@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createGA4Plugin } from "./index";
 
 describe("createGA4Plugin", () => {

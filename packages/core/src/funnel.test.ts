@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Funnel } from "./funnel";
 import type { FunnelPlugin } from "./plugin";
 
@@ -103,10 +103,7 @@ describe("Funnel", () => {
       funnel.initialize();
       funnel.track("page_view", {});
 
-      expect(spy).toHaveBeenCalledWith(
-        '[funnel] Plugin "bad" failed to track "page_view"',
-        error,
-      );
+      expect(spy).toHaveBeenCalledWith('[funnel] Plugin "bad" failed to track "page_view"', error);
     });
 
     it("should log when debug is enabled", () => {
