@@ -10,6 +10,7 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 |---------|-------------|
 | `@funnel/core` | Event types, plugin interface, Funnel class |
 | `@funnel/plugin-ga4` | Google Analytics 4 (`gtag`) plugin |
+| `@funnel/plugin-gtm` | Google Tag Manager (`dataLayer`) plugin |
 | `@funnel/plugin-meta-pixel` | Meta Pixel (`fbq`) plugin |
 
 ## Usage
@@ -57,6 +58,8 @@ Only GA4 standard events relevant to the marketing funnel are included.
 ## Plugin Event Mapping
 
 The GA4 plugin passes events through directly via `gtag("event", ...)`.
+
+The GTM plugin pushes events to `dataLayer` with the GA4 event name as the `event` key. GTM containers then route each event to the appropriate tags based on configured triggers.
 
 The Meta Pixel plugin maps events to standard Meta events:
 

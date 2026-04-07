@@ -20,10 +20,11 @@ Single-package commands: `pnpm --filter @funnel/core build`
 
 ## Architecture
 
-**Monorepo** (`packages/*`) with three packages:
+**Monorepo** (`packages/*`) with four packages:
 
 - **`@funnel/core`** — `EventMap` type definitions (GA4-based), `FunnelPlugin` interface, `Funnel` dispatcher class
 - **`@funnel/plugin-ga4`** — Passes events through to `window.gtag`
+- **`@funnel/plugin-gtm`** — Pushes GA4-format events to `window.dataLayer` for GTM containers
 - **`@funnel/plugin-meta-pixel`** — Transforms GA4 events/params into Meta Pixel format via `window.fbq`
 
 **Data flow:** `Funnel.track(event, params)` → iterates all plugins → each plugin transforms & sends. Plugins are error-isolated (one failure doesn't block others).
