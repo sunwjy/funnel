@@ -40,6 +40,19 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
 
+  packages/plugin-gtm:
+    dependencies:
+      '@funnel/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      tsdown:
+        specifier: ^0.21.0
+        version: 0.21.7(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(typescript@6.0.2)
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.2
+
   packages/plugin-meta-pixel:
     dependencies:
       '@funnel/core':
