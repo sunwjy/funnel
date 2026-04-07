@@ -14,6 +14,8 @@ pnpm typecheck    # Type-check all packages
 pnpm lint         # Lint (Biome)
 pnpm lint:fix     # Auto-fix lint issues
 pnpm format       # Format (Biome)
+pnpm test         # Run all tests (Vitest)
+pnpm test:watch   # Run tests in watch mode
 ```
 
 Single-package commands: `pnpm --filter @funnel/core build`
@@ -34,6 +36,14 @@ Single-package commands: `pnpm --filter @funnel/core build`
 - All plugins must handle SSR (`typeof window` check before accessing globals)
 - No runtime dependencies — plugins call browser globals (`gtag`, `fbq`) directly
 - Dual ESM/CJS output via tsdown
+
+## Testing
+
+- Always write tests when adding or modifying code
+- Colocate test files with source: `src/foo.ts` → `src/foo.test.ts`
+- Vitest + jsdom environment
+- Mock browser globals (`window.gtag`, `window.fbq`, `window.dataLayer`) with `vi.fn()`
+- Ensure `pnpm test` passes before committing
 
 ## Code Style
 
