@@ -110,6 +110,14 @@ pnpm lint        # Run linter
 pnpm lint:fix    # Auto-fix lint issues
 ```
 
+## Pre-release Backlog
+
+- [ ] CI/CD — GitHub Actions workflow for build, typecheck, lint, and test on PRs
+- [ ] Release tooling — Changesets for versioning, changelogs, and npm publish automation
+- [ ] Contributing guide — `CONTRIBUTING.md` with development setup and PR guidelines
+- [ ] Examples — Standalone usage examples (vanilla HTML, React/Next.js integration)
+- [ ] API docs — Auto-generated API reference via TypeDoc or API Extractor
+
 ## Tech Stack
 
 - **Monorepo**: pnpm + Turborepo
