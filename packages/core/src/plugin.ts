@@ -1,7 +1,38 @@
 import type { EventMap, EventName } from "./types";
 
+/**
+ * Interface that all Funnel plugins must implement.
+ *
+ * @remarks
+ * Each analytics platform (GA4, Meta Pixel, etc.) implements this interface
+ * and registers with a {@link Funnel} instance.
+ *
+ * @example
+ * ```ts
+ * const myPlugin: FunnelPlugin = {
+ *   name: "my-plugin",
+ *   initialize(config) { ... },
+ *   track(eventName, params) { ... },
+ * };
+ * ```
+ */
 export interface FunnelPlugin {
+  /** Unique plugin name. Also used as the key for plugin-specific configuration. */
   name: string;
+
+  /**
+   * Initializes the plugin.
+   *
+   * @param config - Plugin-specific configuration object.
+   */
   initialize(config: Record<string, unknown>): void;
+
+  /**
+   * Tracks an event.
+   *
+   * @typeParam E - The event name type.
+   * @param eventName - Name of the event to track.
+   * @param params - Parameters corresponding to the event.
+   */
   track<E extends EventName>(eventName: E, params: EventMap[E]): void;
 }

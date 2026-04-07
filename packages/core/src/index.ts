@@ -1,3 +1,13 @@
+/**
+ * `@funnel/core` — Core package for the marketing funnel event tracking library.
+ *
+ * @remarks
+ * Provides a plugin-based architecture to send events to multiple analytics
+ * platforms (GA4, Meta Pixel, etc.) through a unified interface.
+ *
+ * @packageDocumentation
+ */
+
 export type { FunnelConfig } from "./funnel";
 export { Funnel } from "./funnel";
 export type { FunnelPlugin } from "./plugin";
