@@ -12,6 +12,14 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 | `@funnel/plugin-ga4` | Google Analytics 4 (`gtag`) plugin |
 | `@funnel/plugin-gtm` | Google Tag Manager (`dataLayer`) plugin |
 | `@funnel/plugin-meta-pixel` | Meta Pixel (`fbq`) plugin |
+| `@funnel/plugin-google-ads` | Google Ads conversion tracking (`gtag`) plugin |
+| `@funnel/plugin-tiktok-pixel` | TikTok Pixel (`ttq`) plugin |
+| `@funnel/plugin-kakao-pixel` | Kakao Pixel (`kakaoPixel`) plugin |
+| `@funnel/plugin-naver-ad` | Naver Ad WCSLOG (`wcs`) plugin |
+| `@funnel/plugin-x-pixel` | X/Twitter Pixel (`twq`) plugin |
+| `@funnel/plugin-linkedin-insight` | LinkedIn Insight Tag (`lintrk`) plugin |
+| `@funnel/plugin-mixpanel` | Mixpanel (`mixpanel`) plugin |
+| `@funnel/plugin-amplitude` | Amplitude (`amplitude`) plugin |
 
 ## Usage
 
@@ -77,6 +85,79 @@ The Meta Pixel plugin maps events to standard Meta events:
 | Others | `trackCustom` (original event name preserved) |
 
 The `items` array is automatically transformed into Meta Pixel's `content_ids`, `contents`, and `num_items`.
+
+### Google Ads
+
+Sends conversion events via `gtag("event", "conversion", { send_to })`. Requires `conversionId` and `conversionLabels` mapping in config. Events with a configured conversion label are sent as conversions; others pass through as standard gtag events.
+
+### TikTok Pixel
+
+| GA4 Event | TikTok Pixel Event |
+|-----------|-------------------|
+| `page_view` | `ttq.page()` |
+| `view_item` | `ViewContent` |
+| `add_to_cart` | `AddToCart` |
+| `begin_checkout` | `InitiateCheckout` |
+| `add_payment_info` | `AddPaymentInfo` |
+| `purchase` | `CompletePayment` |
+| `search` | `Search` |
+| `sign_up` | `CompleteRegistration` |
+| `generate_lead` | `SubmitForm` |
+| `select_item` | `ClickButton` |
+| Others | Custom event (original name) |
+
+### Kakao Pixel
+
+| GA4 Event | Kakao Pixel Method |
+|-----------|-------------------|
+| `page_view` | `pageView()` |
+| `search` | `search({ keyword })` |
+| `view_item` | `viewContent({ id })` |
+| `add_to_cart` | `addToCart({ id })` |
+| `begin_checkout` | `viewCart()` |
+| `purchase` | `purchase({ total_quantity, total_price, currency, products })` |
+| `sign_up` | `completeRegistration()` |
+| `generate_lead` | `participation()` |
+| Others | Ignored (no custom event support) |
+
+### Naver Ad (WCSLOG)
+
+| GA4 Event | Naver Conversion Type |
+|-----------|-----------------------|
+| `page_view` | Page view (`wcs_do()` without conversion) |
+| `purchase` | Type 1 (Purchase) |
+| `sign_up` | Type 2 (Registration) |
+| `add_to_cart` | Type 3 (Cart) |
+| `generate_lead` | Type 4 (Lead) |
+| `begin_checkout` / `add_payment_info` | Type 5 (Other) |
+| Others | Ignored |
+
+### X (Twitter) Pixel
+
+| GA4 Event | X Pixel Event |
+|-----------|--------------|
+| `page_view` | `PageVisit` |
+| `view_item` | `ViewContent` |
+| `add_to_cart` | `AddToCart` |
+| `begin_checkout` | `InitiateCheckout` |
+| `purchase` | `Purchase` |
+| `search` | `Search` |
+| `sign_up` | `CompleteRegistration` |
+| `generate_lead` | `Lead` |
+| `add_payment_info` | `AddPaymentInfo` |
+| Others | Custom event (original name) |
+
+### LinkedIn Insight Tag
+
+Sends conversion events via `lintrk("track", { conversion_id })`. Each GA4 event must be mapped to a LinkedIn conversion ID via the `conversionIds` config. Page views are tracked automatically by the Insight Tag.
+
+### Mixpanel
+
+All events are sent via `mixpanel.track()` with Title Case event names (e.g., `page_view` → `"Page View"`). The `items` array is flattened into `item_ids`, `item_names`, and `num_items`. All other properties pass through as-is.
+
+### Amplitude
+
+All events are sent via `amplitude.track()` with Title Case event names. For `purchase` and `refund` events, `value` is mapped to `revenue` for Amplitude's revenue tracking. The `items` array is flattened the same way as Mixpanel.
 
 ## Custom Plugins
 
