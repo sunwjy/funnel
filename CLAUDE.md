@@ -22,20 +22,28 @@ Single-package commands: `pnpm --filter @funnel/core build`
 
 ## Architecture
 
-**Monorepo** (`packages/*`) with four packages:
+**Monorepo** (`packages/*`) with two packages:
 
 - **`@funnel/core`** — `EventMap` type definitions (GA4-based), `FunnelPlugin` interface, `Funnel` dispatcher class
-- **`@funnel/plugin-ga4`** — Passes events through to `window.gtag`
-- **`@funnel/plugin-gtm`** — Pushes GA4-format events to `window.dataLayer` for GTM containers
-- **`@funnel/plugin-meta-pixel`** — Transforms GA4 events/params into Meta Pixel format via `window.fbq`
+- **`@funnel/client`** — All client-side plugins consolidated into one package with subpath exports for tree-shaking (GA4, GTM, Meta Pixel, Google Ads, TikTok Pixel, Kakao Pixel, Naver Ad, X Pixel, LinkedIn Insight, Mixpanel, Amplitude)
+
+**Import styles:**
+```ts
+// Barrel import (tree-shakeable via sideEffects: false)
+import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@funnel/client";
+
+// Subpath import (guaranteed tree-shaking)
+import { createGA4Plugin } from "@funnel/client/ga4";
+```
 
 **Data flow:** `Funnel.track(event, params)` → iterates all plugins → each plugin transforms & sends. Plugins are error-isolated (one failure doesn't block others).
 
 **Key design decisions:**
 - GA4 is the canonical event schema; plugins map FROM it, never the reverse
-- All plugins must handle SSR (`typeof window` check before accessing globals)
+- All client plugins must handle SSR (`typeof window` check before accessing globals)
 - No runtime dependencies — plugins call browser globals (`gtag`, `fbq`) directly
 - Dual ESM/CJS output via tsdown
+- `@funnel/core` is shared between client and future `@funnel/server`
 
 ## Testing
 

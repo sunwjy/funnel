@@ -1,0 +1,146 @@
+{
+  "name": "@funnel/client",
+  "version": "0.1.0",
+  "description": "Client-side analytics plugins for @funnel/core",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./ga4": {
+      "import": {
+        "types": "./dist/plugins/ga4.d.mts",
+        "default": "./dist/plugins/ga4.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/ga4.d.cts",
+        "default": "./dist/plugins/ga4.cjs"
+      }
+    },
+    "./gtm": {
+      "import": {
+        "types": "./dist/plugins/gtm.d.mts",
+        "default": "./dist/plugins/gtm.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/gtm.d.cts",
+        "default": "./dist/plugins/gtm.cjs"
+      }
+    },
+    "./meta-pixel": {
+      "import": {
+        "types": "./dist/plugins/meta-pixel.d.mts",
+        "default": "./dist/plugins/meta-pixel.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/meta-pixel.d.cts",
+        "default": "./dist/plugins/meta-pixel.cjs"
+      }
+    },
+    "./google-ads": {
+      "import": {
+        "types": "./dist/plugins/google-ads.d.mts",
+        "default": "./dist/plugins/google-ads.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/google-ads.d.cts",
+        "default": "./dist/plugins/google-ads.cjs"
+      }
+    },
+    "./tiktok-pixel": {
+      "import": {
+        "types": "./dist/plugins/tiktok-pixel.d.mts",
+        "default": "./dist/plugins/tiktok-pixel.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/tiktok-pixel.d.cts",
+        "default": "./dist/plugins/tiktok-pixel.cjs"
+      }
+    },
+    "./kakao-pixel": {
+      "import": {
+        "types": "./dist/plugins/kakao-pixel.d.mts",
+        "default": "./dist/plugins/kakao-pixel.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/kakao-pixel.d.cts",
+        "default": "./dist/plugins/kakao-pixel.cjs"
+      }
+    },
+    "./naver-ad": {
+      "import": {
+        "types": "./dist/plugins/naver-ad.d.mts",
+        "default": "./dist/plugins/naver-ad.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/naver-ad.d.cts",
+        "default": "./dist/plugins/naver-ad.cjs"
+      }
+    },
+    "./x-pixel": {
+      "import": {
+        "types": "./dist/plugins/x-pixel.d.mts",
+        "default": "./dist/plugins/x-pixel.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/x-pixel.d.cts",
+        "default": "./dist/plugins/x-pixel.cjs"
+      }
+    },
+    "./linkedin-insight": {
+      "import": {
+        "types": "./dist/plugins/linkedin-insight.d.mts",
+        "default": "./dist/plugins/linkedin-insight.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/linkedin-insight.d.cts",
+        "default": "./dist/plugins/linkedin-insight.cjs"
+      }
+    },
+    "./mixpanel": {
+      "import": {
+        "types": "./dist/plugins/mixpanel.d.mts",
+        "default": "./dist/plugins/mixpanel.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/mixpanel.d.cts",
+        "default": "./dist/plugins/mixpanel.cjs"
+      }
+    },
+    "./amplitude": {
+      "import": {
+        "types": "./dist/plugins/amplitude.d.mts",
+        "default": "./dist/plugins/amplitude.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/amplitude.d.cts",
+        "default": "./dist/plugins/amplitude.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@funnel/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsdown": "^0.21.0",
+    "typescript": "^6.0.2"
+  }
+}

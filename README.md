@@ -9,24 +9,33 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 | Package | Description |
 |---------|-------------|
 | `@funnel/core` | Event types, plugin interface, Funnel class |
-| `@funnel/plugin-ga4` | Google Analytics 4 (`gtag`) plugin |
-| `@funnel/plugin-gtm` | Google Tag Manager (`dataLayer`) plugin |
-| `@funnel/plugin-meta-pixel` | Meta Pixel (`fbq`) plugin |
-| `@funnel/plugin-google-ads` | Google Ads conversion tracking (`gtag`) plugin |
-| `@funnel/plugin-tiktok-pixel` | TikTok Pixel (`ttq`) plugin |
-| `@funnel/plugin-kakao-pixel` | Kakao Pixel (`kakaoPixel`) plugin |
-| `@funnel/plugin-naver-ad` | Naver Ad WCSLOG (`wcs`) plugin |
-| `@funnel/plugin-x-pixel` | X/Twitter Pixel (`twq`) plugin |
-| `@funnel/plugin-linkedin-insight` | LinkedIn Insight Tag (`lintrk`) plugin |
-| `@funnel/plugin-mixpanel` | Mixpanel (`mixpanel`) plugin |
-| `@funnel/plugin-amplitude` | Amplitude (`amplitude`) plugin |
+| `@funnel/client` | All client-side plugins (GA4, GTM, Meta Pixel, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude) |
+
+### Client Plugins
+
+| Subpath | Description |
+|---------|-------------|
+| `@funnel/client/ga4` | Google Analytics 4 (`gtag`) |
+| `@funnel/client/gtm` | Google Tag Manager (`dataLayer`) |
+| `@funnel/client/meta-pixel` | Meta Pixel (`fbq`) |
+| `@funnel/client/google-ads` | Google Ads conversion tracking (`gtag`) |
+| `@funnel/client/tiktok-pixel` | TikTok Pixel (`ttq`) |
+| `@funnel/client/kakao-pixel` | Kakao Pixel (`kakaoPixel`) |
+| `@funnel/client/naver-ad` | Naver Ad WCSLOG (`wcs`) |
+| `@funnel/client/x-pixel` | X/Twitter Pixel (`twq`) |
+| `@funnel/client/linkedin-insight` | LinkedIn Insight Tag (`lintrk`) |
+| `@funnel/client/mixpanel` | Mixpanel (`mixpanel`) |
+| `@funnel/client/amplitude` | Amplitude (`amplitude`) |
 
 ## Usage
 
 ```ts
-import { Funnel } from "@funnel/core";
-import { createGA4Plugin } from "@funnel/plugin-ga4";
-import { createMetaPixelPlugin } from "@funnel/plugin-meta-pixel";
+// Barrel import (tree-shakeable)
+import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@funnel/client";
+
+// Or subpath imports (guaranteed tree-shaking in all bundlers)
+// import { createGA4Plugin } from "@funnel/client/ga4";
+// import { createMetaPixelPlugin } from "@funnel/client/meta-pixel";
 
 const funnel = new Funnel({
   plugins: [createGA4Plugin(), createMetaPixelPlugin()],
@@ -164,7 +173,7 @@ All events are sent via `amplitude.track()` with Title Case event names. For `pu
 Implement the `FunnelPlugin` interface to connect any analytics tool.
 
 ```ts
-import type { EventMap, EventName, FunnelPlugin } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin } from "@funnel/client";
 
 export function createMyPlugin(): FunnelPlugin {
   return {
