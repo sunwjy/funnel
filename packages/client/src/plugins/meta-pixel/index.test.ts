@@ -235,6 +235,58 @@ describe("createMetaPixelPlugin", () => {
     });
   });
 
+  describe("setUser", () => {
+    it("should call fbq init with pixelId and mapped user data", () => {
+      window.fbq = vi.fn();
+      const plugin = createMetaPixelPlugin();
+      plugin.initialize({ pixelId: "123456789" });
+
+      plugin.setUser?.({ email: "user@example.com", first_name: "Jane", last_name: "Doe" });
+
+      expect(window.fbq).toHaveBeenCalledWith("init", "123456789", {
+        em: "user@example.com",
+        fn: "Jane",
+        ln: "Doe",
+      });
+    });
+
+    it("should map user_id to external_id", () => {
+      window.fbq = vi.fn();
+      const plugin = createMetaPixelPlugin();
+      plugin.initialize({ pixelId: "123456789" });
+
+      plugin.setUser?.({ user_id: "u-001", phone_number: "+821012345678" });
+
+      expect(window.fbq).toHaveBeenCalledWith("init", "123456789", {
+        external_id: "u-001",
+        ph: "+821012345678",
+      });
+    });
+
+    it("should not call fbq when pixelId is not set", () => {
+      window.fbq = vi.fn();
+      const plugin = createMetaPixelPlugin();
+      // do not call initialize — pixelId remains undefined
+
+      plugin.setUser?.({ email: "user@example.com" });
+
+      // Only the init from initialize should not have been called
+      expect(window.fbq).not.toHaveBeenCalled();
+    });
+
+    it("should not throw in SSR", () => {
+      const originalWindow = globalThis.window;
+      // @ts-expect-error — simulate SSR
+      delete globalThis.window;
+
+      const plugin = createMetaPixelPlugin();
+
+      expect(() => plugin.setUser?.({ email: "user@example.com" })).not.toThrow();
+
+      globalThis.window = originalWindow;
+    });
+  });
+
   describe("track — event deduplication", () => {
     it("should pass eventId as eventID to fbq", () => {
       window.fbq = vi.fn();

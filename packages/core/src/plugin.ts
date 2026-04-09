@@ -1,4 +1,4 @@
-import type { EventContext, EventMap, EventName } from "./types";
+import type { EventContext, EventMap, EventName, UserProperties } from "./types";
 
 /**
  * Interface that all Funnel plugins must implement.
@@ -36,4 +36,23 @@ export interface FunnelPlugin {
    * @param context - Event context containing metadata such as `eventId`.
    */
   track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void;
+
+  /**
+   * Sets user identity and properties for this plugin.
+   *
+   * @remarks
+   * Optional. Plugins that don't support user identification
+   * (e.g., Kakao Pixel, Naver Ad) should omit this method.
+   *
+   * @param properties - User properties following the GA4 model.
+   */
+  setUser?(properties: UserProperties): void;
+
+  /**
+   * Clears user identity for this plugin (logout scenario).
+   *
+   * @remarks
+   * Optional. Plugins should reset any stored user state.
+   */
+  resetUser?(): void;
 }

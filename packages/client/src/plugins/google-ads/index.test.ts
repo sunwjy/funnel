@@ -202,4 +202,35 @@ describe("createGoogleAdsPlugin", () => {
       ).not.toThrow();
     });
   });
+
+  describe("setUser", () => {
+    it("should call gtag set user_data with email and phone", () => {
+      window.gtag = vi.fn();
+      const plugin = createGoogleAdsPlugin();
+
+      plugin.setUser?.({ email: "test@example.com", phone_number: "+821012345678" });
+
+      expect(window.gtag).toHaveBeenCalledWith("set", "user_data", {
+        email: "test@example.com",
+        phone_number: "+821012345678",
+      });
+    });
+
+    it("should nest first_name and last_name under address", () => {
+      window.gtag = vi.fn();
+      const plugin = createGoogleAdsPlugin();
+
+      plugin.setUser?.({ first_name: "Jane", last_name: "Doe" });
+
+      expect(window.gtag).toHaveBeenCalledWith("set", "user_data", {
+        address: { first_name: "Jane", last_name: "Doe" },
+      });
+    });
+
+    it("should not throw in SSR", () => {
+      const plugin = createGoogleAdsPlugin();
+
+      expect(() => plugin.setUser?.({ email: "test@example.com" })).not.toThrow();
+    });
+  });
 });

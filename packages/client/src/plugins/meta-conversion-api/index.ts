@@ -10,7 +10,14 @@
  * @packageDocumentation
  */
 
-import type { EventContext, EventMap, EventName, FunnelPlugin, Item } from "@funnel/core";
+import type {
+  EventContext,
+  EventMap,
+  EventName,
+  FunnelPlugin,
+  Item,
+  UserProperties,
+} from "@funnel/core";
 
 /**
  * Configuration for the Meta Conversion API plugin.
@@ -32,6 +39,16 @@ interface MetaCapiUserData {
   fbc?: string;
   /** Browser user agent string. */
   client_user_agent?: string;
+  /** Hashed email address. */
+  em?: string;
+  /** Hashed phone number. */
+  ph?: string;
+  /** Hashed first name. */
+  fn?: string;
+  /** Hashed last name. */
+  ln?: string;
+  /** External user identifier. */
+  external_id?: string;
 }
 
 /**
@@ -233,6 +250,7 @@ function collectUserData(): MetaCapiUserData {
  */
 export function createMetaConversionApiPlugin(): FunnelPlugin {
   let endpoint = "";
+  let storedUserProperties: UserProperties | null = null;
 
   return {
     name: "meta-conversion-api",
@@ -244,6 +262,14 @@ export function createMetaConversionApiPlugin(): FunnelPlugin {
       }
     },
 
+    setUser(properties: UserProperties): void {
+      storedUserProperties = properties;
+    },
+
+    resetUser(): void {
+      storedUserProperties = null;
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
       if (typeof window === "undefined" || !endpoint) {
         return;
@@ -252,6 +278,14 @@ export function createMetaConversionApiPlugin(): FunnelPlugin {
       const metaEventName = EVENT_MAP[eventName] ?? eventName;
       const customData = transformParams(eventName, params);
       const userData = collectUserData();
+
+      if (storedUserProperties) {
+        if (storedUserProperties.email) userData.em = storedUserProperties.email;
+        if (storedUserProperties.phone_number) userData.ph = storedUserProperties.phone_number;
+        if (storedUserProperties.first_name) userData.fn = storedUserProperties.first_name;
+        if (storedUserProperties.last_name) userData.ln = storedUserProperties.last_name;
+        if (storedUserProperties.user_id) userData.external_id = storedUserProperties.user_id;
+      }
 
       const payload: MetaCapiPayload = {
         event_name: metaEventName,

@@ -8,13 +8,18 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@funnel/core";
 
 declare global {
   interface Window {
     mixpanel: {
       init: (token: string) => void;
       track: (eventName: string, properties?: Record<string, unknown>) => void;
+      identify: (distinctId: string) => void;
+      people: {
+        set: (properties: Record<string, unknown>) => void;
+      };
+      reset: () => void;
     };
   }
 }
@@ -126,6 +131,37 @@ export function createMixpanelPlugin(): FunnelPlugin {
       const mixpanelParams = transformParams(eventName, params);
 
       window.mixpanel.track(mixpanelEvent, mixpanelParams);
+    },
+
+    setUser(properties: UserProperties): void {
+      if (typeof window === "undefined" || !window.mixpanel) {
+        return;
+      }
+
+      const { user_id, email, phone_number, first_name, last_name, ...rest } = properties;
+
+      if (user_id !== undefined) {
+        window.mixpanel.identify(user_id);
+      }
+
+      const peopleProps: Record<string, unknown> = {};
+      if (email !== undefined) peopleProps.$email = email;
+      if (phone_number !== undefined) peopleProps.$phone = phone_number;
+      if (first_name !== undefined) peopleProps.$first_name = first_name;
+      if (last_name !== undefined) peopleProps.$last_name = last_name;
+      Object.assign(peopleProps, rest);
+
+      if (Object.keys(peopleProps).length > 0) {
+        window.mixpanel.people.set(peopleProps);
+      }
+    },
+
+    resetUser(): void {
+      if (typeof window === "undefined" || !window.mixpanel) {
+        return;
+      }
+
+      window.mixpanel.reset();
     },
   };
 }

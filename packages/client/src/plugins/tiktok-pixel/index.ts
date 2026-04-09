@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@funnel/core";
 
 declare global {
   interface Window {
@@ -153,6 +153,20 @@ export function createTikTokPixelPlugin(): FunnelPlugin {
         window.ttq.track(tiktokEvent, tiktokParams);
       } else {
         window.ttq.track(eventName, tiktokParams);
+      }
+    },
+
+    setUser(properties: UserProperties): void {
+      if (typeof window === "undefined" || !window.ttq) return;
+
+      const identifyParams: Record<string, unknown> = {};
+      if (properties.email !== undefined) identifyParams.email = properties.email;
+      if (properties.phone_number !== undefined)
+        identifyParams.phone_number = properties.phone_number;
+      if (properties.user_id !== undefined) identifyParams.external_id = properties.user_id;
+
+      if (Object.keys(identifyParams).length > 0) {
+        window.ttq.identify(identifyParams);
       }
     },
   };

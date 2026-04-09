@@ -225,4 +225,33 @@ describe("createTikTokPixelPlugin", () => {
       ).not.toThrow();
     });
   });
+
+  describe("setUser", () => {
+    it("should call ttq.identify with mapped properties", () => {
+      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      const plugin = createTikTokPixelPlugin();
+
+      plugin.setUser?.({ email: "test@example.com", phone_number: "+821012345678" });
+
+      expect(window.ttq.identify).toHaveBeenCalledWith({
+        email: "test@example.com",
+        phone_number: "+821012345678",
+      });
+    });
+
+    it("should map user_id to external_id", () => {
+      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      const plugin = createTikTokPixelPlugin();
+
+      plugin.setUser?.({ user_id: "user-123" });
+
+      expect(window.ttq.identify).toHaveBeenCalledWith({ external_id: "user-123" });
+    });
+
+    it("should not throw in SSR", () => {
+      const plugin = createTikTokPixelPlugin();
+
+      expect(() => plugin.setUser?.({ email: "test@example.com" })).not.toThrow();
+    });
+  });
 });

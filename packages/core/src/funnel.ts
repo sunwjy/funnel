@@ -1,5 +1,5 @@
 import type { FunnelPlugin } from "./plugin";
-import type { EventContext, EventMap, EventName } from "./types";
+import type { EventContext, EventMap, EventName, UserProperties } from "./types";
 
 /**
  * Generates a unique event ID for deduplication across client and server.
@@ -58,6 +58,7 @@ export class Funnel {
   private plugins: FunnelPlugin[] = [];
   private debug: boolean;
   private initialized = false;
+  private userProperties: UserProperties | null = null;
 
   /**
    * Creates a new Funnel instance.
@@ -88,6 +89,21 @@ export class Funnel {
       }
     }
     this.initialized = true;
+
+    // Replay stored user properties to newly initialized plugins
+    if (this.userProperties) {
+      for (const plugin of this.plugins) {
+        if (!plugin.setUser) continue;
+        try {
+          plugin.setUser(this.userProperties);
+        } catch (error) {
+          console.error(
+            `[funnel] Plugin "${plugin.name}" failed to setUser during initialize`,
+            error,
+          );
+        }
+      }
+    }
   }
 
   /**
@@ -117,6 +133,66 @@ export class Funnel {
         }
       } catch (error) {
         console.error(`[funnel] Plugin "${plugin.name}" failed to track "${eventName}"`, error);
+      }
+    }
+  }
+
+  /**
+   * Sets user identity and properties across all plugins.
+   *
+   * @remarks
+   * If called before {@link initialize}, the properties are stored and
+   * replayed to each plugin during initialization.
+   * Follows the GA4 user properties model as the canonical format.
+   *
+   * @param properties - User properties following the GA4 model.
+   */
+  setUser(properties: UserProperties): void {
+    this.userProperties = properties;
+
+    if (!this.initialized) {
+      if (this.debug) {
+        console.log("[funnel] setUser stored (will apply after initialize)");
+      }
+      return;
+    }
+
+    for (const plugin of this.plugins) {
+      if (!plugin.setUser) continue;
+      try {
+        plugin.setUser(properties);
+        if (this.debug) {
+          console.log(`[funnel] "${plugin.name}" setUser`, properties);
+        }
+      } catch (error) {
+        console.error(`[funnel] Plugin "${plugin.name}" failed to setUser`, error);
+      }
+    }
+  }
+
+  /**
+   * Clears user identity across all plugins (logout scenario).
+   *
+   * @remarks
+   * Clears stored user properties and calls `resetUser()` on each plugin
+   * that implements it.
+   */
+  resetUser(): void {
+    this.userProperties = null;
+
+    if (!this.initialized) {
+      return;
+    }
+
+    for (const plugin of this.plugins) {
+      if (!plugin.resetUser) continue;
+      try {
+        plugin.resetUser();
+        if (this.debug) {
+          console.log(`[funnel] "${plugin.name}" resetUser`);
+        }
+      } catch (error) {
+        console.error(`[funnel] Plugin "${plugin.name}" failed to resetUser`, error);
       }
     }
   }

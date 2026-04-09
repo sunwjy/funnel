@@ -30,6 +30,7 @@ export type {
   SelectItemParams,
   SelectPromotionParams,
   SignUpParams,
+  UserProperties,
   ViewItemListParams,
   ViewItemParams,
   ViewPromotionParams,

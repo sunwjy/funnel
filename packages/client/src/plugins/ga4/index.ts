@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@funnel/core";
 
 declare global {
   interface Window {
@@ -64,6 +64,32 @@ export function createGA4Plugin(): FunnelPlugin {
       }
       // GA4 is the base format, so pass through directly
       window.gtag("event", eventName, params);
+    },
+
+    setUser(properties: UserProperties): void {
+      if (typeof window === "undefined" || !window.gtag) {
+        return;
+      }
+      const { user_id, ...rest } = properties;
+      if (user_id !== undefined) {
+        window.gtag("set", { user_id });
+      }
+      const userProperties: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(rest)) {
+        if (value !== undefined) {
+          userProperties[key] = value;
+        }
+      }
+      if (Object.keys(userProperties).length > 0) {
+        window.gtag("set", "user_properties", userProperties);
+      }
+    },
+
+    resetUser(): void {
+      if (typeof window === "undefined" || !window.gtag) {
+        return;
+      }
+      window.gtag("set", { user_id: null });
     },
   };
 }

@@ -8,7 +8,14 @@
  * @packageDocumentation
  */
 
-import type { EventContext, EventMap, EventName, FunnelPlugin, Item } from "@funnel/core";
+import type {
+  EventContext,
+  EventMap,
+  EventName,
+  FunnelPlugin,
+  Item,
+  UserProperties,
+} from "@funnel/core";
 
 declare global {
   interface Window {
@@ -166,13 +173,31 @@ function transformParams<E extends EventName>(eventName: E, params: EventMap[E])
  * ```
  */
 export function createMetaPixelPlugin(): FunnelPlugin {
+  let pixelId: string | undefined;
+
   return {
     name: "meta-pixel",
 
     initialize(config: Record<string, unknown>): void {
-      const { pixelId } = config as MetaPixelPluginConfig;
+      const { pixelId: id } = config as MetaPixelPluginConfig;
+      pixelId = id;
       if (pixelId && typeof window !== "undefined" && window.fbq) {
         window.fbq("init", pixelId);
+      }
+    },
+
+    setUser(properties: UserProperties): void {
+      if (typeof window === "undefined" || !window.fbq || !pixelId) return;
+
+      const metaUserData: Record<string, string> = {};
+      if (properties.email) metaUserData.em = properties.email;
+      if (properties.phone_number) metaUserData.ph = properties.phone_number;
+      if (properties.first_name) metaUserData.fn = properties.first_name;
+      if (properties.last_name) metaUserData.ln = properties.last_name;
+      if (properties.user_id) metaUserData.external_id = properties.user_id;
+
+      if (Object.keys(metaUserData).length > 0) {
+        window.fbq("init", pixelId, metaUserData);
       }
     },
 

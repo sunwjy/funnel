@@ -156,4 +156,143 @@ describe("Funnel", () => {
       expect(spy).toHaveBeenCalledWith('[funnel] "p1" tracked "search"', params);
     });
   });
+
+  describe("setUser", () => {
+    it("should call setUser on plugins that implement it", () => {
+      const plugin = createMockPlugin("p1");
+      plugin.setUser = vi.fn();
+      const funnel = new Funnel({ plugins: [plugin] });
+      funnel.initialize();
+
+      const properties = { user_id: "u-123", email: "test@example.com" };
+      funnel.setUser(properties);
+
+      expect(plugin.setUser).toHaveBeenCalledWith(properties);
+    });
+
+    it("should skip plugins that do not implement setUser", () => {
+      const withSetUser = createMockPlugin("with");
+      withSetUser.setUser = vi.fn();
+      const withoutSetUser = createMockPlugin("without");
+      const funnel = new Funnel({ plugins: [withSetUser, withoutSetUser] });
+      funnel.initialize();
+
+      funnel.setUser({ user_id: "u-1" });
+
+      expect(withSetUser.setUser).toHaveBeenCalled();
+      // withoutSetUser has no setUser — should not throw
+    });
+
+    it("should isolate errors — one plugin failure does not block others", () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const failing = createMockPlugin("failing");
+      failing.setUser = vi.fn(() => {
+        throw new Error("crash");
+      });
+      const healthy = createMockPlugin("healthy");
+      healthy.setUser = vi.fn();
+      const funnel = new Funnel({ plugins: [failing, healthy] });
+      funnel.initialize();
+
+      funnel.setUser({ user_id: "u-1" });
+
+      expect(healthy.setUser).toHaveBeenCalledWith({ user_id: "u-1" });
+    });
+
+    it("should log error when a plugin throws in setUser", () => {
+      const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const error = new Error("boom");
+      const failing = createMockPlugin("bad");
+      failing.setUser = vi.fn(() => {
+        throw error;
+      });
+      const funnel = new Funnel({ plugins: [failing] });
+      funnel.initialize();
+
+      funnel.setUser({ user_id: "u-1" });
+
+      expect(spy).toHaveBeenCalledWith('[funnel] Plugin "bad" failed to setUser', error);
+    });
+
+    it("should store properties and replay after initialize", () => {
+      const plugin = createMockPlugin("p1");
+      plugin.setUser = vi.fn();
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      const properties = { user_id: "u-1", email: "a@b.com" };
+      funnel.setUser(properties);
+
+      expect(plugin.setUser).not.toHaveBeenCalled();
+
+      funnel.initialize();
+
+      expect(plugin.setUser).toHaveBeenCalledWith(properties);
+    });
+
+    it("should log when debug is enabled", () => {
+      const spy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const plugin = createMockPlugin("p1");
+      plugin.setUser = vi.fn();
+      const funnel = new Funnel({ plugins: [plugin], debug: true });
+      funnel.initialize();
+
+      const properties = { user_id: "u-1" };
+      funnel.setUser(properties);
+
+      expect(spy).toHaveBeenCalledWith('[funnel] "p1" setUser', properties);
+    });
+  });
+
+  describe("resetUser", () => {
+    it("should call resetUser on plugins that implement it", () => {
+      const plugin = createMockPlugin("p1");
+      plugin.resetUser = vi.fn();
+      const funnel = new Funnel({ plugins: [plugin] });
+      funnel.initialize();
+
+      funnel.resetUser();
+
+      expect(plugin.resetUser).toHaveBeenCalled();
+    });
+
+    it("should skip plugins without resetUser", () => {
+      const withReset = createMockPlugin("with");
+      withReset.resetUser = vi.fn();
+      const withoutReset = createMockPlugin("without");
+      const funnel = new Funnel({ plugins: [withReset, withoutReset] });
+      funnel.initialize();
+
+      funnel.resetUser();
+
+      expect(withReset.resetUser).toHaveBeenCalled();
+    });
+
+    it("should isolate errors", () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const failing = createMockPlugin("failing");
+      failing.resetUser = vi.fn(() => {
+        throw new Error("crash");
+      });
+      const healthy = createMockPlugin("healthy");
+      healthy.resetUser = vi.fn();
+      const funnel = new Funnel({ plugins: [failing, healthy] });
+      funnel.initialize();
+
+      funnel.resetUser();
+
+      expect(healthy.resetUser).toHaveBeenCalled();
+    });
+
+    it("should clear stored user so replay does not occur after resetUser + initialize", () => {
+      const plugin = createMockPlugin("p1");
+      plugin.setUser = vi.fn();
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      funnel.setUser({ user_id: "u-1" });
+      funnel.resetUser();
+      funnel.initialize();
+
+      expect(plugin.setUser).not.toHaveBeenCalled();
+    });
+  });
 });

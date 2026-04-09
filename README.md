@@ -60,6 +60,55 @@ funnel.track("purchase", {
 
 A single `track` call sends the event to both GA4 and Meta Pixel.
 
+## User Identification (`setUser` / `resetUser`)
+
+Set user identity once — it propagates to all plugins that support it. The format follows GA4's user properties model.
+
+```ts
+// After login
+funnel.setUser({
+  user_id: "U-12345",
+  email: "user@example.com",
+  phone_number: "+821012345678",
+  first_name: "Jaeyun",
+  last_name: "Woo",
+  plan: "premium", // custom properties are also supported
+});
+
+// After logout
+funnel.resetUser();
+```
+
+`setUser` can be called before `initialize()` — the properties are stored and automatically replayed to each plugin during initialization.
+
+### UserProperties
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `user_id` | `string?` | Stable cross-device identifier (GA4 `user_id`) |
+| `email` | `string?` | Email for advanced matching (Meta, TikTok, X, Google Ads) |
+| `phone_number` | `string?` | Phone in E.164 format (e.g., `"+821012345678"`) |
+| `first_name` | `string?` | First name (Meta Advanced Matching, Google Enhanced Conversions) |
+| `last_name` | `string?` | Last name (Meta Advanced Matching, Google Enhanced Conversions) |
+| `[key]` | `unknown` | Arbitrary custom user properties |
+
+### Per-Plugin Mapping
+
+| Plugin | `setUser` | `resetUser` |
+|--------|-----------|-------------|
+| GA4 | `gtag("set", { user_id })` + `gtag("set", "user_properties", {...})` | `gtag("set", { user_id: null })` |
+| GTM | `dataLayer.push({ event: "set_user_properties", user_properties })` | `dataLayer.push({ event: "reset_user_properties" })` |
+| Meta Pixel | `fbq("init", pixelId, { em, fn, ln, ph, external_id })` | — |
+| Meta CAPI | Merges `em`, `ph`, `fn`, `ln`, `external_id` into `user_data` on every `track` | Clears stored data |
+| TikTok Pixel | `ttq.identify({ email, phone_number, external_id })` | — |
+| Mixpanel | `mixpanel.identify(user_id)` + `mixpanel.people.set({ $email, ... })` | `mixpanel.reset()` |
+| Amplitude | `amplitude.setUserId(user_id)` + `amplitude.identify({...})` | `amplitude.setUserId(null)` |
+| Google Ads | `gtag("set", "user_data", { email, phone_number, address })` | — |
+| X Pixel | `twq("config", pixelId, { em, ph_number })` | — |
+| Kakao Pixel | — (no API) | — |
+| Naver Ad | — (no API) | — |
+| LinkedIn | — (no API) | — |
+
 ## Event Deduplication (`eventId`)
 
 Every `funnel.track()` call automatically generates a unique `eventId` (UUID) and passes it to all plugins via `EventContext`. This enables deduplication between client-side pixels and server-side APIs (e.g., Meta Pixel + Conversion API).
@@ -188,7 +237,7 @@ All events are sent via `amplitude.track()` with Title Case event names. For `pu
 Implement the `FunnelPlugin` interface to connect any analytics tool.
 
 ```ts
-import type { EventContext, EventMap, EventName, FunnelPlugin } from "@funnel/client";
+import type { EventContext, EventMap, EventName, FunnelPlugin, UserProperties } from "@funnel/client";
 
 export function createMyPlugin(): FunnelPlugin {
   return {
@@ -201,6 +250,16 @@ export function createMyPlugin(): FunnelPlugin {
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext) {
       // context.eventId — unique ID for deduplication
       // Transform GA4 events to the target tool's format and send
+    },
+
+    // Optional — implement if the target tool supports user identification
+    setUser(properties: UserProperties) {
+      // Map GA4 user properties to the target tool's format
+    },
+
+    // Optional — implement for logout support
+    resetUser() {
+      // Clear user identity in the target tool
     },
   };
 }

@@ -378,3 +378,28 @@ export interface EventContext {
   /** Unique identifier for the event, used for deduplication (e.g., Meta CAPI). */
   eventId: string;
 }
+
+/**
+ * User properties following the GA4 user data model.
+ *
+ * @remarks
+ * The `user_id` field is GA4's top-level user identifier.
+ * Well-known PII fields (`email`, `phone_number`, `first_name`, `last_name`)
+ * are typed explicitly because many platforms consume them for advanced
+ * matching and enhanced conversions.
+ * Additional custom user properties are supported via the index signature.
+ */
+export interface UserProperties {
+  /** Stable, cross-device user identifier (GA4 user_id). */
+  user_id?: string;
+  /** Email address. Used for advanced matching on Meta, TikTok, X, Google Ads. */
+  email?: string;
+  /** Phone number in E.164 format. Used for advanced matching. */
+  phone_number?: string;
+  /** First name. Used for Meta Advanced Matching and Google Enhanced Conversions. */
+  first_name?: string;
+  /** Last name. Used for Meta Advanced Matching and Google Enhanced Conversions. */
+  last_name?: string;
+  /** Arbitrary custom user properties. */
+  [key: string]: unknown;
+}

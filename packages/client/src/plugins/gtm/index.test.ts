@@ -78,4 +78,45 @@ describe("createGTMPlugin", () => {
       );
     });
   });
+
+  describe("setUser", () => {
+    it("should push set_user_properties event to dataLayer", () => {
+      const plugin = createGTMPlugin();
+      const properties = { user_id: "abc123", email: "user@example.com" };
+
+      plugin.setUser?.(properties);
+
+      expect(window.dataLayer).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            event: "set_user_properties",
+            user_properties: properties,
+          }),
+        ]),
+      );
+    });
+
+    it("should not throw in SSR", () => {
+      const plugin = createGTMPlugin();
+
+      expect(() => plugin.setUser?.({ user_id: "abc123" })).not.toThrow();
+    });
+  });
+
+  describe("resetUser", () => {
+    it("should push reset_user_properties event to dataLayer", () => {
+      const plugin = createGTMPlugin();
+
+      plugin.resetUser?.();
+
+      expect(window.dataLayer).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            event: "reset_user_properties",
+            user_properties: null,
+          }),
+        ]),
+      );
+    });
+  });
 });

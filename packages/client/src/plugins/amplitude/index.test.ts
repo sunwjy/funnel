@@ -15,7 +15,7 @@ describe("createAmplitudePlugin", () => {
 
   describe("initialize", () => {
     it("should call amplitude.init with apiKey when provided", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.initialize({ apiKey: "test-api-key" });
@@ -24,7 +24,7 @@ describe("createAmplitudePlugin", () => {
     });
 
     it("should not call amplitude.init when apiKey is absent", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.initialize({});
@@ -43,7 +43,7 @@ describe("createAmplitudePlugin", () => {
     const mockContext = { eventId: "test-event-id" };
 
     it("should send page_view as 'Page View'", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.track("page_view", {}, mockContext);
@@ -52,7 +52,7 @@ describe("createAmplitudePlugin", () => {
     });
 
     it("should send purchase as 'Purchase' with revenue instead of value", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.track(
@@ -80,7 +80,7 @@ describe("createAmplitudePlugin", () => {
     });
 
     it("should send refund as 'Refund' with revenue instead of value", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.track("refund", { currency: "USD", value: 5000 }, mockContext);
@@ -94,7 +94,7 @@ describe("createAmplitudePlugin", () => {
     });
 
     it("should send add_to_cart as 'Add To Cart' keeping value as-is", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
@@ -108,7 +108,7 @@ describe("createAmplitudePlugin", () => {
     });
 
     it("should send search as 'Search' with search_term passed through", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.track("search", { search_term: "running shoes" }, mockContext);
@@ -124,7 +124,7 @@ describe("createAmplitudePlugin", () => {
     const mockContext = { eventId: "test-event-id" };
 
     it("should flatten items to item_ids, item_names, and num_items", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.track(
@@ -151,7 +151,7 @@ describe("createAmplitudePlugin", () => {
     });
 
     it("should not include item fields when items is empty", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.track("view_item", { items: [] }, mockContext);
@@ -163,7 +163,7 @@ describe("createAmplitudePlugin", () => {
     });
 
     it("should pass through non-item properties like currency", () => {
-      window.amplitude = { init: vi.fn(), track: vi.fn() };
+      window.amplitude = { init: vi.fn(), track: vi.fn(), setUserId: vi.fn(), identify: vi.fn() };
       const plugin = createAmplitudePlugin();
 
       plugin.track("begin_checkout", { currency: "EUR", value: 120 }, mockContext);
@@ -184,6 +184,61 @@ describe("createAmplitudePlugin", () => {
       expect(() =>
         plugin.track("purchase", { currency: "KRW", value: 1000 }, mockContext),
       ).not.toThrow();
+    });
+  });
+
+  describe("setUser", () => {
+    it("should call amplitude.setUserId with user_id", () => {
+      window.amplitude = {
+        init: vi.fn(),
+        track: vi.fn(),
+        setUserId: vi.fn(),
+        identify: vi.fn(),
+      };
+      const plugin = createAmplitudePlugin();
+
+      plugin.setUser?.({ user_id: "user-123" });
+
+      expect(window.amplitude.setUserId).toHaveBeenCalledWith("user-123");
+    });
+
+    it("should call amplitude.identify with remaining properties", () => {
+      window.amplitude = {
+        init: vi.fn(),
+        track: vi.fn(),
+        setUserId: vi.fn(),
+        identify: vi.fn(),
+      };
+      const plugin = createAmplitudePlugin();
+
+      plugin.setUser?.({ user_id: "user-123", email: "test@example.com", plan: "pro" });
+
+      expect(window.amplitude.identify).toHaveBeenCalledWith({
+        email: "test@example.com",
+        plan: "pro",
+      });
+    });
+
+    it("should not throw in SSR", () => {
+      const plugin = createAmplitudePlugin();
+
+      expect(() => plugin.setUser?.({ user_id: "user-123" })).not.toThrow();
+    });
+  });
+
+  describe("resetUser", () => {
+    it("should call amplitude.setUserId(null)", () => {
+      window.amplitude = {
+        init: vi.fn(),
+        track: vi.fn(),
+        setUserId: vi.fn(),
+        identify: vi.fn(),
+      };
+      const plugin = createAmplitudePlugin();
+
+      plugin.resetUser?.();
+
+      expect(window.amplitude.setUserId).toHaveBeenCalledWith(null);
     });
   });
 });

@@ -7,6 +7,7 @@ export type {
   FunnelConfig,
   FunnelPlugin,
   Item,
+  UserProperties,
 } from "@funnel/core";
 export { Funnel } from "@funnel/core";
 export { createAmplitudePlugin } from "./plugins/amplitude/index.js";

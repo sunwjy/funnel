@@ -221,4 +221,49 @@ describe("createXPixelPlugin", () => {
       ).not.toThrow();
     });
   });
+
+  describe("setUser", () => {
+    it("should call twq config with pixelId and mapped user data", () => {
+      window.twq = vi.fn();
+      const plugin = createXPixelPlugin();
+      plugin.initialize({ pixelId: "o12345" });
+
+      plugin.setUser?.({ email: "test@example.com", phone_number: "+821012345678" });
+
+      expect(window.twq).toHaveBeenCalledWith("config", "o12345", {
+        em: "test@example.com",
+        ph_number: "+821012345678",
+      });
+    });
+
+    it("should map email to em and phone_number to ph_number", () => {
+      window.twq = vi.fn();
+      const plugin = createXPixelPlugin();
+      plugin.initialize({ pixelId: "o12345" });
+
+      plugin.setUser?.({ email: "user@test.com", phone_number: "+15551234567" });
+
+      const call = (window.twq as ReturnType<typeof vi.fn>).mock.calls.find(
+        (c) => c[0] === "config" && c[1] === "o12345" && c[2] !== undefined,
+      );
+      expect(call?.[2]).toEqual({ em: "user@test.com", ph_number: "+15551234567" });
+    });
+
+    it("should not call twq when pixelId is not set", () => {
+      window.twq = vi.fn();
+      const plugin = createXPixelPlugin();
+      // initialize not called, so pixelId remains undefined
+
+      plugin.setUser?.({ email: "test@example.com" });
+
+      expect(window.twq).not.toHaveBeenCalled();
+    });
+
+    it("should not throw in SSR", () => {
+      const plugin = createXPixelPlugin();
+      plugin.initialize({ pixelId: "o12345" });
+
+      expect(() => plugin.setUser?.({ email: "test@example.com" })).not.toThrow();
+    });
+  });
 });

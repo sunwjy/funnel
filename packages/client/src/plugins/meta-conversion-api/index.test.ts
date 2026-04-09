@@ -348,6 +348,59 @@ describe("createMetaConversionApiPlugin", () => {
     });
   });
 
+  describe("setUser / resetUser", () => {
+    it("should include user properties in track payload after setUser", async () => {
+      const plugin = createMetaConversionApiPlugin();
+      plugin.initialize({ endpoint: TEST_ENDPOINT });
+      plugin.setUser?.({ email: "user@example.com", user_id: "u-001" });
+
+      plugin.track("page_view", {}, TEST_CONTEXT);
+
+      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
+      const payload = JSON.parse(await (blob as Blob).text());
+
+      expect(payload.user_data.em).toBe("user@example.com");
+      expect(payload.user_data.external_id).toBe("u-001");
+    });
+
+    it("should clear user properties after resetUser", async () => {
+      const plugin = createMetaConversionApiPlugin();
+      plugin.initialize({ endpoint: TEST_ENDPOINT });
+      plugin.setUser?.({ email: "user@example.com" });
+      plugin.resetUser?.();
+
+      plugin.track("page_view", {}, TEST_CONTEXT);
+
+      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
+      const payload = JSON.parse(await (blob as Blob).text());
+
+      expect(payload.user_data.em).toBeUndefined();
+    });
+
+    it("should map email→em, phone_number→ph, first_name→fn, last_name→ln, user_id→external_id", async () => {
+      const plugin = createMetaConversionApiPlugin();
+      plugin.initialize({ endpoint: TEST_ENDPOINT });
+      plugin.setUser?.({
+        email: "a@b.com",
+        phone_number: "+821012345678",
+        first_name: "Jane",
+        last_name: "Doe",
+        user_id: "u-42",
+      });
+
+      plugin.track("page_view", {}, TEST_CONTEXT);
+
+      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
+      const payload = JSON.parse(await (blob as Blob).text());
+
+      expect(payload.user_data.em).toBe("a@b.com");
+      expect(payload.user_data.ph).toBe("+821012345678");
+      expect(payload.user_data.fn).toBe("Jane");
+      expect(payload.user_data.ln).toBe("Doe");
+      expect(payload.user_data.external_id).toBe("u-42");
+    });
+  });
+
   describe("track — SSR safety", () => {
     it("should not throw when window is undefined", () => {
       const originalWindow = globalThis.window;

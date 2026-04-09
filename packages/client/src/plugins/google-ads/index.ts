@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@funnel/core";
 
 declare global {
   interface Window {
@@ -74,6 +74,25 @@ export function createGoogleAdsPlugin(): FunnelPlugin {
       } else {
         // Non-conversion events — pass through
         window.gtag("event", eventName, params);
+      }
+    },
+
+    setUser(properties: UserProperties): void {
+      if (typeof window === "undefined" || !window.gtag) return;
+
+      const userData: Record<string, unknown> = {};
+      if (properties.email !== undefined) userData.email = properties.email;
+      if (properties.phone_number !== undefined) userData.phone_number = properties.phone_number;
+
+      if (properties.first_name !== undefined || properties.last_name !== undefined) {
+        const address: Record<string, unknown> = {};
+        if (properties.first_name !== undefined) address.first_name = properties.first_name;
+        if (properties.last_name !== undefined) address.last_name = properties.last_name;
+        userData.address = address;
+      }
+
+      if (Object.keys(userData).length > 0) {
+        window.gtag("set", "user_data", userData);
       }
     },
   };

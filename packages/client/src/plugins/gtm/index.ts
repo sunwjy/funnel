@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@funnel/core";
 
 declare global {
   interface Window {
@@ -78,6 +78,22 @@ export function createGTMPlugin(): FunnelPlugin {
         event: eventName,
         ...params,
       });
+    },
+
+    setUser(properties: UserProperties): void {
+      if (typeof window === "undefined") {
+        return;
+      }
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: "set_user_properties", user_properties: properties });
+    },
+
+    resetUser(): void {
+      if (typeof window === "undefined") {
+        return;
+      }
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: "reset_user_properties", user_properties: null });
     },
   };
 }

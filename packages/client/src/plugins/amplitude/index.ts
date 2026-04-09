@@ -8,13 +8,15 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@funnel/core";
 
 declare global {
   interface Window {
     amplitude: {
       init: (apiKey: string) => void;
       track: (eventName: string, properties?: Record<string, unknown>) => void;
+      setUserId: (userId: string | null) => void;
+      identify: (identifyObj: Record<string, unknown>) => void;
     };
   }
 }
@@ -87,6 +89,30 @@ export function createAmplitudePlugin(): FunnelPlugin {
       const amplitudeParams = transformParams(eventName, params);
 
       window.amplitude.track(amplitudeEvent, amplitudeParams);
+    },
+
+    setUser(properties: UserProperties): void {
+      if (typeof window === "undefined" || !window.amplitude) {
+        return;
+      }
+
+      const { user_id, ...rest } = properties;
+
+      if (user_id !== undefined) {
+        window.amplitude.setUserId(user_id);
+      }
+
+      if (Object.keys(rest).length > 0) {
+        window.amplitude.identify(rest);
+      }
+    },
+
+    resetUser(): void {
+      if (typeof window === "undefined" || !window.amplitude) {
+        return;
+      }
+
+      window.amplitude.setUserId(null);
     },
   };
 }

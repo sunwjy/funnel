@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@funnel/core";
 
 declare global {
   interface Window {
@@ -126,11 +126,14 @@ function transformParams<E extends EventName>(
  * ```
  */
 export function createXPixelPlugin(): FunnelPlugin {
+  let pixelId: string | undefined;
+
   return {
     name: "x-pixel",
 
     initialize(config: Record<string, unknown>): void {
-      const { pixelId } = config as XPixelPluginConfig;
+      const pluginConfig = config as XPixelPluginConfig;
+      pixelId = pluginConfig.pixelId;
       if (pixelId && typeof window !== "undefined" && window.twq) {
         window.twq("config", pixelId);
       }
@@ -148,6 +151,18 @@ export function createXPixelPlugin(): FunnelPlugin {
         window.twq("event", xEvent, xParams);
       } else {
         window.twq("event", eventName, xParams);
+      }
+    },
+
+    setUser(properties: UserProperties): void {
+      if (typeof window === "undefined" || !window.twq || !pixelId) return;
+
+      const xUserData: Record<string, unknown> = {};
+      if (properties.email !== undefined) xUserData.em = properties.email;
+      if (properties.phone_number !== undefined) xUserData.ph_number = properties.phone_number;
+
+      if (Object.keys(xUserData).length > 0) {
+        window.twq("config", pixelId, xUserData);
       }
     },
   };
