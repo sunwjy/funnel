@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMixpanelPlugin } from "./index";
 
 describe("createMixpanelPlugin", () => {
+  const mockContext = { eventId: "test-event-id" };
+
   beforeEach(() => {
     vi.restoreAllMocks();
     // @ts-expect-error — reset global
@@ -44,7 +46,7 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.mixpanel.track).toHaveBeenCalledWith("Page View", {});
     });
@@ -53,14 +55,18 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("purchase", {
-        currency: "KRW",
-        value: 29000,
-        items: [
-          { item_id: "SKU1", item_name: "Shoes", quantity: 2 },
-          { item_id: "SKU2", item_name: "Socks", quantity: 1 },
-        ],
-      });
+      plugin.track(
+        "purchase",
+        {
+          currency: "KRW",
+          value: 29000,
+          items: [
+            { item_id: "SKU1", item_name: "Shoes", quantity: 2 },
+            { item_id: "SKU2", item_name: "Socks", quantity: 1 },
+          ],
+        },
+        mockContext,
+      );
 
       expect(window.mixpanel.track).toHaveBeenCalledWith(
         "Purchase",
@@ -78,7 +84,7 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("add_to_cart", { currency: "USD", value: 50 });
+      plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
 
       expect(window.mixpanel.track).toHaveBeenCalledWith(
         "Add To Cart",
@@ -90,7 +96,7 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("search", { search_term: "shoes" });
+      plugin.track("search", { search_term: "shoes" }, mockContext);
 
       expect(window.mixpanel.track).toHaveBeenCalledWith("Search", { search_term: "shoes" });
     });
@@ -99,7 +105,7 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("begin_checkout", { currency: "USD", value: 100 });
+      plugin.track("begin_checkout", { currency: "USD", value: 100 }, mockContext);
 
       expect(window.mixpanel.track).toHaveBeenCalledWith(
         "Begin Checkout",
@@ -111,7 +117,7 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("sign_up", { method: "google" });
+      plugin.track("sign_up", { method: "google" }, mockContext);
 
       expect(window.mixpanel.track).toHaveBeenCalledWith("Sign Up", { method: "google" });
     });
@@ -120,7 +126,7 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("generate_lead", { value: 100, currency: "USD" });
+      plugin.track("generate_lead", { value: 100, currency: "USD" }, mockContext);
 
       expect(window.mixpanel.track).toHaveBeenCalledWith(
         "Generate Lead",
@@ -132,7 +138,7 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("view_item", { items: [{ item_id: "A", item_name: "Hat" }] });
+      plugin.track("view_item", { items: [{ item_id: "A", item_name: "Hat" }] }, mockContext);
 
       expect(window.mixpanel.track).toHaveBeenCalledWith(
         "View Item",
@@ -145,14 +151,14 @@ describe("createMixpanelPlugin", () => {
     it("should convert page_view to 'Page View'", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
       expect(window.mixpanel.track).toHaveBeenCalledWith("Page View", expect.anything());
     });
 
     it("should convert add_to_cart to 'Add To Cart'", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
-      plugin.track("add_to_cart", {});
+      plugin.track("add_to_cart", {}, mockContext);
       expect(window.mixpanel.track).toHaveBeenCalledWith("Add To Cart", expect.anything());
     });
   });
@@ -162,12 +168,16 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("view_item", {
-        items: [
-          { item_id: "A", item_name: "Item A" },
-          { item_id: "B", item_name: "Item B" },
-        ],
-      });
+      plugin.track(
+        "view_item",
+        {
+          items: [
+            { item_id: "A", item_name: "Item A" },
+            { item_id: "B", item_name: "Item B" },
+          ],
+        },
+        mockContext,
+      );
 
       expect(window.mixpanel.track).toHaveBeenCalledWith(
         "View Item",
@@ -183,7 +193,7 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("view_item", { items: [] });
+      plugin.track("view_item", { items: [] }, mockContext);
 
       const params = (window.mixpanel.track as ReturnType<typeof vi.fn>).mock.calls[0][1];
       expect(params.item_ids).toBeUndefined();
@@ -195,11 +205,15 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("add_to_cart", {
-        currency: "USD",
-        value: 20,
-        items: [{ item_id: "X", item_name: "Widget" }],
-      });
+      plugin.track(
+        "add_to_cart",
+        {
+          currency: "USD",
+          value: 20,
+          items: [{ item_id: "X", item_name: "Widget" }],
+        },
+        mockContext,
+      );
 
       const params = (window.mixpanel.track as ReturnType<typeof vi.fn>).mock.calls[0][1];
       expect(params.items).toBeUndefined();
@@ -211,7 +225,7 @@ describe("createMixpanelPlugin", () => {
       window.mixpanel = { init: vi.fn(), track: vi.fn() };
       const plugin = createMixpanelPlugin();
 
-      plugin.track("purchase", { currency: "EUR", value: 99.99 });
+      plugin.track("purchase", { currency: "EUR", value: 99.99 }, mockContext);
 
       expect(window.mixpanel.track).toHaveBeenCalledWith(
         "Purchase",
@@ -224,7 +238,9 @@ describe("createMixpanelPlugin", () => {
     it("should not throw when mixpanel is not available", () => {
       const plugin = createMixpanelPlugin();
 
-      expect(() => plugin.track("purchase", { currency: "KRW", value: 1000 })).not.toThrow();
+      expect(() =>
+        plugin.track("purchase", { currency: "KRW", value: 1000 }, mockContext),
+      ).not.toThrow();
     });
   });
 });

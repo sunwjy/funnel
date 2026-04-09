@@ -40,6 +40,8 @@ describe("createGoogleAdsPlugin", () => {
   });
 
   describe("track — conversion label", () => {
+    const mockContext = { eventId: "test-event-id" };
+
     it("should send conversion event with send_to when label is configured", () => {
       window.gtag = vi.fn();
       const plugin = createGoogleAdsPlugin();
@@ -49,7 +51,7 @@ describe("createGoogleAdsPlugin", () => {
         conversionLabels: { purchase: "abc123" },
       });
 
-      plugin.track("purchase", { currency: "USD", value: 100, transaction_id: "T-1" });
+      plugin.track("purchase", { currency: "USD", value: 100, transaction_id: "T-1" }, mockContext);
 
       expect(window.gtag).toHaveBeenCalledWith(
         "event",
@@ -72,7 +74,7 @@ describe("createGoogleAdsPlugin", () => {
         conversionLabels: { generate_lead: "lead_label" },
       });
 
-      plugin.track("generate_lead", { currency: "EUR", value: 50 });
+      plugin.track("generate_lead", { currency: "EUR", value: 50 }, mockContext);
 
       expect(window.gtag).toHaveBeenCalledWith(
         "event",
@@ -94,7 +96,7 @@ describe("createGoogleAdsPlugin", () => {
         conversionLabels: { sign_up: "signup_label" },
       });
 
-      plugin.track("sign_up", { method: "email" });
+      plugin.track("sign_up", { method: "email" }, mockContext);
 
       expect(window.gtag).toHaveBeenCalledWith("event", "conversion", expect.any(Object));
     });
@@ -107,7 +109,7 @@ describe("createGoogleAdsPlugin", () => {
         conversionLabels: { purchase: "abc123" },
       });
 
-      plugin.track("purchase", { currency: "USD", value: 100, transaction_id: "T-1" });
+      plugin.track("purchase", { currency: "USD", value: 100, transaction_id: "T-1" }, mockContext);
 
       // Falls through to default conversion event path, not "conversion" event
       expect(window.gtag).toHaveBeenCalledWith("event", "purchase", expect.any(Object));
@@ -115,13 +117,19 @@ describe("createGoogleAdsPlugin", () => {
   });
 
   describe("track — default conversion events without labels", () => {
+    const mockContext = { eventId: "test-event-id" };
+
     it("should send purchase via gtag event when no label configured", () => {
       window.gtag = vi.fn();
       const plugin = createGoogleAdsPlugin();
 
       plugin.initialize({ conversionId: "AW-123" });
 
-      plugin.track("purchase", { currency: "KRW", value: 29000, transaction_id: "T-2" });
+      plugin.track(
+        "purchase",
+        { currency: "KRW", value: 29000, transaction_id: "T-2" },
+        mockContext,
+      );
 
       expect(window.gtag).toHaveBeenCalledWith(
         "event",
@@ -136,7 +144,7 @@ describe("createGoogleAdsPlugin", () => {
 
       plugin.initialize({});
 
-      plugin.track("add_to_cart", { currency: "USD", value: 50 });
+      plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
 
       expect(window.gtag).toHaveBeenCalledWith("event", "add_to_cart", expect.any(Object));
     });
@@ -147,20 +155,22 @@ describe("createGoogleAdsPlugin", () => {
 
       plugin.initialize({});
 
-      plugin.track("begin_checkout", { currency: "USD", value: 100 });
+      plugin.track("begin_checkout", { currency: "USD", value: 100 }, mockContext);
 
       expect(window.gtag).toHaveBeenCalledWith("event", "begin_checkout", expect.any(Object));
     });
   });
 
   describe("track — non-conversion events", () => {
+    const mockContext = { eventId: "test-event-id" };
+
     it("should pass through page_view via gtag event", () => {
       window.gtag = vi.fn();
       const plugin = createGoogleAdsPlugin();
 
       plugin.initialize({});
 
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.gtag).toHaveBeenCalledWith("event", "page_view", expect.any(Object));
     });
@@ -171,18 +181,24 @@ describe("createGoogleAdsPlugin", () => {
 
       plugin.initialize({});
 
-      plugin.track("search", { search_term: "shoes" });
+      plugin.track("search", { search_term: "shoes" }, mockContext);
 
       expect(window.gtag).toHaveBeenCalledWith("event", "search", expect.any(Object));
     });
   });
 
   describe("track — SSR safety", () => {
+    const mockContext = { eventId: "test-event-id" };
+
     it("should not throw when gtag is not available", () => {
       const plugin = createGoogleAdsPlugin();
 
       expect(() =>
-        plugin.track("purchase", { currency: "KRW", value: 1000, transaction_id: "T-3" }),
+        plugin.track(
+          "purchase",
+          { currency: "KRW", value: 1000, transaction_id: "T-3" },
+          mockContext,
+        ),
       ).not.toThrow();
     });
   });

@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item } from "@funnel/core";
+import type { EventContext, EventMap, EventName, FunnelPlugin, Item } from "@funnel/core";
 
 declare global {
   interface Window {
@@ -176,7 +176,7 @@ export function createMetaPixelPlugin(): FunnelPlugin {
       }
     },
 
-    track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+    track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
       if (typeof window === "undefined" || !window.fbq) {
         return;
       }
@@ -186,13 +186,13 @@ export function createMetaPixelPlugin(): FunnelPlugin {
 
       if (metaEventName) {
         if (metaEventName === "PageView") {
-          window.fbq("track", "PageView");
+          window.fbq("track", "PageView", {}, { eventID: context.eventId });
         } else {
-          window.fbq("track", metaEventName, metaParams);
+          window.fbq("track", metaEventName, metaParams, { eventID: context.eventId });
         }
       } else {
         // No standard Meta event mapping — send as custom event
-        window.fbq("trackCustom", eventName, metaParams);
+        window.fbq("trackCustom", eventName, metaParams, { eventID: context.eventId });
       }
     },
   };

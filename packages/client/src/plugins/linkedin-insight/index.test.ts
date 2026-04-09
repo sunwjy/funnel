@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createLinkedInInsightPlugin } from "./index";
 
 describe("createLinkedInInsightPlugin", () => {
+  const mockContext = { eventId: "test-event-id" };
+
   beforeEach(() => {
     vi.restoreAllMocks();
     // @ts-expect-error — reset global
@@ -58,7 +60,7 @@ describe("createLinkedInInsightPlugin", () => {
       const plugin = createLinkedInInsightPlugin();
       plugin.initialize({ conversionIds: { page_view: 999 } });
 
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.lintrk).not.toHaveBeenCalled();
     });
@@ -68,7 +70,7 @@ describe("createLinkedInInsightPlugin", () => {
       const plugin = createLinkedInInsightPlugin();
       plugin.initialize({ conversionIds: { purchase: 123 } });
 
-      plugin.track("purchase", { currency: "USD", value: 99 });
+      plugin.track("purchase", { currency: "USD", value: 99 }, mockContext);
 
       expect(window.lintrk).toHaveBeenCalledWith("track", { conversion_id: 123 });
     });
@@ -78,7 +80,7 @@ describe("createLinkedInInsightPlugin", () => {
       const plugin = createLinkedInInsightPlugin();
       plugin.initialize({ conversionIds: { purchase: 123 } });
 
-      plugin.track("add_to_cart", { currency: "USD", value: 50 });
+      plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
 
       expect(window.lintrk).not.toHaveBeenCalled();
     });
@@ -94,9 +96,9 @@ describe("createLinkedInInsightPlugin", () => {
         },
       });
 
-      plugin.track("sign_up", {});
-      plugin.track("generate_lead", {});
-      plugin.track("purchase", { currency: "USD", value: 10 });
+      plugin.track("sign_up", {}, mockContext);
+      plugin.track("generate_lead", {}, mockContext);
+      plugin.track("purchase", { currency: "USD", value: 10 }, mockContext);
 
       expect(window.lintrk).toHaveBeenNthCalledWith(1, "track", { conversion_id: 200 });
       expect(window.lintrk).toHaveBeenNthCalledWith(2, "track", { conversion_id: 300 });
@@ -107,7 +109,9 @@ describe("createLinkedInInsightPlugin", () => {
       const plugin = createLinkedInInsightPlugin();
       plugin.initialize({ conversionIds: { purchase: 123 } });
 
-      expect(() => plugin.track("purchase", { currency: "USD", value: 50 })).not.toThrow();
+      expect(() =>
+        plugin.track("purchase", { currency: "USD", value: 50 }, mockContext),
+      ).not.toThrow();
     });
   });
 });

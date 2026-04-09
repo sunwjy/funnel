@@ -51,7 +51,7 @@ describe("Funnel", () => {
   });
 
   describe("track", () => {
-    it("should dispatch event to all plugins", () => {
+    it("should dispatch event to all plugins with context containing eventId", () => {
       const plugin1 = createMockPlugin("p1");
       const plugin2 = createMockPlugin("p2");
       const funnel = new Funnel({ plugins: [plugin1, plugin2] });
@@ -60,8 +60,42 @@ describe("Funnel", () => {
       const params = { search_term: "shoes" };
       funnel.track("search", params);
 
-      expect(plugin1.track).toHaveBeenCalledWith("search", params);
-      expect(plugin2.track).toHaveBeenCalledWith("search", params);
+      expect(plugin1.track).toHaveBeenCalledWith(
+        "search",
+        params,
+        expect.objectContaining({ eventId: expect.any(String) }),
+      );
+      expect(plugin2.track).toHaveBeenCalledWith(
+        "search",
+        params,
+        expect.objectContaining({ eventId: expect.any(String) }),
+      );
+    });
+
+    it("should pass the same eventId to all plugins for a single track call", () => {
+      const plugin1 = createMockPlugin("p1");
+      const plugin2 = createMockPlugin("p2");
+      const funnel = new Funnel({ plugins: [plugin1, plugin2] });
+      funnel.initialize();
+
+      funnel.track("page_view", {});
+
+      const context1 = (plugin1.track as ReturnType<typeof vi.fn>).mock.calls[0][2];
+      const context2 = (plugin2.track as ReturnType<typeof vi.fn>).mock.calls[0][2];
+      expect(context1.eventId).toBe(context2.eventId);
+    });
+
+    it("should generate different eventIds for different track calls", () => {
+      const plugin = createMockPlugin("p1");
+      const funnel = new Funnel({ plugins: [plugin] });
+      funnel.initialize();
+
+      funnel.track("page_view", {});
+      funnel.track("page_view", {});
+
+      const id1 = (plugin.track as ReturnType<typeof vi.fn>).mock.calls[0][2].eventId;
+      const id2 = (plugin.track as ReturnType<typeof vi.fn>).mock.calls[1][2].eventId;
+      expect(id1).not.toBe(id2);
     });
 
     it("should warn and skip when not initialized", () => {
@@ -88,7 +122,11 @@ describe("Funnel", () => {
 
       funnel.track("page_view", {});
 
-      expect(healthy.track).toHaveBeenCalledWith("page_view", {});
+      expect(healthy.track).toHaveBeenCalledWith(
+        "page_view",
+        {},
+        expect.objectContaining({ eventId: expect.any(String) }),
+      );
     });
 
     it("should log error when a plugin throws", () => {

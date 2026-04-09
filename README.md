@@ -8,8 +8,8 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 
 | Package | Description |
 |---------|-------------|
-| `@funnel/core` | Event types, plugin interface, Funnel class |
-| `@funnel/client` | All client-side plugins (GA4, GTM, Meta Pixel, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude) |
+| `@funnel/core` | Event types, plugin interface, Funnel class, `EventContext` (auto-generated `eventId`) |
+| `@funnel/client` | All client-side plugins (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude) |
 
 ### Client Plugins
 
@@ -25,6 +25,7 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 | `@funnel/client/x-pixel` | X/Twitter Pixel (`twq`) |
 | `@funnel/client/linkedin-insight` | LinkedIn Insight Tag (`lintrk`) |
 | `@funnel/client/mixpanel` | Mixpanel (`mixpanel`) |
+| `@funnel/client/meta-conversion-api` | Meta Conversion API (server-side relay via `sendBeacon`/`fetch`) |
 | `@funnel/client/amplitude` | Amplitude (`amplitude`) |
 
 ## Usage
@@ -58,6 +59,14 @@ funnel.track("purchase", {
 ```
 
 A single `track` call sends the event to both GA4 and Meta Pixel.
+
+## Event Deduplication (`eventId`)
+
+Every `funnel.track()` call automatically generates a unique `eventId` (UUID) and passes it to all plugins via `EventContext`. This enables deduplication between client-side pixels and server-side APIs (e.g., Meta Pixel + Conversion API).
+
+- The Meta Pixel plugin passes `eventId` as the `eventID` parameter to `fbq()` calls
+- The Meta Conversion API plugin includes `event_id` in the server payload
+- The server matches events using the shared `eventId` to avoid double-counting
 
 ## Supported Events
 
@@ -93,7 +102,13 @@ The Meta Pixel plugin maps events to standard Meta events:
 | `sign_up` | `CompleteRegistration` |
 | Others | `trackCustom` (original event name preserved) |
 
-The `items` array is automatically transformed into Meta Pixel's `content_ids`, `contents`, and `num_items`.
+The `items` array is automatically transformed into Meta Pixel's `content_ids`, `contents`, and `num_items`. The `eventId` is passed as `eventID` for Conversion API deduplication.
+
+### Meta Conversion API
+
+Collects client-side event data + user data (`_fbp`, `_fbc` cookies, `userAgent`, page URL) and POSTs to a configured server endpoint via `sendBeacon`/`fetch`. The server then forwards to Meta's Conversion API. Each payload includes `event_id` from `EventContext` for deduplication with the Meta Pixel.
+
+Config: `{ endpoint: "https://your-server.com/api/meta-capi" }`
 
 ### Google Ads
 
@@ -173,7 +188,7 @@ All events are sent via `amplitude.track()` with Title Case event names. For `pu
 Implement the `FunnelPlugin` interface to connect any analytics tool.
 
 ```ts
-import type { EventMap, EventName, FunnelPlugin } from "@funnel/client";
+import type { EventContext, EventMap, EventName, FunnelPlugin } from "@funnel/client";
 
 export function createMyPlugin(): FunnelPlugin {
   return {
@@ -183,7 +198,8 @@ export function createMyPlugin(): FunnelPlugin {
       // Setup logic
     },
 
-    track<E extends EventName>(eventName: E, params: EventMap[E]) {
+    track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext) {
+      // context.eventId — unique ID for deduplication
       // Transform GA4 events to the target tool's format and send
     },
   };

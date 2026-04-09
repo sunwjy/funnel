@@ -1,5 +1,27 @@
 import type { FunnelPlugin } from "./plugin";
-import type { EventMap, EventName } from "./types";
+import type { EventContext, EventMap, EventName } from "./types";
+
+/**
+ * Generates a unique event ID for deduplication across client and server.
+ *
+ * @returns A UUID string.
+ *
+ * @internal
+ */
+function generateEventId(): string {
+  const g = globalThis as unknown as {
+    crypto?: { randomUUID?: () => string };
+  };
+  if (g.crypto?.randomUUID) {
+    return g.crypto.randomUUID();
+  }
+  // Fallback for environments without crypto.randomUUID
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 /**
  * Configuration object passed to the {@link Funnel} constructor.
@@ -84,9 +106,12 @@ export class Funnel {
       console.warn("[funnel] Not initialized. Call initialize() first.");
       return;
     }
+
+    const context: EventContext = { eventId: generateEventId() };
+
     for (const plugin of this.plugins) {
       try {
-        plugin.track(eventName, params);
+        plugin.track(eventName, params, context);
         if (this.debug) {
           console.log(`[funnel] "${plugin.name}" tracked "${eventName}"`, params);
         }

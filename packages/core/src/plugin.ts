@@ -1,4 +1,4 @@
-import type { EventMap, EventName } from "./types";
+import type { EventContext, EventMap, EventName } from "./types";
 
 /**
  * Interface that all Funnel plugins must implement.
@@ -12,7 +12,7 @@ import type { EventMap, EventName } from "./types";
  * const myPlugin: FunnelPlugin = {
  *   name: "my-plugin",
  *   initialize(config) { ... },
- *   track(eventName, params) { ... },
+ *   track(eventName, params, context) { ... },
  * };
  * ```
  */
@@ -33,6 +33,7 @@ export interface FunnelPlugin {
    * @typeParam E - The event name type.
    * @param eventName - Name of the event to track.
    * @param params - Parameters corresponding to the event.
+   * @param context - Event context containing metadata such as `eventId`.
    */
-  track<E extends EventName>(eventName: E, params: EventMap[E]): void;
+  track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void;
 }

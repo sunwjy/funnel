@@ -40,11 +40,13 @@ describe("createAmplitudePlugin", () => {
   });
 
   describe("track — event name mapping", () => {
+    const mockContext = { eventId: "test-event-id" };
+
     it("should send page_view as 'Page View'", () => {
       window.amplitude = { init: vi.fn(), track: vi.fn() };
       const plugin = createAmplitudePlugin();
 
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.amplitude.track).toHaveBeenCalledWith("Page View", expect.any(Object));
     });
@@ -53,11 +55,15 @@ describe("createAmplitudePlugin", () => {
       window.amplitude = { init: vi.fn(), track: vi.fn() };
       const plugin = createAmplitudePlugin();
 
-      plugin.track("purchase", {
-        currency: "KRW",
-        value: 29000,
-        items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2 }],
-      });
+      plugin.track(
+        "purchase",
+        {
+          currency: "KRW",
+          value: 29000,
+          items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2 }],
+        },
+        mockContext,
+      );
 
       expect(window.amplitude.track).toHaveBeenCalledWith(
         "Purchase",
@@ -77,7 +83,7 @@ describe("createAmplitudePlugin", () => {
       window.amplitude = { init: vi.fn(), track: vi.fn() };
       const plugin = createAmplitudePlugin();
 
-      plugin.track("refund", { currency: "USD", value: 5000 });
+      plugin.track("refund", { currency: "USD", value: 5000 }, mockContext);
 
       expect(window.amplitude.track).toHaveBeenCalledWith(
         "Refund",
@@ -91,7 +97,7 @@ describe("createAmplitudePlugin", () => {
       window.amplitude = { init: vi.fn(), track: vi.fn() };
       const plugin = createAmplitudePlugin();
 
-      plugin.track("add_to_cart", { currency: "USD", value: 50 });
+      plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
 
       expect(window.amplitude.track).toHaveBeenCalledWith(
         "Add To Cart",
@@ -105,7 +111,7 @@ describe("createAmplitudePlugin", () => {
       window.amplitude = { init: vi.fn(), track: vi.fn() };
       const plugin = createAmplitudePlugin();
 
-      plugin.track("search", { search_term: "running shoes" });
+      plugin.track("search", { search_term: "running shoes" }, mockContext);
 
       expect(window.amplitude.track).toHaveBeenCalledWith(
         "Search",
@@ -115,16 +121,22 @@ describe("createAmplitudePlugin", () => {
   });
 
   describe("track — item flattening", () => {
+    const mockContext = { eventId: "test-event-id" };
+
     it("should flatten items to item_ids, item_names, and num_items", () => {
       window.amplitude = { init: vi.fn(), track: vi.fn() };
       const plugin = createAmplitudePlugin();
 
-      plugin.track("view_item", {
-        items: [
-          { item_id: "A", item_name: "Item A", quantity: 3 },
-          { item_id: "B", item_name: "Item B" },
-        ],
-      });
+      plugin.track(
+        "view_item",
+        {
+          items: [
+            { item_id: "A", item_name: "Item A", quantity: 3 },
+            { item_id: "B", item_name: "Item B" },
+          ],
+        },
+        mockContext,
+      );
 
       expect(window.amplitude.track).toHaveBeenCalledWith(
         "View Item",
@@ -142,7 +154,7 @@ describe("createAmplitudePlugin", () => {
       window.amplitude = { init: vi.fn(), track: vi.fn() };
       const plugin = createAmplitudePlugin();
 
-      plugin.track("view_item", { items: [] });
+      plugin.track("view_item", { items: [] }, mockContext);
 
       const params = (window.amplitude.track as ReturnType<typeof vi.fn>).mock.calls[0][1];
       expect(params.item_ids).toBeUndefined();
@@ -154,7 +166,7 @@ describe("createAmplitudePlugin", () => {
       window.amplitude = { init: vi.fn(), track: vi.fn() };
       const plugin = createAmplitudePlugin();
 
-      plugin.track("begin_checkout", { currency: "EUR", value: 120 });
+      plugin.track("begin_checkout", { currency: "EUR", value: 120 }, mockContext);
 
       expect(window.amplitude.track).toHaveBeenCalledWith(
         "Begin Checkout",
@@ -164,10 +176,14 @@ describe("createAmplitudePlugin", () => {
   });
 
   describe("track — SSR safety", () => {
+    const mockContext = { eventId: "test-event-id" };
+
     it("should not throw when amplitude is not available", () => {
       const plugin = createAmplitudePlugin();
 
-      expect(() => plugin.track("purchase", { currency: "KRW", value: 1000 })).not.toThrow();
+      expect(() =>
+        plugin.track("purchase", { currency: "KRW", value: 1000 }, mockContext),
+      ).not.toThrow();
     });
   });
 });

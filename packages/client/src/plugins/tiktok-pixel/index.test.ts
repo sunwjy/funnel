@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createTikTokPixelPlugin } from "./index";
 
 describe("createTikTokPixelPlugin", () => {
+  const mockContext = { eventId: "test-event-id" };
+
   beforeEach(() => {
     vi.restoreAllMocks();
     // @ts-expect-error — reset global
@@ -44,7 +46,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.ttq.page).toHaveBeenCalledOnce();
       expect(window.ttq.track).not.toHaveBeenCalled();
@@ -54,11 +56,15 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("purchase", {
-        currency: "KRW",
-        value: 29000,
-        items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 14500 }],
-      });
+      plugin.track(
+        "purchase",
+        {
+          currency: "KRW",
+          value: 29000,
+          items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 14500 }],
+        },
+        mockContext,
+      );
 
       expect(window.ttq.track).toHaveBeenCalledWith(
         "CompletePayment",
@@ -82,7 +88,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("add_to_cart", { currency: "USD", value: 50 });
+      plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
 
       expect(window.ttq.track).toHaveBeenCalledWith(
         "AddToCart",
@@ -94,7 +100,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("begin_checkout", { currency: "USD", value: 100 });
+      plugin.track("begin_checkout", { currency: "USD", value: 100 }, mockContext);
 
       expect(window.ttq.track).toHaveBeenCalledWith("InitiateCheckout", expect.any(Object));
     });
@@ -103,7 +109,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("add_payment_info", { currency: "USD", value: 100 });
+      plugin.track("add_payment_info", { currency: "USD", value: 100 }, mockContext);
 
       expect(window.ttq.track).toHaveBeenCalledWith("AddPaymentInfo", expect.any(Object));
     });
@@ -112,7 +118,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("search", { search_term: "sneakers" });
+      plugin.track("search", { search_term: "sneakers" }, mockContext);
 
       expect(window.ttq.track).toHaveBeenCalledWith(
         "Search",
@@ -124,7 +130,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("sign_up", {});
+      plugin.track("sign_up", {}, mockContext);
 
       expect(window.ttq.track).toHaveBeenCalledWith("CompleteRegistration", expect.any(Object));
     });
@@ -133,7 +139,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("generate_lead", {});
+      plugin.track("generate_lead", {}, mockContext);
 
       expect(window.ttq.track).toHaveBeenCalledWith("SubmitForm", expect.any(Object));
     });
@@ -142,7 +148,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("select_item", {});
+      plugin.track("select_item", {}, mockContext);
 
       expect(window.ttq.track).toHaveBeenCalledWith("ClickButton", expect.any(Object));
     });
@@ -151,7 +157,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("refund", { currency: "KRW", value: 5000 });
+      plugin.track("refund", { currency: "KRW", value: 5000 }, mockContext);
 
       expect(window.ttq.track).toHaveBeenCalledWith(
         "refund",
@@ -165,12 +171,16 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("view_item", {
-        items: [
-          { item_id: "A", item_name: "Item A", quantity: 3, price: 10 },
-          { item_id: "B", item_name: "Item B" },
-        ],
-      });
+      plugin.track(
+        "view_item",
+        {
+          items: [
+            { item_id: "A", item_name: "Item A", quantity: 3, price: 10 },
+            { item_id: "B", item_name: "Item B" },
+          ],
+        },
+        mockContext,
+      );
 
       expect(window.ttq.track).toHaveBeenCalledWith(
         "ViewContent",
@@ -199,7 +209,7 @@ describe("createTikTokPixelPlugin", () => {
       window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
       const plugin = createTikTokPixelPlugin();
 
-      plugin.track("view_item", { items: [] });
+      plugin.track("view_item", { items: [] }, mockContext);
 
       const params = (window.ttq.track as ReturnType<typeof vi.fn>).mock.calls[0][1];
       expect(params.contents).toBeUndefined();
@@ -210,7 +220,9 @@ describe("createTikTokPixelPlugin", () => {
     it("should not throw when ttq is not available", () => {
       const plugin = createTikTokPixelPlugin();
 
-      expect(() => plugin.track("purchase", { currency: "KRW", value: 1000 })).not.toThrow();
+      expect(() =>
+        plugin.track("purchase", { currency: "KRW", value: 1000 }, mockContext),
+      ).not.toThrow();
     });
   });
 });

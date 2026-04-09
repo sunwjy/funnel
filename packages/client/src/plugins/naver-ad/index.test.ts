@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createNaverAdPlugin } from "./index";
 
 describe("createNaverAdPlugin", () => {
+  const mockContext = { eventId: "test-event-id" };
+
   beforeEach(() => {
     vi.restoreAllMocks();
     // @ts-expect-error — reset globals
@@ -49,7 +51,7 @@ describe("createNaverAdPlugin", () => {
       window.wcs_do = vi.fn();
       const plugin = createNaverAdPlugin();
 
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.wcs.cnv).toBeUndefined();
       expect(window.wcs_do).toHaveBeenCalledTimes(1);
@@ -60,7 +62,7 @@ describe("createNaverAdPlugin", () => {
       window.wcs_do = vi.fn();
       const plugin = createNaverAdPlugin();
 
-      plugin.track("purchase", { currency: "KRW", value: 29000, items: [] });
+      plugin.track("purchase", { currency: "KRW", value: 29000, items: [] }, mockContext);
 
       expect(window.wcs.cnv).toBe("1,29000");
       expect(window.wcs_do).toHaveBeenCalledTimes(1);
@@ -71,7 +73,7 @@ describe("createNaverAdPlugin", () => {
       window.wcs_do = vi.fn();
       const plugin = createNaverAdPlugin();
 
-      plugin.track("sign_up", {});
+      plugin.track("sign_up", {}, mockContext);
 
       expect(window.wcs.cnv).toBe("2,0");
       expect(window.wcs_do).toHaveBeenCalledTimes(1);
@@ -82,7 +84,7 @@ describe("createNaverAdPlugin", () => {
       window.wcs_do = vi.fn();
       const plugin = createNaverAdPlugin();
 
-      plugin.track("add_to_cart", { currency: "KRW", value: 5000 });
+      plugin.track("add_to_cart", { currency: "KRW", value: 5000 }, mockContext);
 
       expect(window.wcs.cnv).toBe("3,5000");
       expect(window.wcs_do).toHaveBeenCalledTimes(1);
@@ -93,7 +95,7 @@ describe("createNaverAdPlugin", () => {
       window.wcs_do = vi.fn();
       const plugin = createNaverAdPlugin();
 
-      plugin.track("generate_lead", { value: 1000 });
+      plugin.track("generate_lead", { value: 1000 }, mockContext);
 
       expect(window.wcs.cnv).toBe("4,1000");
       expect(window.wcs_do).toHaveBeenCalledTimes(1);
@@ -104,7 +106,7 @@ describe("createNaverAdPlugin", () => {
       window.wcs_do = vi.fn();
       const plugin = createNaverAdPlugin();
 
-      plugin.track("begin_checkout", { currency: "KRW", value: 15000 });
+      plugin.track("begin_checkout", { currency: "KRW", value: 15000 }, mockContext);
 
       expect(window.wcs.cnv).toBe("5,15000");
       expect(window.wcs_do).toHaveBeenCalledTimes(1);
@@ -115,7 +117,7 @@ describe("createNaverAdPlugin", () => {
       window.wcs_do = vi.fn();
       const plugin = createNaverAdPlugin();
 
-      plugin.track("add_payment_info", { currency: "KRW", value: 15000 });
+      plugin.track("add_payment_info", { currency: "KRW", value: 15000 }, mockContext);
 
       expect(window.wcs.cnv).toBe("5,15000");
       expect(window.wcs_do).toHaveBeenCalledTimes(1);
@@ -126,7 +128,7 @@ describe("createNaverAdPlugin", () => {
       window.wcs_do = vi.fn();
       const plugin = createNaverAdPlugin();
 
-      plugin.track("sign_up", {});
+      plugin.track("sign_up", {}, mockContext);
 
       expect(window.wcs.cnv).toBe("2,0");
     });
@@ -136,7 +138,7 @@ describe("createNaverAdPlugin", () => {
       window.wcs_do = vi.fn();
       const plugin = createNaverAdPlugin();
 
-      plugin.track("refund", { currency: "KRW", value: 5000 });
+      plugin.track("refund", { currency: "KRW", value: 5000 }, mockContext);
 
       expect(window.wcs_do).not.toHaveBeenCalled();
     });
@@ -147,7 +149,7 @@ describe("createNaverAdPlugin", () => {
       const plugin = createNaverAdPlugin();
 
       expect(() =>
-        plugin.track("purchase", { currency: "KRW", value: 1000, items: [] }),
+        plugin.track("purchase", { currency: "KRW", value: 1000, items: [] }, mockContext),
       ).not.toThrow();
     });
 
@@ -156,7 +158,7 @@ describe("createNaverAdPlugin", () => {
       const plugin = createNaverAdPlugin();
 
       expect(() =>
-        plugin.track("purchase", { currency: "KRW", value: 1000, items: [] }),
+        plugin.track("purchase", { currency: "KRW", value: 1000, items: [] }, mockContext),
       ).not.toThrow();
     });
   });

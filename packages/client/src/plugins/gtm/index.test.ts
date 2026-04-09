@@ -49,11 +49,13 @@ describe("createGTMPlugin", () => {
   });
 
   describe("track", () => {
+    const mockContext = { eventId: "test-event-id" };
+
     it("should push event name and params to dataLayer", () => {
       const plugin = createGTMPlugin();
       plugin.initialize({});
 
-      plugin.track("purchase", { currency: "KRW", value: 29000 });
+      plugin.track("purchase", { currency: "KRW", value: 29000 }, mockContext);
 
       expect(window.dataLayer).toEqual(
         expect.arrayContaining([
@@ -69,7 +71,7 @@ describe("createGTMPlugin", () => {
     it("should create dataLayer if not present when tracking", () => {
       const plugin = createGTMPlugin();
 
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.dataLayer).toEqual(
         expect.arrayContaining([expect.objectContaining({ event: "page_view" })]),

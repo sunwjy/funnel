@@ -38,6 +38,16 @@
         "default": "./dist/plugins/gtm.cjs"
       }
     },
+    "./meta-conversion-api": {
+      "import": {
+        "types": "./dist/plugins/meta-conversion-api.d.mts",
+        "default": "./dist/plugins/meta-conversion-api.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/meta-conversion-api.d.cts",
+        "default": "./dist/plugins/meta-conversion-api.cjs"
+      }
+    },
     "./meta-pixel": {
       "import": {
         "types": "./dist/plugins/meta-pixel.d.mts",

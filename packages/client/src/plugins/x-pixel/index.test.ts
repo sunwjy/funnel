@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createXPixelPlugin } from "./index";
 
 describe("createXPixelPlugin", () => {
+  const mockContext = { eventId: "test-event-id" };
+
   beforeEach(() => {
     vi.restoreAllMocks();
     // @ts-expect-error — reset global
@@ -44,7 +46,7 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.twq).toHaveBeenCalledWith("event", "PageVisit", {});
     });
@@ -53,12 +55,16 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("purchase", {
-        currency: "USD",
-        value: 99.99,
-        transaction_id: "TXN-001",
-        items: [{ item_id: "SKU1", item_name: "Shirt", quantity: 1, price: 99.99 }],
-      });
+      plugin.track(
+        "purchase",
+        {
+          currency: "USD",
+          value: 99.99,
+          transaction_id: "TXN-001",
+          items: [{ item_id: "SKU1", item_name: "Shirt", quantity: 1, price: 99.99 }],
+        },
+        mockContext,
+      );
 
       expect(window.twq).toHaveBeenCalledWith(
         "event",
@@ -78,11 +84,15 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("add_to_cart", {
-        currency: "USD",
-        value: 50,
-        items: [{ item_id: "SKU2", item_name: "Hat" }],
-      });
+      plugin.track(
+        "add_to_cart",
+        {
+          currency: "USD",
+          value: 50,
+          items: [{ item_id: "SKU2", item_name: "Hat" }],
+        },
+        mockContext,
+      );
 
       expect(window.twq).toHaveBeenCalledWith(
         "event",
@@ -101,7 +111,7 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("begin_checkout", { currency: "USD", value: 120 });
+      plugin.track("begin_checkout", { currency: "USD", value: 120 }, mockContext);
 
       expect(window.twq).toHaveBeenCalledWith("event", "InitiateCheckout", expect.any(Object));
     });
@@ -110,7 +120,7 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("search", { search_term: "running shoes" });
+      plugin.track("search", { search_term: "running shoes" }, mockContext);
 
       expect(window.twq).toHaveBeenCalledWith(
         "event",
@@ -123,7 +133,7 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("sign_up", {});
+      plugin.track("sign_up", {}, mockContext);
 
       expect(window.twq).toHaveBeenCalledWith("event", "CompleteRegistration", expect.any(Object));
     });
@@ -132,7 +142,7 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("generate_lead", { currency: "USD", value: 25 });
+      plugin.track("generate_lead", { currency: "USD", value: 25 }, mockContext);
 
       expect(window.twq).toHaveBeenCalledWith(
         "event",
@@ -145,7 +155,7 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("add_payment_info", { currency: "USD", value: 100 });
+      plugin.track("add_payment_info", { currency: "USD", value: 100 }, mockContext);
 
       expect(window.twq).toHaveBeenCalledWith("event", "AddPaymentInfo", expect.any(Object));
     });
@@ -154,7 +164,7 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("refund", { currency: "USD", value: 20 });
+      plugin.track("refund", { currency: "USD", value: 20 }, mockContext);
 
       expect(window.twq).toHaveBeenCalledWith(
         "event",
@@ -169,12 +179,16 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("view_item", {
-        items: [
-          { item_id: "A", item_name: "Item A" },
-          { item_id: "B", item_name: "Item B" },
-        ],
-      });
+      plugin.track(
+        "view_item",
+        {
+          items: [
+            { item_id: "A", item_name: "Item A" },
+            { item_id: "B", item_name: "Item B" },
+          ],
+        },
+        mockContext,
+      );
 
       expect(window.twq).toHaveBeenCalledWith(
         "event",
@@ -191,7 +205,7 @@ describe("createXPixelPlugin", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
-      plugin.track("view_item", { items: [] });
+      plugin.track("view_item", { items: [] }, mockContext);
 
       const params = (window.twq as ReturnType<typeof vi.fn>).mock.calls[0][2];
       expect(params.content_ids).toBeUndefined();
@@ -202,7 +216,9 @@ describe("createXPixelPlugin", () => {
     it("should not throw when twq is not available", () => {
       const plugin = createXPixelPlugin();
 
-      expect(() => plugin.track("purchase", { currency: "USD", value: 50 })).not.toThrow();
+      expect(() =>
+        plugin.track("purchase", { currency: "USD", value: 50 }, mockContext),
+      ).not.toThrow();
     });
   });
 });

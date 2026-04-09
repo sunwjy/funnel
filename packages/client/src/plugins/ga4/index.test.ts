@@ -40,12 +40,14 @@ describe("createGA4Plugin", () => {
   });
 
   describe("track", () => {
+    const mockContext = { eventId: "test-event-id" };
+
     it("should call gtag event with event name and params", () => {
       window.gtag = vi.fn();
       const plugin = createGA4Plugin();
 
       const params = { currency: "KRW", value: 29000 };
-      plugin.track("purchase", params);
+      plugin.track("purchase", params, mockContext);
 
       expect(window.gtag).toHaveBeenCalledWith("event", "purchase", params);
     });
@@ -53,7 +55,7 @@ describe("createGA4Plugin", () => {
     it("should silently skip when gtag is not available", () => {
       const plugin = createGA4Plugin();
 
-      expect(() => plugin.track("page_view", {})).not.toThrow();
+      expect(() => plugin.track("page_view", {}, mockContext)).not.toThrow();
     });
   });
 });

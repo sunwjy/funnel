@@ -13,6 +13,8 @@ const mockPixelInstance = {
 };
 
 describe("createKakaoPixelPlugin", () => {
+  const mockContext = { eventId: "test-event-id" };
+
   beforeEach(() => {
     vi.restoreAllMocks();
     for (const fn of Object.values(mockPixelInstance)) {
@@ -32,7 +34,7 @@ describe("createKakaoPixelPlugin", () => {
       const plugin = createKakaoPixelPlugin();
       plugin.initialize({ trackId: "1234567890" });
 
-      expect(() => plugin.track("page_view", {})).not.toThrow();
+      expect(() => plugin.track("page_view", {}, mockContext)).not.toThrow();
     });
 
     it("should not call anything when trackId is not set", () => {
@@ -40,7 +42,7 @@ describe("createKakaoPixelPlugin", () => {
       const plugin = createKakaoPixelPlugin();
       plugin.initialize({});
 
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.kakaoPixel).not.toHaveBeenCalled();
     });
@@ -56,58 +58,70 @@ describe("createKakaoPixelPlugin", () => {
     });
 
     it("should map page_view to pageView()", () => {
-      plugin.track("page_view", {});
+      plugin.track("page_view", {}, mockContext);
 
       expect(window.kakaoPixel).toHaveBeenCalledWith("1234567890");
       expect(mockPixelInstance.pageView).toHaveBeenCalledTimes(1);
     });
 
     it("should map search to search({ keyword })", () => {
-      plugin.track("search", { search_term: "running shoes" });
+      plugin.track("search", { search_term: "running shoes" }, mockContext);
 
       expect(mockPixelInstance.search).toHaveBeenCalledWith({ keyword: "running shoes" });
     });
 
     it("should map view_item to viewContent({ id }) using first item", () => {
-      plugin.track("view_item", {
-        items: [
-          { item_id: "SKU1", item_name: "Shirt" },
-          { item_id: "SKU2", item_name: "Pants" },
-        ],
-      });
+      plugin.track(
+        "view_item",
+        {
+          items: [
+            { item_id: "SKU1", item_name: "Shirt" },
+            { item_id: "SKU2", item_name: "Pants" },
+          ],
+        },
+        mockContext,
+      );
 
       expect(mockPixelInstance.viewContent).toHaveBeenCalledWith({ id: "SKU1" });
     });
 
     it("should map view_item_list to viewContent({ id: item_list_id })", () => {
-      plugin.track("view_item_list", { item_list_id: "homepage_recs" });
+      plugin.track("view_item_list", { item_list_id: "homepage_recs" }, mockContext);
 
       expect(mockPixelInstance.viewContent).toHaveBeenCalledWith({ id: "homepage_recs" });
     });
 
     it("should map add_to_cart to addToCart({ id }) using first item", () => {
-      plugin.track("add_to_cart", {
-        items: [{ item_id: "SKU3", item_name: "Hat" }],
-      });
+      plugin.track(
+        "add_to_cart",
+        {
+          items: [{ item_id: "SKU3", item_name: "Hat" }],
+        },
+        mockContext,
+      );
 
       expect(mockPixelInstance.addToCart).toHaveBeenCalledWith({ id: "SKU3" });
     });
 
     it("should map begin_checkout to viewCart()", () => {
-      plugin.track("begin_checkout", { currency: "KRW", value: 50000 });
+      plugin.track("begin_checkout", { currency: "KRW", value: 50000 }, mockContext);
 
       expect(mockPixelInstance.viewCart).toHaveBeenCalledTimes(1);
     });
 
     it("should map purchase to purchase() with products, total_quantity, total_price, currency", () => {
-      plugin.track("purchase", {
-        currency: "KRW",
-        value: 29000,
-        items: [
-          { item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 10000 },
-          { item_id: "SKU2", item_name: "Socks", quantity: 1, price: 9000 },
-        ],
-      });
+      plugin.track(
+        "purchase",
+        {
+          currency: "KRW",
+          value: 29000,
+          items: [
+            { item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 10000 },
+            { item_id: "SKU2", item_name: "Socks", quantity: 1, price: 9000 },
+          ],
+        },
+        mockContext,
+      );
 
       expect(mockPixelInstance.purchase).toHaveBeenCalledWith({
         total_quantity: 3,
@@ -121,11 +135,15 @@ describe("createKakaoPixelPlugin", () => {
     });
 
     it("should default quantity to 1 and price to 0 for purchase items without those fields", () => {
-      plugin.track("purchase", {
-        currency: "USD",
-        value: 100,
-        items: [{ item_id: "SKU1", item_name: "Widget" }],
-      });
+      plugin.track(
+        "purchase",
+        {
+          currency: "USD",
+          value: 100,
+          items: [{ item_id: "SKU1", item_name: "Widget" }],
+        },
+        mockContext,
+      );
 
       expect(mockPixelInstance.purchase).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -136,10 +154,14 @@ describe("createKakaoPixelPlugin", () => {
     });
 
     it("should default currency to KRW when not provided in purchase", () => {
-      plugin.track("purchase", {
-        value: 5000,
-        items: [{ item_id: "SKU1", item_name: "Item" }],
-      });
+      plugin.track(
+        "purchase",
+        {
+          value: 5000,
+          items: [{ item_id: "SKU1", item_name: "Item" }],
+        },
+        mockContext,
+      );
 
       expect(mockPixelInstance.purchase).toHaveBeenCalledWith(
         expect.objectContaining({ currency: "KRW" }),
@@ -147,19 +169,21 @@ describe("createKakaoPixelPlugin", () => {
     });
 
     it("should map sign_up to completeRegistration()", () => {
-      plugin.track("sign_up", {});
+      plugin.track("sign_up", {}, mockContext);
 
       expect(mockPixelInstance.completeRegistration).toHaveBeenCalledTimes(1);
     });
 
     it("should map generate_lead to participation()", () => {
-      plugin.track("generate_lead", {});
+      plugin.track("generate_lead", {}, mockContext);
 
       expect(mockPixelInstance.participation).toHaveBeenCalledTimes(1);
     });
 
     it("should not throw for unmapped events", () => {
-      expect(() => plugin.track("refund", { currency: "KRW", value: 5000 })).not.toThrow();
+      expect(() =>
+        plugin.track("refund", { currency: "KRW", value: 5000 }, mockContext),
+      ).not.toThrow();
       expect(mockPixelInstance.pageView).not.toHaveBeenCalled();
       expect(mockPixelInstance.purchase).not.toHaveBeenCalled();
     });

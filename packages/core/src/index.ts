@@ -17,6 +17,7 @@ export type {
   AddToCartParams,
   BaseEventParams,
   BeginCheckoutParams,
+  EventContext,
   EventMap,
   EventName,
   GenerateLeadParams,
