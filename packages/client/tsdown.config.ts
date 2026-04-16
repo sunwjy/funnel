@@ -5,6 +5,7 @@ export default defineConfig({
     index: "src/index.ts",
     "plugins/ga4": "src/plugins/ga4/index.ts",
     "plugins/gtm": "src/plugins/gtm/index.ts",
+    "plugins/sgtm": "src/plugins/sgtm/index.ts",
     "plugins/meta-conversion-api": "src/plugins/meta-conversion-api/index.ts",
     "plugins/meta-pixel": "src/plugins/meta-pixel/index.ts",
     "plugins/google-ads": "src/plugins/google-ads/index.ts",

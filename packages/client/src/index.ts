@@ -21,5 +21,6 @@ export { createMetaConversionApiPlugin } from "./plugins/meta-conversion-api/ind
 export { createMetaPixelPlugin } from "./plugins/meta-pixel/index.js";
 export { createMixpanelPlugin } from "./plugins/mixpanel/index.js";
 export { createNaverAdPlugin } from "./plugins/naver-ad/index.js";
+export { createSGTMPlugin } from "./plugins/sgtm/index.js";
 export { createTikTokPixelPlugin } from "./plugins/tiktok-pixel/index.js";
 export { createXPixelPlugin } from "./plugins/x-pixel/index.js";
