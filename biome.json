@@ -1,7 +1,16 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
   "files": {
-    "includes": ["**", "!**/.omc", "!**/.claude", "!**/.turbo", "!**/dist", "!**/node_modules"]
+    "includes": [
+      "**",
+      "!**/.omc",
+      "!**/.claude",
+      "!**/.turbo",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/coverage",
+      "!**/.changeset"
+    ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
