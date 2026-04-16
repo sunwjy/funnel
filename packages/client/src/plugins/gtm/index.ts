@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-gtm` — Google Tag Manager plugin.
+ * `@sunwjy/funnel-client/gtm` — Google Tag Manager plugin.
  *
  * @remarks
  * Pushes GA4-format events to the GTM `dataLayer`.
@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -39,8 +39,8 @@ export interface GTMPluginConfig {
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createGTMPlugin } from "@funnel/plugin-gtm";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createGTMPlugin } from "@sunwjy/funnel-client/gtm";
  *
  * const funnel = new Funnel({
  *   plugins: [createGTMPlugin()],

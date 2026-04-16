@@ -103,9 +103,7 @@ describe("createSGTMPlugin", () => {
       plugin.track("page_view", {}, TEST_CONTEXT);
 
       const url = beaconUrl(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(url).toBe(
-        `${TEST_ENDPOINT}/custom/collect?measurement_id=${TEST_MEASUREMENT_ID}`,
-      );
+      expect(url).toBe(`${TEST_ENDPOINT}/custom/collect?measurement_id=${TEST_MEASUREMENT_ID}`);
     });
 
     it("should normalize trailing slashes and missing leading slash in path", () => {
@@ -118,9 +116,7 @@ describe("createSGTMPlugin", () => {
       plugin.track("page_view", {}, TEST_CONTEXT);
 
       const url = beaconUrl(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(url).toBe(
-        `${TEST_ENDPOINT}/custom/collect?measurement_id=${TEST_MEASUREMENT_ID}`,
-      );
+      expect(url).toBe(`${TEST_ENDPOINT}/custom/collect?measurement_id=${TEST_MEASUREMENT_ID}`);
     });
 
     it("should not send when endpoint is missing", () => {

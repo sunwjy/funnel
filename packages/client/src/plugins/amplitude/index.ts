@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-amplitude` — Amplitude plugin.
+ * `@sunwjy/funnel-client/amplitude` — Amplitude plugin.
  *
  * @remarks
  * Sends GA4-based events to Amplitude with Title Case event names.
@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {

@@ -1,5 +1,5 @@
 /**
- * `@funnel/core` — Core package for the marketing funnel event tracking library.
+ * `@sunwjy/funnel-core` — Core package for the marketing funnel event tracking library.
  *
  * @remarks
  * Provides a plugin-based architecture to send events to multiple analytics

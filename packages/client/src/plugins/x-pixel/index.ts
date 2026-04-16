@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-x-pixel` — X (Twitter) Pixel plugin.
+ * `@sunwjy/funnel-client/x-pixel` — X (Twitter) Pixel plugin.
  *
  * @remarks
  * Transforms GA4-based events into X Pixel standard events.
@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -113,8 +113,8 @@ function transformParams<E extends EventName>(
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createXPixelPlugin } from "@funnel/plugin-x-pixel";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createXPixelPlugin } from "@sunwjy/funnel-client/x-pixel";
  *
  * const funnel = new Funnel({
  *   plugins: [createXPixelPlugin()],

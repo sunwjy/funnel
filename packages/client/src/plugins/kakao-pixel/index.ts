@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-kakao-pixel` — Kakao Pixel plugin.
+ * `@sunwjy/funnel-client/kakao-pixel` — Kakao Pixel plugin.
  *
  * @remarks
  * Transforms GA4-based events into Kakao Pixel standard events.
@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, Item } from "@sunwjy/funnel-core";
 
 interface KakaoPixelInstance {
   pageView: () => void;
@@ -62,8 +62,8 @@ function transformProducts(
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createKakaoPixelPlugin } from "@funnel/plugin-kakao-pixel";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createKakaoPixelPlugin } from "@sunwjy/funnel-client/kakao-pixel";
  *
  * const funnel = new Funnel({
  *   plugins: [createKakaoPixelPlugin()],

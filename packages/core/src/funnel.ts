@@ -42,8 +42,8 @@ export interface FunnelConfig {
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createGA4Plugin } from "@funnel/plugin-ga4";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
  *
  * const funnel = new Funnel({
  *   plugins: [createGA4Plugin()],

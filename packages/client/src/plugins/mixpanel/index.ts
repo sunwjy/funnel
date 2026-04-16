@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-mixpanel` — Mixpanel plugin.
+ * `@sunwjy/funnel-client/mixpanel` — Mixpanel plugin.
  *
  * @remarks
  * Sends GA4-based events to Mixpanel with Title Case event names.
@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -99,8 +99,8 @@ function transformParams<E extends EventName>(
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createMixpanelPlugin } from "@funnel/plugin-mixpanel";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createMixpanelPlugin } from "@sunwjy/funnel-client/mixpanel";
  *
  * const funnel = new Funnel({
  *   plugins: [createMixpanelPlugin()],

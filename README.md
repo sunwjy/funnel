@@ -8,35 +8,35 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 
 | Package | Description |
 |---------|-------------|
-| `@funnel/core` | Event types, plugin interface, Funnel class, `EventContext` (auto-generated `eventId`) |
-| `@funnel/client` | All client-side plugins (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude) |
+| `@sunwjy/funnel-core` | Event types, plugin interface, Funnel class, `EventContext` (auto-generated `eventId`) |
+| `@sunwjy/funnel-client` | All client-side plugins (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude) |
 
 ### Client Plugins
 
 | Subpath | Description |
 |---------|-------------|
-| `@funnel/client/ga4` | Google Analytics 4 (`gtag`) |
-| `@funnel/client/gtm` | Google Tag Manager (`dataLayer`) |
-| `@funnel/client/meta-pixel` | Meta Pixel (`fbq`) |
-| `@funnel/client/google-ads` | Google Ads conversion tracking (`gtag`) |
-| `@funnel/client/tiktok-pixel` | TikTok Pixel (`ttq`) |
-| `@funnel/client/kakao-pixel` | Kakao Pixel (`kakaoPixel`) |
-| `@funnel/client/naver-ad` | Naver Ad WCSLOG (`wcs`) |
-| `@funnel/client/x-pixel` | X/Twitter Pixel (`twq`) |
-| `@funnel/client/linkedin-insight` | LinkedIn Insight Tag (`lintrk`) |
-| `@funnel/client/mixpanel` | Mixpanel (`mixpanel`) |
-| `@funnel/client/meta-conversion-api` | Meta Conversion API (server-side relay via `sendBeacon`/`fetch`) |
-| `@funnel/client/amplitude` | Amplitude (`amplitude`) |
+| `@sunwjy/funnel-client/ga4` | Google Analytics 4 (`gtag`) |
+| `@sunwjy/funnel-client/gtm` | Google Tag Manager (`dataLayer`) |
+| `@sunwjy/funnel-client/meta-pixel` | Meta Pixel (`fbq`) |
+| `@sunwjy/funnel-client/google-ads` | Google Ads conversion tracking (`gtag`) |
+| `@sunwjy/funnel-client/tiktok-pixel` | TikTok Pixel (`ttq`) |
+| `@sunwjy/funnel-client/kakao-pixel` | Kakao Pixel (`kakaoPixel`) |
+| `@sunwjy/funnel-client/naver-ad` | Naver Ad WCSLOG (`wcs`) |
+| `@sunwjy/funnel-client/x-pixel` | X/Twitter Pixel (`twq`) |
+| `@sunwjy/funnel-client/linkedin-insight` | LinkedIn Insight Tag (`lintrk`) |
+| `@sunwjy/funnel-client/mixpanel` | Mixpanel (`mixpanel`) |
+| `@sunwjy/funnel-client/meta-conversion-api` | Meta Conversion API (server-side relay via `sendBeacon`/`fetch`) |
+| `@sunwjy/funnel-client/amplitude` | Amplitude (`amplitude`) |
 
 ## Usage
 
 ```ts
 // Barrel import (tree-shakeable)
-import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@funnel/client";
+import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@sunwjy/funnel-client";
 
 // Or subpath imports (guaranteed tree-shaking in all bundlers)
-// import { createGA4Plugin } from "@funnel/client/ga4";
-// import { createMetaPixelPlugin } from "@funnel/client/meta-pixel";
+// import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
+// import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
 
 const funnel = new Funnel({
   plugins: [createGA4Plugin(), createMetaPixelPlugin()],
@@ -237,7 +237,7 @@ All events are sent via `amplitude.track()` with Title Case event names. For `pu
 Implement the `FunnelPlugin` interface to connect any analytics tool.
 
 ```ts
-import type { EventContext, EventMap, EventName, FunnelPlugin, UserProperties } from "@funnel/client";
+import type { EventContext, EventMap, EventName, FunnelPlugin, UserProperties } from "@sunwjy/funnel-client";
 
 export function createMyPlugin(): FunnelPlugin {
   return {

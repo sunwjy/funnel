@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-meta-conversion-api` — Meta Conversion API (CAPI) client plugin.
+ * `@sunwjy/funnel-client/meta-conversion-api` — Meta Conversion API (CAPI) client plugin.
  *
  * @remarks
  * Collects GA4-based event data on the client side and forwards it to a
@@ -17,7 +17,7 @@ import type {
   FunnelPlugin,
   Item,
   UserProperties,
-} from "@funnel/core";
+} from "@sunwjy/funnel-core";
 
 /**
  * Configuration for the Meta Conversion API plugin.
@@ -236,8 +236,8 @@ function collectUserData(): MetaCapiUserData {
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createMetaConversionApiPlugin } from "@funnel/client/meta-conversion-api";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createMetaConversionApiPlugin } from "@sunwjy/funnel-client/meta-conversion-api";
  *
  * const funnel = new Funnel({
  *   plugins: [createMetaConversionApiPlugin()],

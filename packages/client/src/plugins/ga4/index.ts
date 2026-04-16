@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-ga4` — Google Analytics 4 plugin.
+ * `@sunwjy/funnel-client/ga4` — Google Analytics 4 plugin.
  *
  * @remarks
  * Since GA4 is the base event format, events are passed through without transformation.
@@ -7,7 +7,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -35,8 +35,8 @@ export interface GA4PluginConfig {
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createGA4Plugin } from "@funnel/plugin-ga4";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
  *
  * const funnel = new Funnel({
  *   plugins: [createGA4Plugin()],

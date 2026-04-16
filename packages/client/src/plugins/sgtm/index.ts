@@ -1,5 +1,5 @@
 /**
- * `@funnel/client/sgtm` — Server-side Google Tag Manager (sGTM) client plugin.
+ * `@sunwjy/funnel-client/sgtm` — Server-side Google Tag Manager (sGTM) client plugin.
  *
  * @remarks
  * Sends GA4-format events directly to a server-side GTM container via the
@@ -22,7 +22,7 @@ import type {
   EventName,
   FunnelPlugin,
   UserProperties,
-} from "@funnel/core";
+} from "@sunwjy/funnel-core";
 
 /**
  * Configuration for the sGTM plugin.
@@ -205,8 +205,8 @@ function sendPayload(url: string, body: string): void {
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createSGTMPlugin } from "@funnel/client/sgtm";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createSGTMPlugin } from "@sunwjy/funnel-client/sgtm";
  *
  * const funnel = new Funnel({
  *   plugins: [createSGTMPlugin()],

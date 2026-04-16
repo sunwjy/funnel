@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-linkedin-insight` — LinkedIn Insight Tag plugin.
+ * `@sunwjy/funnel-client/linkedin-insight` — LinkedIn Insight Tag plugin.
  *
  * @remarks
  * Sends conversion events to LinkedIn via `window.lintrk`.
@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin } from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {

@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-tiktok-pixel` — TikTok Pixel plugin.
+ * `@sunwjy/funnel-client/tiktok-pixel` — TikTok Pixel plugin.
  *
  * @remarks
  * Transforms GA4-based events into TikTok Pixel standard events.
@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -113,8 +113,8 @@ function transformParams<E extends EventName>(
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createTikTokPixelPlugin } from "@funnel/plugin-tiktok-pixel";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createTikTokPixelPlugin } from "@sunwjy/funnel-client/tiktok-pixel";
  *
  * const funnel = new Funnel({
  *   plugins: [createTikTokPixelPlugin()],

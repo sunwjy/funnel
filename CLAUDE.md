@@ -18,22 +18,22 @@ pnpm test         # Run all tests (Vitest)
 pnpm test:watch   # Run tests in watch mode
 ```
 
-Single-package commands: `pnpm --filter @funnel/core build`
+Single-package commands: `pnpm --filter @sunwjy/funnel-core build`
 
 ## Architecture
 
 **Monorepo** (`packages/*`) with two packages:
 
-- **`@funnel/core`** — `EventMap` type definitions (GA4-based), `FunnelPlugin` interface, `Funnel` dispatcher class, `EventContext` (auto-generated `eventId` for deduplication)
-- **`@funnel/client`** — All client-side plugins consolidated into one package with subpath exports for tree-shaking (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok Pixel, Kakao Pixel, Naver Ad, X Pixel, LinkedIn Insight, Mixpanel, Amplitude)
+- **`@sunwjy/funnel-core`** — `EventMap` type definitions (GA4-based), `FunnelPlugin` interface, `Funnel` dispatcher class, `EventContext` (auto-generated `eventId` for deduplication)
+- **`@sunwjy/funnel-client`** — All client-side plugins consolidated into one package with subpath exports for tree-shaking (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok Pixel, Kakao Pixel, Naver Ad, X Pixel, LinkedIn Insight, Mixpanel, Amplitude)
 
 **Import styles:**
 ```ts
 // Barrel import (tree-shakeable via sideEffects: false)
-import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@funnel/client";
+import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@sunwjy/funnel-client";
 
 // Subpath import (guaranteed tree-shaking)
-import { createGA4Plugin } from "@funnel/client/ga4";
+import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 ```
 
 **Data flow:** `Funnel.track(event, params)` → generates `EventContext` with unique `eventId` → iterates all plugins with `plugin.track(event, params, context)` → each plugin transforms & sends. Plugins are error-isolated (one failure doesn't block others).
@@ -43,7 +43,7 @@ import { createGA4Plugin } from "@funnel/client/ga4";
 - All client plugins must handle SSR (`typeof window` check before accessing globals)
 - No runtime dependencies — plugins call browser globals (`gtag`, `fbq`) directly
 - Dual ESM/CJS output via tsdown
-- `@funnel/core` is shared between client and future `@funnel/server`
+- `@sunwjy/funnel-core` is shared between client and future `@sunwjy/funnel-server`
 - Every `track()` call generates a unique `eventId` (via `crypto.randomUUID()`) in `EventContext`, enabling server-side deduplication (e.g., Meta CAPI)
 - `FunnelPlugin.track` signature: `track(eventName, params, context: EventContext)` — all plugins receive context
 

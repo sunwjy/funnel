@@ -8,8 +8,8 @@ export type {
   FunnelPlugin,
   Item,
   UserProperties,
-} from "@funnel/core";
-export { Funnel } from "@funnel/core";
+} from "@sunwjy/funnel-core";
+export { Funnel } from "@sunwjy/funnel-core";
 export { createAmplitudePlugin } from "./plugins/amplitude/index.js";
 // Client-side plugins
 export { createGA4Plugin } from "./plugins/ga4/index.js";

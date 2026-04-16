@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-meta-pixel` — Meta Pixel (Facebook Pixel) plugin.
+ * `@sunwjy/funnel-client/meta-pixel` — Meta Pixel (Facebook Pixel) plugin.
  *
  * @remarks
  * Transforms GA4-based events into Meta Pixel standard events.
@@ -15,7 +15,7 @@ import type {
   FunnelPlugin,
   Item,
   UserProperties,
-} from "@funnel/core";
+} from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -160,8 +160,8 @@ function transformParams<E extends EventName>(eventName: E, params: EventMap[E])
  *
  * @example
  * ```ts
- * import { Funnel } from "@funnel/core";
- * import { createMetaPixelPlugin } from "@funnel/plugin-meta-pixel";
+ * import { Funnel } from "@sunwjy/funnel-core";
+ * import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
  *
  * const funnel = new Funnel({
  *   plugins: [createMetaPixelPlugin()],

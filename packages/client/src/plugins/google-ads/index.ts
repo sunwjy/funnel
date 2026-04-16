@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-google-ads` — Google Ads conversion tracking plugin.
+ * `@sunwjy/funnel-client/google-ads` — Google Ads conversion tracking plugin.
  *
  * @remarks
  * Transforms GA4-based events into Google Ads conversion events.
@@ -8,7 +8,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {

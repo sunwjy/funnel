@@ -1,4 +1,4 @@
-# @funnel/core
+# @sunwjy/funnel-core
 
 Core package for the [Funnel](../../README.md) marketing event tracking library.
 
@@ -7,14 +7,14 @@ Provides the `Funnel` dispatcher class, the `FunnelPlugin` interface, and GA4-ba
 ## Installation
 
 ```bash
-npm install @funnel/core
+npm install @sunwjy/funnel-core
 ```
 
 ## Usage
 
 ```ts
-import { Funnel } from "@funnel/core";
-import { createGA4Plugin } from "@funnel/plugin-ga4";
+import { Funnel } from "@sunwjy/funnel-core";
+import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 
 const funnel = new Funnel({
   plugins: [createGA4Plugin()],

@@ -1,5 +1,5 @@
 /**
- * `@funnel/plugin-naver-ad` — Naver Ad (WCSLOG) conversion tracking plugin.
+ * `@sunwjy/funnel-client/naver-ad` — Naver Ad (WCSLOG) conversion tracking plugin.
  *
  * @remarks
  * Transforms GA4-based events into Naver Ad conversion tracking calls.
@@ -9,7 +9,7 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin } from "@funnel/core";
+import type { EventMap, EventName, FunnelPlugin } from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
