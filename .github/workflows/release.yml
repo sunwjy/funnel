@@ -1,8 +1,9 @@
 name: Release
 
+# Disabled until npm publishing is ready (NPM_TOKEN secret not yet configured).
+# To re-enable: restore `push: { branches: [main] }` below.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: release-${{ github.ref }}
