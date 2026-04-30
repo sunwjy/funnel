@@ -8,7 +8,15 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@sunwjy/funnel-core";
+import {
+  type EventContext,
+  type EventMap,
+  type EventName,
+  type FunnelPlugin,
+  hashPii,
+  type Item,
+  type UserProperties,
+} from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -24,15 +32,6 @@ export interface XPixelPluginConfig {
   pixelId?: string;
 }
 
-/**
- * Mapping from GA4 event names to X Pixel standard event names.
- *
- * @remarks
- * GA4 events not present in this map are sent as custom events
- * via `twq("event", eventName, params)`.
- *
- * @see {@link https://business.twitter.com/en/help/campaign-measurement-and-analytics/conversion-tracking-for-websites.html | X Pixel Event Reference}
- */
 const EVENT_MAP: Partial<Record<EventName, string>> = {
   page_view: "PageVisit",
   view_item: "ViewContent",
@@ -45,16 +44,23 @@ const EVENT_MAP: Partial<Record<EventName, string>> = {
   add_payment_info: "AddPaymentInfo",
 };
 
-/**
- * Transforms a GA4 {@link Item} array into X Pixel parameter format.
- *
- * @param items - The items to transform.
- * @returns X Pixel item parameters, or an empty object if no items are provided.
- *
- * @internal
- */
+function hasPerItemFields(items: Item[]): boolean {
+  return items.some((it) => it.price !== undefined || it.quantity !== undefined);
+}
+
 function transformItems(items?: Item[]): Record<string, unknown> {
   if (!items || items.length === 0) return {};
+  if (hasPerItemFields(items)) {
+    return {
+      contents: items.map((item) => {
+        const entry: Record<string, unknown> = { id: item.item_id };
+        if (item.price !== undefined) entry.item_price = item.price;
+        if (item.quantity !== undefined) entry.quantity = item.quantity;
+        return entry;
+      }),
+      num_items: items.length,
+    };
+  }
   return {
     content_ids: items.map((item) => item.item_id),
     content_type: "product",
@@ -62,20 +68,6 @@ function transformItems(items?: Item[]): Record<string, unknown> {
   };
 }
 
-/**
- * Transforms GA4 event parameters into X Pixel parameters.
- *
- * @remarks
- * Common fields (`currency`, `value`, `items`) are mapped automatically.
- * Event-specific transformations are applied for `search` and `purchase`.
- *
- * @typeParam E - The event name type.
- * @param eventName - The GA4 event name.
- * @param params - The GA4 event parameters.
- * @returns Parameters formatted for the X Pixel API.
- *
- * @internal
- */
 function transformParams<E extends EventName>(
   eventName: E,
   params: EventMap[E],
@@ -103,27 +95,6 @@ function transformParams<E extends EventName>(
 
 /**
  * Creates an X Pixel plugin instance.
- *
- * @remarks
- * Automatically transforms GA4 events into X Pixel standard events
- * and sends them via `window.twq`.
- * Automatically skipped in SSR environments where `window` is not available.
- *
- * @returns An X Pixel {@link FunnelPlugin} instance.
- *
- * @example
- * ```ts
- * import { Funnel } from "@sunwjy/funnel-core";
- * import { createXPixelPlugin } from "@sunwjy/funnel-client/x-pixel";
- *
- * const funnel = new Funnel({
- *   plugins: [createXPixelPlugin()],
- * });
- *
- * funnel.initialize({
- *   "x-pixel": { pixelId: "o12345" },
- * });
- * ```
  */
 export function createXPixelPlugin(): FunnelPlugin {
   let pixelId: string | undefined;
@@ -139,13 +110,16 @@ export function createXPixelPlugin(): FunnelPlugin {
       }
     },
 
-    track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+    track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
       if (typeof window === "undefined" || !window.twq) {
         return;
       }
 
       const xEvent = EVENT_MAP[eventName];
-      const xParams = transformParams(eventName, params);
+      const xParams = {
+        ...transformParams(eventName, params),
+        event_id: context.eventId,
+      };
 
       if (xEvent) {
         window.twq("event", xEvent, xParams);
@@ -157,13 +131,20 @@ export function createXPixelPlugin(): FunnelPlugin {
     setUser(properties: UserProperties): void {
       if (typeof window === "undefined" || !window.twq || !pixelId) return;
 
-      const xUserData: Record<string, unknown> = {};
-      if (properties.email !== undefined) xUserData.em = properties.email;
-      if (properties.phone_number !== undefined) xUserData.ph_number = properties.phone_number;
+      const capturedPixelId = pixelId;
+      void (async () => {
+        const [em, ph] = await Promise.all([
+          hashPii(properties.email, "email"),
+          hashPii(properties.phone_number, "phone"),
+        ]);
+        const xUserData: Record<string, unknown> = {};
+        if (em) xUserData.em = em;
+        if (ph) xUserData.ph_number = ph;
 
-      if (Object.keys(xUserData).length > 0) {
-        window.twq("config", pixelId, xUserData);
-      }
+        if (Object.keys(xUserData).length > 0) {
+          window.twq("config", capturedPixelId, xUserData);
+        }
+      })();
     },
   };
 }

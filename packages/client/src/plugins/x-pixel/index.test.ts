@@ -42,16 +42,20 @@ describe("createXPixelPlugin", () => {
   });
 
   describe("track — event mapping", () => {
-    it("should map page_view to PageVisit", () => {
+    it("should map page_view to PageVisit with event_id", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
       plugin.track("page_view", {}, mockContext);
 
-      expect(window.twq).toHaveBeenCalledWith("event", "PageVisit", {});
+      expect(window.twq).toHaveBeenCalledWith(
+        "event",
+        "PageVisit",
+        expect.objectContaining({ event_id: "test-event-id" }),
+      );
     });
 
-    it("should map purchase to Purchase with value, currency, order_id, content_ids", () => {
+    it("should map purchase to Purchase with per-item content fields and order_id", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
@@ -73,14 +77,14 @@ describe("createXPixelPlugin", () => {
           value: 99.99,
           currency: "USD",
           order_id: "TXN-001",
-          content_ids: ["SKU1"],
-          content_type: "product",
+          contents: [{ id: "SKU1", item_price: 99.99, quantity: 1 }],
           num_items: 1,
+          event_id: "test-event-id",
         }),
       );
     });
 
-    it("should map add_to_cart to AddToCart with item params", () => {
+    it("should map add_to_cart to AddToCart with content_ids when no per-item data", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
@@ -175,7 +179,7 @@ describe("createXPixelPlugin", () => {
   });
 
   describe("track — item transformation", () => {
-    it("should transform items to content_ids, content_type, num_items", () => {
+    it("should use content_ids when no per-item price/quantity", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
 
@@ -201,6 +205,29 @@ describe("createXPixelPlugin", () => {
       );
     });
 
+    it("should use contents array when per-item price/quantity is present", () => {
+      window.twq = vi.fn();
+      const plugin = createXPixelPlugin();
+
+      plugin.track(
+        "view_item",
+        {
+          items: [
+            { item_id: "A", item_name: "Item A", price: 10, quantity: 2 },
+            { item_id: "B", item_name: "Item B", price: 20 },
+          ],
+        },
+        mockContext,
+      );
+
+      const params = (window.twq as ReturnType<typeof vi.fn>).mock.calls[0][2];
+      expect(params.contents).toEqual([
+        { id: "A", item_price: 10, quantity: 2 },
+        { id: "B", item_price: 20 },
+      ]);
+      expect(params.num_items).toBe(2);
+    });
+
     it("should not include content_ids when items is empty", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
@@ -209,6 +236,7 @@ describe("createXPixelPlugin", () => {
 
       const params = (window.twq as ReturnType<typeof vi.fn>).mock.calls[0][2];
       expect(params.content_ids).toBeUndefined();
+      expect(params.contents).toBeUndefined();
     });
   });
 
@@ -217,44 +245,43 @@ describe("createXPixelPlugin", () => {
       const plugin = createXPixelPlugin();
 
       expect(() =>
-        plugin.track("purchase", { currency: "USD", value: 50 }, mockContext),
+        plugin.track(
+          "purchase",
+          { currency: "USD", value: 50, transaction_id: "T-1" },
+          mockContext,
+        ),
       ).not.toThrow();
     });
   });
 
   describe("setUser", () => {
-    it("should call twq config with pixelId and mapped user data", () => {
+    it("should call twq config with pixelId and SHA-256-hashed user data", async () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
       plugin.initialize({ pixelId: "o12345" });
 
       plugin.setUser?.({ email: "test@example.com", phone_number: "+821012345678" });
-
-      expect(window.twq).toHaveBeenCalledWith("config", "o12345", {
-        em: "test@example.com",
-        ph_number: "+821012345678",
-      });
-    });
-
-    it("should map email to em and phone_number to ph_number", () => {
-      window.twq = vi.fn();
-      const plugin = createXPixelPlugin();
-      plugin.initialize({ pixelId: "o12345" });
-
-      plugin.setUser?.({ email: "user@test.com", phone_number: "+15551234567" });
+      // setUser hashes asynchronously
+      await new Promise((r) => setTimeout(r, 0));
 
       const call = (window.twq as ReturnType<typeof vi.fn>).mock.calls.find(
-        (c) => c[0] === "config" && c[1] === "o12345" && c[2] !== undefined,
+        (c) => c[0] === "config" && c[1] === "o12345" && c[2],
       );
-      expect(call?.[2]).toEqual({ em: "user@test.com", ph_number: "+15551234567" });
+      expect(call).toBeDefined();
+      const data = call?.[2] as Record<string, string>;
+      // Hashed values are 64-char hex; raw values must NOT appear.
+      expect(data.em).toMatch(/^[a-f0-9]{64}$/);
+      expect(data.ph_number).toMatch(/^[a-f0-9]{64}$/);
+      expect(data.em).not.toBe("test@example.com");
+      expect(data.ph_number).not.toBe("+821012345678");
     });
 
-    it("should not call twq when pixelId is not set", () => {
+    it("should not call twq when pixelId is not set", async () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
-      // initialize not called, so pixelId remains undefined
 
       plugin.setUser?.({ email: "test@example.com" });
+      await new Promise((r) => setTimeout(r, 0));
 
       expect(window.twq).not.toHaveBeenCalled();
     });

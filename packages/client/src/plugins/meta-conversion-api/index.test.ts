@@ -1,3 +1,4 @@
+import { hashPii } from "@sunwjy/funnel-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMetaConversionApiPlugin } from "./index";
 
@@ -5,13 +6,21 @@ const TEST_ENDPOINT = "https://example.com/api/meta-capi";
 const TEST_EVENT_ID = "evt-abc-123";
 const TEST_CONTEXT = { eventId: TEST_EVENT_ID };
 
+function lastBeaconBlob(): Blob {
+  const calls = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls;
+  return calls[calls.length - 1][1] as Blob;
+}
+
+async function lastBeaconPayload(): Promise<Record<string, unknown>> {
+  const text = await lastBeaconBlob().text();
+  return JSON.parse(text);
+}
+
 describe("createMetaConversionApiPlugin", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    // jsdom does not define sendBeacon — assign a mock directly
     navigator.sendBeacon = vi.fn().mockReturnValue(true);
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
-    // Reset cookies
     Object.defineProperty(document, "cookie", {
       writable: true,
       value: "",
@@ -49,9 +58,7 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.event_id).toBe(TEST_EVENT_ID);
     });
 
@@ -61,9 +68,7 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.action_source).toBe("website");
     });
 
@@ -76,9 +81,7 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.event_time).toBe(now);
     });
 
@@ -88,10 +91,18 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.event_source_url).toBe(window.location.href);
+    });
+
+    it("should include test_event_code when configured", async () => {
+      const plugin = createMetaConversionApiPlugin();
+      plugin.initialize({ endpoint: TEST_ENDPOINT, testEventCode: "TEST123" });
+
+      plugin.track("page_view", {}, TEST_CONTEXT);
+
+      const payload = await lastBeaconPayload();
+      expect(payload.test_event_code).toBe("TEST123");
     });
   });
 
@@ -102,13 +113,11 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.event_name).toBe("PageView");
     });
 
-    it("should map purchase to Purchase with currency and value", async () => {
+    it("should map purchase to Purchase with order_id, currency, value", async () => {
       const plugin = createMetaConversionApiPlugin();
       plugin.initialize({ endpoint: TEST_ENDPOINT });
 
@@ -117,20 +126,20 @@ describe("createMetaConversionApiPlugin", () => {
         {
           currency: "KRW",
           value: 29000,
-          items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2 }],
+          transaction_id: "T-1",
+          items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 14500 }],
         },
         TEST_CONTEXT,
       );
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.event_name).toBe("Purchase");
       expect(payload.custom_data).toMatchObject({
         currency: "KRW",
         value: 29000,
+        order_id: "T-1",
         content_ids: ["SKU1"],
-        contents: [{ id: "SKU1", quantity: 2 }],
+        contents: [{ id: "SKU1", quantity: 2, item_price: 14500 }],
         num_items: 1,
       });
     });
@@ -141,9 +150,7 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("add_to_cart", { currency: "USD", value: 50 }, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.event_name).toBe("AddToCart");
       expect(payload.custom_data).toMatchObject({ currency: "USD", value: 50 });
     });
@@ -154,11 +161,10 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("search", { search_term: "running shoes" }, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.event_name).toBe("Search");
-      expect(payload.custom_data.search_string).toBe("running shoes");
+      const customData = payload.custom_data as Record<string, unknown>;
+      expect(customData.search_string).toBe("running shoes");
     });
 
     it("should map view_item_list to ViewContent", async () => {
@@ -171,9 +177,7 @@ describe("createMetaConversionApiPlugin", () => {
         TEST_CONTEXT,
       );
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.event_name).toBe("ViewContent");
     });
 
@@ -183,15 +187,13 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("refund", { currency: "KRW", value: 5000 }, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.event_name).toBe("refund");
     });
   });
 
   describe("track — item transformation", () => {
-    it("should transform items to content_ids, contents, and num_items", async () => {
+    it("should transform items to content_ids, contents (with item_price), and num_items", async () => {
       const plugin = createMetaConversionApiPlugin();
       plugin.initialize({ endpoint: TEST_ENDPOINT });
 
@@ -199,20 +201,18 @@ describe("createMetaConversionApiPlugin", () => {
         "view_item",
         {
           items: [
-            { item_id: "A", item_name: "Item A", quantity: 3 },
+            { item_id: "A", item_name: "Item A", quantity: 3, price: 10 },
             { item_id: "B", item_name: "Item B" },
           ],
         },
         TEST_CONTEXT,
       );
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
+      const payload = await lastBeaconPayload();
       expect(payload.custom_data).toMatchObject({
         content_ids: ["A", "B"],
         contents: [
-          { id: "A", quantity: 3 },
+          { id: "A", quantity: 3, item_price: 10 },
           { id: "B", quantity: 1 },
         ],
         num_items: 2,
@@ -225,11 +225,10 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("view_item", { items: [] }, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
-      expect(payload.custom_data.content_ids).toBeUndefined();
-      expect(payload.custom_data.contents).toBeUndefined();
+      const payload = await lastBeaconPayload();
+      const customData = payload.custom_data as Record<string, unknown>;
+      expect(customData.content_ids).toBeUndefined();
+      expect(customData.contents).toBeUndefined();
     });
   });
 
@@ -245,10 +244,9 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
-      expect(payload.user_data.fbp).toBe("fb.1.1234567890.abcdef");
+      const payload = await lastBeaconPayload();
+      const userData = payload.user_data as Record<string, unknown>;
+      expect(userData.fbp).toBe("fb.1.1234567890.abcdef");
     });
 
     it("should include fbc cookie in user_data", async () => {
@@ -262,10 +260,9 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
-      expect(payload.user_data.fbc).toBe("fb.1.1234567890.xyz");
+      const payload = await lastBeaconPayload();
+      const userData = payload.user_data as Record<string, unknown>;
+      expect(userData.fbc).toBe("fb.1.1234567890.xyz");
     });
 
     it("should include client_user_agent from navigator", async () => {
@@ -274,10 +271,9 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
-      expect(payload.user_data.client_user_agent).toBe(navigator.userAgent);
+      const payload = await lastBeaconPayload();
+      const userData = payload.user_data as Record<string, unknown>;
+      expect(userData.client_user_agent).toBe(navigator.userAgent);
     });
 
     it("should omit fbp and fbc when cookies are absent", async () => {
@@ -286,11 +282,34 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
+      const payload = await lastBeaconPayload();
+      const userData = payload.user_data as Record<string, unknown>;
+      expect(userData.fbp).toBeUndefined();
+      expect(userData.fbc).toBeUndefined();
+    });
 
-      expect(payload.user_data.fbp).toBeUndefined();
-      expect(payload.user_data.fbc).toBeUndefined();
+    it("should synthesize fbc from fbclid query param when no _fbc cookie", async () => {
+      const now = 1712600000_000;
+      vi.spyOn(Date, "now").mockReturnValue(now);
+      const originalLocation = window.location;
+      Object.defineProperty(window, "location", {
+        writable: true,
+        value: { href: "https://example.com/?fbclid=abc123", search: "?fbclid=abc123" },
+      });
+
+      const plugin = createMetaConversionApiPlugin();
+      plugin.initialize({ endpoint: TEST_ENDPOINT });
+
+      plugin.track("page_view", {}, TEST_CONTEXT);
+
+      const payload = await lastBeaconPayload();
+      const userData = payload.user_data as Record<string, unknown>;
+      expect(userData.fbc).toBe(`fb.1.${now}.abc123`);
+
+      Object.defineProperty(window, "location", {
+        writable: true,
+        value: originalLocation,
+      });
     });
   });
 
@@ -348,19 +367,41 @@ describe("createMetaConversionApiPlugin", () => {
     });
   });
 
-  describe("setUser / resetUser", () => {
-    it("should include user properties in track payload after setUser", async () => {
+  describe("setUser / resetUser — PII hashing", () => {
+    it("should hash email/phone/name/user_id before sending", async () => {
       const plugin = createMetaConversionApiPlugin();
       plugin.initialize({ endpoint: TEST_ENDPOINT });
-      plugin.setUser?.({ email: "user@example.com", user_id: "u-001" });
+      plugin.setUser?.({
+        email: "  Jane@Example.COM ",
+        phone_number: "+82 10-1234-5678",
+        first_name: "Jane",
+        last_name: "Doe",
+        user_id: "u-001",
+      });
 
       plugin.track("page_view", {}, TEST_CONTEXT);
+      // wait for the async hash + dispatch
+      await new Promise((r) => setTimeout(r, 0));
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
+      const payload = await lastBeaconPayload();
+      const userData = payload.user_data as Record<string, string>;
 
-      expect(payload.user_data.em).toBe("user@example.com");
-      expect(payload.user_data.external_id).toBe("u-001");
+      // Verify each field is hashed (not the raw value) and has expected SHA-256 hex.
+      const expectedEm = await hashPii("  Jane@Example.COM ", "email");
+      const expectedPh = await hashPii("+82 10-1234-5678", "phone");
+      const expectedFn = await hashPii("Jane", "name");
+      const expectedLn = await hashPii("Doe", "name");
+      const expectedExt = await hashPii("u-001", "id");
+
+      expect(userData.em).toBe(expectedEm);
+      expect(userData.ph).toBe(expectedPh);
+      expect(userData.fn).toBe(expectedFn);
+      expect(userData.ln).toBe(expectedLn);
+      expect(userData.external_id).toBe(expectedExt);
+
+      // Sanity: hashed values are not the raw inputs.
+      expect(userData.em).not.toBe("Jane@Example.COM");
+      expect(userData.ph).not.toBe("+82 10-1234-5678");
     });
 
     it("should clear user properties after resetUser", async () => {
@@ -371,33 +412,9 @@ describe("createMetaConversionApiPlugin", () => {
 
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
-      expect(payload.user_data.em).toBeUndefined();
-    });
-
-    it("should map email→em, phone_number→ph, first_name→fn, last_name→ln, user_id→external_id", async () => {
-      const plugin = createMetaConversionApiPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT });
-      plugin.setUser?.({
-        email: "a@b.com",
-        phone_number: "+821012345678",
-        first_name: "Jane",
-        last_name: "Doe",
-        user_id: "u-42",
-      });
-
-      plugin.track("page_view", {}, TEST_CONTEXT);
-
-      const [, blob] = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls[0];
-      const payload = JSON.parse(await (blob as Blob).text());
-
-      expect(payload.user_data.em).toBe("a@b.com");
-      expect(payload.user_data.ph).toBe("+821012345678");
-      expect(payload.user_data.fn).toBe("Jane");
-      expect(payload.user_data.ln).toBe("Doe");
-      expect(payload.user_data.external_id).toBe("u-42");
+      const payload = await lastBeaconPayload();
+      const userData = payload.user_data as Record<string, unknown>;
+      expect(userData.em).toBeUndefined();
     });
   });
 

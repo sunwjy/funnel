@@ -23,15 +23,13 @@ import type {
   FunnelPlugin,
   UserProperties,
 } from "@sunwjy/funnel-core";
+import { postJson } from "../../internal/transport.js";
 
 /**
  * Configuration for the sGTM plugin.
  */
 export interface SGTMPluginConfig {
-  /**
-   * Base URL of the sGTM container (e.g., `"https://sgtm.example.com"`).
-   * The {@link SGTMPluginConfig.path | path} is appended to this base.
-   */
+  /** Base URL of the sGTM container (e.g., `"https://sgtm.example.com"`). */
   endpoint: string;
   /** GA4 Measurement ID (e.g., `"G-XXXXXXXXXX"`). */
   measurementId: string;
@@ -39,12 +37,22 @@ export interface SGTMPluginConfig {
    * GA4 Measurement Protocol API secret.
    *
    * @remarks
-   * SECURITY: Including this in browser code exposes the secret to anyone
-   * who inspects your client. Prefer configuring your sGTM container's
-   * GA4 Measurement Protocol client to skip `api_secret` validation for
-   * browser traffic. Only set this if you explicitly accept the risk.
+   * Setting this in browser code exposes the secret in DevTools, proxy logs,
+   * and CDN access logs. The plugin REJECTS this option unless
+   * {@link allowApiSecretInBrowser} is also set to `true`. The recommended
+   * configuration is to leave `apiSecret` unset and have your sGTM container
+   * skip api_secret validation for browser traffic.
    */
   apiSecret?: string;
+  /**
+   * Required acknowledgement to forward {@link apiSecret} from the browser.
+   *
+   * @remarks
+   * The plugin will not include `api_secret` in the request URL unless this
+   * flag is explicitly `true`, and emits a `console.error` reminding callers
+   * of the leak surface (DevTools, referrer, CDN logs).
+   */
+  allowApiSecretInBrowser?: boolean;
   /** Path appended to the endpoint (default: `"/mp/collect"`). */
   path?: string;
   /**
@@ -52,16 +60,29 @@ export interface SGTMPluginConfig {
    *
    * @remarks
    * When omitted, a UUID is generated and persisted in `localStorage`
-   * (key `_funnel_sgtm_cid`) so subsequent visits reuse the same id.
+   * (key `_funnel_sgtm_cid`).
    */
   clientId?: string;
   /** Sets the `non_personalized_ads` flag on every event. */
   nonPersonalizedAds?: boolean;
+  /**
+   * Value forwarded as the GA4 `engagement_time_msec` event param.
+   *
+   * @remarks
+   * GA4 uses this for engaged-session and average-engagement-time metrics.
+   * Default: `1` (a single ms — minimal influence on metrics). Set explicitly
+   * if you measure real engagement. The previous default of `100` polluted
+   * GA4 engagement metrics.
+   */
+  engagementTimeMsec?: number;
 }
 
 const CLIENT_ID_STORAGE_KEY = "_funnel_sgtm_cid";
 const SESSION_ID_STORAGE_KEY = "_funnel_sgtm_sid";
+const SESSION_LAST_ACTIVITY_KEY = "_funnel_sgtm_sla";
 const DEFAULT_PATH = "/mp/collect";
+const DEFAULT_ENGAGEMENT_TIME_MSEC = 1;
+const SESSION_IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 min — GA4 default
 
 /** @internal */
 interface MPEvent {
@@ -137,10 +158,19 @@ function resolveClientId(override?: string): string {
 
 function resolveSessionId(): string {
   const storage = getSessionStorage();
+  const now = Date.now();
   const existing = readStorage(storage, SESSION_ID_STORAGE_KEY);
-  if (existing) return existing;
-  const sid = Math.floor(Date.now() / 1000).toString();
-  writeStorage(storage, SESSION_ID_STORAGE_KEY, sid);
+  const lastActivity = Number(readStorage(storage, SESSION_LAST_ACTIVITY_KEY) ?? "0");
+  const idleExpired = !existing || now - lastActivity > SESSION_IDLE_TIMEOUT_MS;
+
+  let sid: string;
+  if (existing && !idleExpired) {
+    sid = existing;
+  } else {
+    sid = Math.floor(now / 1000).toString();
+    writeStorage(storage, SESSION_ID_STORAGE_KEY, sid);
+  }
+  writeStorage(storage, SESSION_LAST_ACTIVITY_KEY, String(now));
   return sid;
 }
 
@@ -168,57 +198,8 @@ function buildUserProperties(
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-function sendPayload(url: string, body: string): void {
-  if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
-    const blob = new Blob([body], { type: "application/json" });
-    if (navigator.sendBeacon(url, blob)) return;
-  }
-  if (typeof fetch === "function") {
-    fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body,
-      keepalive: true,
-    }).catch(() => {
-      // analytics must never throw
-    });
-  }
-}
-
 /**
  * Creates a server-side Google Tag Manager (sGTM) plugin instance.
- *
- * @remarks
- * On each `track()` call, the plugin:
- * 1. Builds a GA4 Measurement Protocol v2 JSON payload wrapping the
- *    GA4 event name and parameters, plus `event_id`
- *    (from {@link EventContext}), `session_id`, and `engagement_time_msec`.
- * 2. Includes `user_id` and `user_properties` when `setUser` has been called.
- * 3. POSTs the payload to `{endpoint}{path}?measurement_id=...&api_secret=...`
- *    via `navigator.sendBeacon` with `fetch` as fallback.
- *
- * Auto-generates and persists a `client_id` in `localStorage` on first use.
- * SSR-safe: all browser globals are guarded; `track()` is a no-op when
- * `window` is undefined or required config is missing.
- *
- * @returns An sGTM {@link FunnelPlugin} instance.
- *
- * @example
- * ```ts
- * import { Funnel } from "@sunwjy/funnel-core";
- * import { createSGTMPlugin } from "@sunwjy/funnel-client/sgtm";
- *
- * const funnel = new Funnel({
- *   plugins: [createSGTMPlugin()],
- * });
- *
- * funnel.initialize({
- *   sgtm: {
- *     endpoint: "https://sgtm.example.com",
- *     measurementId: "G-XXXXXXXXXX",
- *   },
- * });
- * ```
  */
 export function createSGTMPlugin(): FunnelPlugin {
   let endpoint = "";
@@ -227,6 +208,7 @@ export function createSGTMPlugin(): FunnelPlugin {
   let path = DEFAULT_PATH;
   let clientIdOverride: string | undefined;
   let nonPersonalizedAds: boolean | undefined;
+  let engagementTimeMsec = DEFAULT_ENGAGEMENT_TIME_MSEC;
   let resolvedClientId = "";
   let storedUserProperties: UserProperties | null = null;
 
@@ -237,10 +219,24 @@ export function createSGTMPlugin(): FunnelPlugin {
       const c = config as unknown as SGTMPluginConfig;
       if (c.endpoint) endpoint = c.endpoint;
       if (c.measurementId) measurementId = c.measurementId;
-      apiSecret = c.apiSecret;
+
+      if (c.apiSecret) {
+        if (c.allowApiSecretInBrowser === true) {
+          apiSecret = c.apiSecret;
+        } else {
+          apiSecret = undefined;
+          console.error(
+            "[funnel/sgtm] apiSecret was provided but allowApiSecretInBrowser is not true; the secret will NOT be sent. Putting api_secret in browser traffic exposes it in DevTools, proxy logs, and CDN access logs. Prefer skipping api_secret validation in your sGTM container; or set allowApiSecretInBrowser: true to acknowledge the risk.",
+          );
+        }
+      } else {
+        apiSecret = undefined;
+      }
+
       path = c.path ?? DEFAULT_PATH;
       clientIdOverride = c.clientId;
       nonPersonalizedAds = c.nonPersonalizedAds;
+      engagementTimeMsec = c.engagementTimeMsec ?? DEFAULT_ENGAGEMENT_TIME_MSEC;
 
       if (typeof window !== "undefined") {
         resolvedClientId = resolveClientId(clientIdOverride);
@@ -263,7 +259,7 @@ export function createSGTMPlugin(): FunnelPlugin {
         ...(params as Record<string, unknown>),
         event_id: context.eventId,
         session_id: resolveSessionId(),
-        engagement_time_msec: 100,
+        engagement_time_msec: engagementTimeMsec,
       };
 
       const payload: MPPayload = {
@@ -285,7 +281,7 @@ export function createSGTMPlugin(): FunnelPlugin {
         payload.non_personalized_ads = nonPersonalizedAds;
       }
 
-      sendPayload(buildUrl(endpoint, path, measurementId, apiSecret), JSON.stringify(payload));
+      postJson(buildUrl(endpoint, path, measurementId, apiSecret), JSON.stringify(payload));
     },
   };
 }

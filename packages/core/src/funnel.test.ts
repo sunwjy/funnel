@@ -48,6 +48,16 @@ describe("Funnel", () => {
 
       expect(spy).toHaveBeenCalledWith('[funnel] Plugin "p1" initialized');
     });
+
+    it("should be idempotent at the per-plugin level — initialize twice does not re-init", () => {
+      const plugin = createMockPlugin("p1");
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      funnel.initialize();
+      funnel.initialize();
+
+      expect(plugin.initialize).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("track", () => {
@@ -141,7 +151,30 @@ describe("Funnel", () => {
       funnel.initialize();
       funnel.track("page_view", {});
 
-      expect(spy).toHaveBeenCalledWith('[funnel] Plugin "bad" failed to track "page_view"', error);
+      expect(spy).toHaveBeenCalledWith(
+        '[funnel] Plugin "bad" failed during track "page_view"',
+        error,
+      );
+    });
+
+    it("should call onError hook instead of console.error when configured", () => {
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const onError = vi.fn();
+      const error = new Error("boom");
+      const failing = createMockPlugin("bad");
+      (failing.track as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        throw error;
+      });
+
+      const funnel = new Funnel({ plugins: [failing], onError });
+      funnel.initialize();
+      funnel.track("page_view", {});
+
+      expect(onError).toHaveBeenCalledWith(
+        error,
+        expect.objectContaining({ plugin: "bad", phase: "track", eventName: "page_view" }),
+      );
+      expect(consoleSpy).not.toHaveBeenCalled();
     });
 
     it("should log when debug is enabled", () => {
@@ -211,7 +244,7 @@ describe("Funnel", () => {
 
       funnel.setUser({ user_id: "u-1" });
 
-      expect(spy).toHaveBeenCalledWith('[funnel] Plugin "bad" failed to setUser', error);
+      expect(spy).toHaveBeenCalledWith('[funnel] Plugin "bad" failed during setUser', error);
     });
 
     it("should store properties and replay after initialize", () => {

@@ -291,14 +291,17 @@ export interface AddPaymentInfoParams extends BaseEventParams {
  *
  * @remarks
  * Sent when a purchase is completed.
+ *
+ * `transaction_id` is required by GA4 and is what most platforms use for
+ * server-side deduplication of purchase events.
  */
 export interface PurchaseParams extends BaseEventParams {
+  /** Unique transaction identifier (required by GA4 for purchase events). */
+  transaction_id: string;
   /** Currency code. */
   currency?: string;
   /** Total purchase value (including shipping and tax). */
   value?: number;
-  /** Unique transaction identifier. */
-  transaction_id?: string;
   /** Applied coupon code. */
   coupon?: string;
   /** Shipping cost. */
@@ -306,6 +309,75 @@ export interface PurchaseParams extends BaseEventParams {
   /** Tax amount. */
   tax?: number;
   /** Purchased items. */
+  items?: Item[];
+}
+
+/**
+ * Parameters for the `login` event.
+ *
+ * @remarks
+ * Sent when a user signs in to an existing account.
+ */
+export interface LoginParams extends BaseEventParams {
+  /** Login method (e.g., "google", "email"). */
+  method?: string;
+}
+
+/**
+ * Parameters for the `share` event.
+ *
+ * @remarks
+ * Sent when a user shares content.
+ */
+export interface ShareParams extends BaseEventParams {
+  /** Sharing channel (e.g., "twitter", "email"). */
+  method?: string;
+  /** Type of shared content. */
+  content_type?: string;
+  /** ID of the shared content. */
+  item_id?: string;
+}
+
+/**
+ * Parameters for the `view_cart` event.
+ *
+ * @remarks
+ * Sent when a user views their shopping cart.
+ */
+export interface ViewCartParams extends BaseEventParams {
+  /** Currency code. */
+  currency?: string;
+  /** Total value of items in the cart. */
+  value?: number;
+  /** Items in the cart. */
+  items?: Item[];
+}
+
+/**
+ * Parameters for the `view_search_results` event.
+ *
+ * @remarks
+ * Sent when a user views the results of a search.
+ */
+export interface ViewSearchResultsParams extends BaseEventParams {
+  /** The search query string. */
+  search_term: string;
+  /** Items shown as search results. */
+  items?: Item[];
+}
+
+/**
+ * Parameters for the `add_to_wishlist` event.
+ *
+ * @remarks
+ * Sent when an item is added to a wishlist.
+ */
+export interface AddToWishlistParams extends BaseEventParams {
+  /** Currency code. */
+  currency?: string;
+  /** Total value of items added. */
+  value?: number;
+  /** Items added to the wishlist. */
   items?: Item[];
 }
 
@@ -344,13 +416,18 @@ export interface EventMap {
   view_promotion: ViewPromotionParams;
   select_promotion: SelectPromotionParams;
   sign_up: SignUpParams;
+  login: LoginParams;
+  share: ShareParams;
   generate_lead: GenerateLeadParams;
   search: SearchParams;
+  view_search_results: ViewSearchResultsParams;
   view_item_list: ViewItemListParams;
   select_item: SelectItemParams;
   view_item: ViewItemParams;
+  add_to_wishlist: AddToWishlistParams;
   add_to_cart: AddToCartParams;
   remove_from_cart: RemoveFromCartParams;
+  view_cart: ViewCartParams;
   begin_checkout: BeginCheckoutParams;
   add_shipping_info: AddShippingInfoParams;
   add_payment_info: AddPaymentInfoParams;

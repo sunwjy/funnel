@@ -64,6 +64,16 @@ describe("createKakaoPixelPlugin", () => {
       expect(mockPixelInstance.pageView).toHaveBeenCalledTimes(1);
     });
 
+    it("should cache the kakaoPixel instance across calls", () => {
+      plugin.track("page_view", {}, mockContext);
+      plugin.track("page_view", {}, mockContext);
+      plugin.track("page_view", {}, mockContext);
+
+      // factory called once; method called per track
+      expect(window.kakaoPixel).toHaveBeenCalledTimes(1);
+      expect(mockPixelInstance.pageView).toHaveBeenCalledTimes(3);
+    });
+
     it("should map search to search({ keyword })", () => {
       plugin.track("search", { search_term: "running shoes" }, mockContext);
 
@@ -85,10 +95,10 @@ describe("createKakaoPixelPlugin", () => {
       expect(mockPixelInstance.viewContent).toHaveBeenCalledWith({ id: "SKU1" });
     });
 
-    it("should map view_item_list to viewContent({ id: item_list_id })", () => {
+    it("should silently drop view_item_list (no Kakao equivalent)", () => {
       plugin.track("view_item_list", { item_list_id: "homepage_recs" }, mockContext);
 
-      expect(mockPixelInstance.viewContent).toHaveBeenCalledWith({ id: "homepage_recs" });
+      expect(mockPixelInstance.viewContent).not.toHaveBeenCalled();
     });
 
     it("should map add_to_cart to addToCart({ id }) using first item", () => {
@@ -109,12 +119,19 @@ describe("createKakaoPixelPlugin", () => {
       expect(mockPixelInstance.viewCart).toHaveBeenCalledTimes(1);
     });
 
-    it("should map purchase to purchase() with products, total_quantity, total_price, currency", () => {
+    it("should map view_cart to viewCart()", () => {
+      plugin.track("view_cart", { currency: "KRW", value: 50000 }, mockContext);
+
+      expect(mockPixelInstance.viewCart).toHaveBeenCalledTimes(1);
+    });
+
+    it("should map purchase computing total_price from products", () => {
       plugin.track(
         "purchase",
         {
           currency: "KRW",
-          value: 29000,
+          value: 99999, // intentionally different from product sum to verify recompute
+          transaction_id: "T-1",
           items: [
             { item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 10000 },
             { item_id: "SKU2", item_name: "Socks", quantity: 1, price: 9000 },
@@ -125,7 +142,7 @@ describe("createKakaoPixelPlugin", () => {
 
       expect(mockPixelInstance.purchase).toHaveBeenCalledWith({
         total_quantity: 3,
-        total_price: 29000,
+        total_price: 29000, // 2*10000 + 1*9000
         currency: "KRW",
         products: [
           { id: "SKU1", name: "Shoes", quantity: 2, price: 10000 },
@@ -134,12 +151,13 @@ describe("createKakaoPixelPlugin", () => {
       });
     });
 
-    it("should default quantity to 1 and price to 0 for purchase items without those fields", () => {
+    it("should fall back to params.value when per-item prices are missing", () => {
       plugin.track(
         "purchase",
         {
           currency: "USD",
           value: 100,
+          transaction_id: "T-2",
           items: [{ item_id: "SKU1", item_name: "Widget" }],
         },
         mockContext,
@@ -149,6 +167,7 @@ describe("createKakaoPixelPlugin", () => {
         expect.objectContaining({
           products: [{ id: "SKU1", name: "Widget", quantity: 1, price: 0 }],
           total_quantity: 1,
+          total_price: 100,
         }),
       );
     });
@@ -158,6 +177,7 @@ describe("createKakaoPixelPlugin", () => {
         "purchase",
         {
           value: 5000,
+          transaction_id: "T-3",
           items: [{ item_id: "SKU1", item_name: "Item" }],
         },
         mockContext,

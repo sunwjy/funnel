@@ -8,7 +8,14 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@sunwjy/funnel-core";
+import type {
+  EventContext,
+  EventMap,
+  EventName,
+  FunnelPlugin,
+  Item,
+  UserProperties,
+} from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -33,9 +40,9 @@ export interface TikTokPixelPluginConfig {
  * Mapping from GA4 event names to TikTok Pixel standard event names.
  *
  * @remarks
- * GA4 events not present in this map are sent as custom events via `ttq.track()`.
- *
- * @see {@link https://ads.tiktok.com/help/article/standard-events-parameters | TikTok Pixel Standard Events}
+ * `select_item` is intentionally NOT mapped: TikTok's `ClickButton` is for
+ * non-product CTAs and conflating PLP clicks with it inflates that counter
+ * in TikTok ads manager. Unmapped GA4 events fall through to a custom event.
  */
 const EVENT_MAP: Partial<Record<EventName, string>> = {
   view_item: "ViewContent",
@@ -46,40 +53,24 @@ const EVENT_MAP: Partial<Record<EventName, string>> = {
   search: "Search",
   sign_up: "CompleteRegistration",
   generate_lead: "SubmitForm",
-  select_item: "ClickButton",
 };
 
-/**
- * Transforms a GA4 {@link Item} array into TikTok Pixel contents format.
- *
- * @param items - The items to transform.
- * @returns TikTok Pixel contents parameter, or an empty object if no items are provided.
- *
- * @internal
- */
 function transformItems(items?: Item[]): Record<string, unknown> {
   if (!items || items.length === 0) return {};
   return {
-    contents: items.map((item) => ({
-      content_id: item.item_id,
-      content_name: item.item_name,
-      content_type: "product",
-      quantity: item.quantity ?? 1,
-      price: item.price ?? 0,
-    })),
+    contents: items.map((item) => {
+      const entry: Record<string, unknown> = {
+        content_id: item.item_id,
+        content_name: item.item_name,
+        content_type: "product",
+        quantity: item.quantity ?? 1,
+      };
+      if (item.price !== undefined) entry.price = item.price;
+      return entry;
+    }),
   };
 }
 
-/**
- * Transforms GA4 event parameters into TikTok Pixel parameters.
- *
- * @typeParam E - The event name type.
- * @param eventName - The GA4 event name.
- * @param params - The GA4 event parameters.
- * @returns Parameters formatted for the TikTok Pixel API.
- *
- * @internal
- */
 function transformParams<E extends EventName>(
   eventName: E,
   params: EventMap[E],
@@ -98,32 +89,15 @@ function transformParams<E extends EventName>(
     result.query = p.search_term;
   }
 
+  if (eventName === "purchase" && "transaction_id" in p) {
+    result.order_id = p.transaction_id;
+  }
+
   return result;
 }
 
 /**
  * Creates a TikTok Pixel plugin instance.
- *
- * @remarks
- * Automatically transforms GA4 events into TikTok Pixel standard events
- * and sends them via `window.ttq`.
- * Automatically skipped in SSR environments where `window` is not available.
- *
- * @returns A TikTok Pixel {@link FunnelPlugin} instance.
- *
- * @example
- * ```ts
- * import { Funnel } from "@sunwjy/funnel-core";
- * import { createTikTokPixelPlugin } from "@sunwjy/funnel-client/tiktok-pixel";
- *
- * const funnel = new Funnel({
- *   plugins: [createTikTokPixelPlugin()],
- * });
- *
- * funnel.initialize({
- *   "tiktok-pixel": { pixelId: "ABCDE12345" },
- * });
- * ```
  */
 export function createTikTokPixelPlugin(): FunnelPlugin {
   return {
@@ -136,7 +110,7 @@ export function createTikTokPixelPlugin(): FunnelPlugin {
       }
     },
 
-    track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+    track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
       if (typeof window === "undefined" || !window.ttq) {
         return;
       }
@@ -147,7 +121,10 @@ export function createTikTokPixelPlugin(): FunnelPlugin {
       }
 
       const tiktokEvent = EVENT_MAP[eventName];
-      const tiktokParams = transformParams(eventName, params);
+      const tiktokParams = {
+        ...transformParams(eventName, params),
+        event_id: context.eventId,
+      };
 
       if (tiktokEvent) {
         window.ttq.track(tiktokEvent, tiktokParams);

@@ -64,9 +64,15 @@ export function createNaverAdPlugin(): FunnelPlugin {
       if (conversionType) {
         const value = typeof p.value === "number" ? String(p.value) : "0";
         window.wcs.cnv = `${conversionType},${value}`;
-        window.wcs_do();
+        try {
+          window.wcs_do();
+        } finally {
+          // Clear so the value doesn't leak into the next call (wcs.cnv is
+          // a global mutable string; without this reset, a follow-up
+          // page_view that forgets to clear would re-fire the conversion).
+          window.wcs.cnv = undefined;
+        }
       }
-      // Unmapped events are silently ignored
     },
   };
 }

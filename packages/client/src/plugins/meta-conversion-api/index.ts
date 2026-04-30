@@ -7,108 +7,88 @@
  * Conversion API. Shares the `eventId` from {@link EventContext} with the
  * browser-side Meta Pixel plugin to enable server-browser deduplication.
  *
+ * PII fields (em/ph/fn/ln/external_id) are SHA-256 hashed in the browser
+ * before being sent to the server endpoint, so the server only ever receives
+ * hashed values. If SubtleCrypto is unavailable, the fields are omitted
+ * rather than transmitted in the clear.
+ *
  * @packageDocumentation
  */
 
-import type {
-  EventContext,
-  EventMap,
-  EventName,
-  FunnelPlugin,
-  Item,
-  UserProperties,
+import {
+  type EventContext,
+  type EventMap,
+  type EventName,
+  type FunnelPlugin,
+  hashPii,
+  type Item,
+  type UserProperties,
 } from "@sunwjy/funnel-core";
+import { postJson } from "../../internal/transport.js";
 
 /**
  * Configuration for the Meta Conversion API plugin.
  */
 export interface MetaConversionApiPluginConfig {
-  /** The server endpoint URL that receives the event payload and forwards it to Meta CAPI. */
-  endpoint: string;
+  /**
+   * The server endpoint URL that receives the event payload and forwards it
+   * to Meta CAPI. When omitted (or empty), `track()` is a no-op — useful for
+   * SSR / partial configs.
+   */
+  endpoint?: string;
+  /**
+   * Meta CAPI Test Event Code (e.g., "TEST12345"). When set, every event
+   * is tagged with this code so it appears in the Meta Events Manager
+   * "Test Events" tab.
+   */
+  testEventCode?: string;
 }
 
-/**
- * User data collected from the browser for Meta CAPI.
- *
- * @internal
- */
+/** @internal */
 interface MetaCapiUserData {
-  /** Meta browser ID cookie (_fbp). */
   fbp?: string;
-  /** Meta click ID cookie (_fbc). */
   fbc?: string;
-  /** Browser user agent string. */
   client_user_agent?: string;
-  /** Hashed email address. */
   em?: string;
-  /** Hashed phone number. */
   ph?: string;
-  /** Hashed first name. */
   fn?: string;
-  /** Hashed last name. */
   ln?: string;
-  /** External user identifier. */
   external_id?: string;
 }
 
-/**
- * Custom data payload for Meta CAPI events.
- *
- * @internal
- */
+/** @internal */
 interface MetaCapiCustomData {
-  /** Currency code (e.g., "USD", "KRW"). */
   currency?: string;
-  /** Monetary value of the event. */
   value?: number;
-  /** Array of product content IDs. */
   content_ids?: string[];
-  /** Detailed product information. */
-  contents?: Array<{ id: string; quantity: number }>;
-  /** Number of items. */
+  contents?: Array<{ id: string; quantity: number; item_price?: number }>;
   num_items?: number;
-  /** Search query string. */
   search_string?: string;
+  order_id?: string;
   [key: string]: unknown;
 }
 
-/**
- * Full event payload sent to the server endpoint.
- *
- * @internal
- */
+/** @internal */
 interface MetaCapiPayload {
-  /** Meta standard or custom event name. */
   event_name: string;
-  /** Unix timestamp in seconds. */
   event_time: number;
-  /** Unique event ID for browser-server deduplication. */
   event_id: string;
-  /** URL where the event occurred. */
   event_source_url: string;
-  /** Always "website" for browser-originated events. */
   action_source: "website";
-  /** Browser-collected user data. */
   user_data: MetaCapiUserData;
-  /** Event-specific custom data. */
   custom_data: MetaCapiCustomData;
+  test_event_code?: string;
 }
 
-/**
- * Mapping from GA4 event names to Meta standard event names.
- *
- * @remarks
- * GA4 events not present in this map are sent as custom events
- * using the original GA4 event name.
- *
- * @see {@link https://developers.facebook.com/docs/marketing-api/conversions-api/parameters/server-event | Meta CAPI Server Event Reference}
- */
 const EVENT_MAP: Partial<Record<EventName, string>> = {
   page_view: "PageView",
   view_item: "ViewContent",
   view_item_list: "ViewContent",
   select_item: "ViewContent",
+  view_cart: "ViewContent",
+  add_to_wishlist: "AddToWishlist",
   search: "Search",
+  view_search_results: "Search",
   add_to_cart: "AddToCart",
   begin_checkout: "InitiateCheckout",
   add_payment_info: "AddPaymentInfo",
@@ -117,54 +97,37 @@ const EVENT_MAP: Partial<Record<EventName, string>> = {
   sign_up: "CompleteRegistration",
 };
 
-/**
- * Reads a cookie value by name from `document.cookie`.
- *
- * @param name - The cookie name to look up.
- * @returns The decoded cookie value, or `undefined` if not found or in SSR.
- *
- * @internal
- */
 function getCookie(name: string): string | undefined {
   if (typeof document === "undefined") return undefined;
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : undefined;
 }
 
-/**
- * Transforms a GA4 {@link Item} array into Meta CAPI custom data format.
- *
- * @param items - The items to transform.
- * @returns Meta CAPI item fields, or an empty object if no items are provided.
- *
- * @internal
- */
+function getQueryParam(name: string): string | undefined {
+  if (typeof window === "undefined" || !window.location) return undefined;
+  try {
+    return new URLSearchParams(window.location.search).get(name) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function transformItems(items?: Item[]): Partial<MetaCapiCustomData> {
   if (!items || items.length === 0) return {};
   return {
     content_ids: items.map((item) => item.item_id),
-    contents: items.map((item) => ({
-      id: item.item_id,
-      quantity: item.quantity ?? 1,
-    })),
+    contents: items.map((item) => {
+      const entry: { id: string; quantity: number; item_price?: number } = {
+        id: item.item_id,
+        quantity: item.quantity ?? 1,
+      };
+      if (item.price !== undefined) entry.item_price = item.price;
+      return entry;
+    }),
     num_items: items.length,
   };
 }
 
-/**
- * Transforms GA4 event parameters into Meta CAPI custom data.
- *
- * @remarks
- * Common fields (`currency`, `value`, `items`) are mapped automatically.
- * Event-specific transformations are applied for `search` and `view_item_list`.
- *
- * @typeParam E - The event name type.
- * @param eventName - The GA4 event name.
- * @param params - The GA4 event parameters.
- * @returns Custom data formatted for the Meta CAPI payload.
- *
- * @internal
- */
 function transformParams<E extends EventName>(
   eventName: E,
   params: EventMap[E],
@@ -172,42 +135,41 @@ function transformParams<E extends EventName>(
   const result: MetaCapiCustomData = {};
   const p = params as Record<string, unknown>;
 
-  // Transform items if present
   if ("items" in p && Array.isArray(p.items)) {
     Object.assign(result, transformItems(p.items as Item[]));
   }
 
-  // Pass through currency and value
   if ("currency" in p) result.currency = p.currency as string;
   if ("value" in p) result.value = p.value as number;
 
-  // Event-specific transformations
   switch (eventName) {
     case "search":
+    case "view_search_results":
       if ("search_term" in p) result.search_string = p.search_term as string;
       break;
-    case "view_item_list":
-      // No additional custom_data transformation needed beyond items
+    case "purchase":
+    case "refund":
+      if ("transaction_id" in p) result.order_id = p.transaction_id as string;
       break;
   }
 
   return result;
 }
 
-/**
- * Collects browser-side user data for Meta CAPI.
- *
- * @returns User data object with fbp, fbc, and client_user_agent.
- *
- * @internal
- */
 function collectUserData(): MetaCapiUserData {
   const userData: MetaCapiUserData = {};
 
   const fbp = getCookie("_fbp");
   if (fbp) userData.fbp = fbp;
 
-  const fbc = getCookie("_fbc");
+  let fbc = getCookie("_fbc");
+  if (!fbc) {
+    const fbclid = getQueryParam("fbclid");
+    if (fbclid) {
+      // Meta's documented synthesis: fb.<subdomainIndex>.<creationTime>.<fbclid>
+      fbc = `fb.1.${Date.now()}.${fbclid}`;
+    }
+  }
   if (fbc) userData.fbc = fbc;
 
   if (typeof navigator !== "undefined") {
@@ -217,49 +179,39 @@ function collectUserData(): MetaCapiUserData {
   return userData;
 }
 
+async function applyHashedUserProperties(
+  userData: MetaCapiUserData,
+  properties: UserProperties,
+): Promise<void> {
+  const [em, ph, fn, ln, externalId] = await Promise.all([
+    hashPii(properties.email, "email"),
+    hashPii(properties.phone_number, "phone"),
+    hashPii(properties.first_name, "name"),
+    hashPii(properties.last_name, "name"),
+    hashPii(properties.user_id, "id"),
+  ]);
+  if (em) userData.em = em;
+  if (ph) userData.ph = ph;
+  if (fn) userData.fn = fn;
+  if (ln) userData.ln = ln;
+  if (externalId) userData.external_id = externalId;
+}
+
 /**
  * Creates a Meta Conversion API (CAPI) client plugin instance.
- *
- * @remarks
- * On each `track()` call, the plugin:
- * 1. Transforms the GA4 event into Meta's server event format.
- * 2. Collects browser-side user data (_fbp, _fbc cookies, userAgent).
- * 3. Builds a payload including the `eventId` from {@link EventContext} for
- *    browser-server deduplication with the Meta Pixel plugin.
- * 4. Sends the payload to the configured server endpoint via
- *    `navigator.sendBeacon` (preferred) with `fetch` as fallback.
- *
- * Automatically skipped in SSR environments where `window` is not available.
- *
- * @param config - Plugin configuration including the server endpoint URL.
- * @returns A Meta Conversion API {@link FunnelPlugin} instance.
- *
- * @example
- * ```ts
- * import { Funnel } from "@sunwjy/funnel-core";
- * import { createMetaConversionApiPlugin } from "@sunwjy/funnel-client/meta-conversion-api";
- *
- * const funnel = new Funnel({
- *   plugins: [createMetaConversionApiPlugin()],
- * });
- *
- * funnel.initialize({
- *   "meta-conversion-api": { endpoint: "/api/meta-capi" },
- * });
- * ```
  */
 export function createMetaConversionApiPlugin(): FunnelPlugin {
   let endpoint = "";
+  let testEventCode: string | undefined;
   let storedUserProperties: UserProperties | null = null;
 
   return {
     name: "meta-conversion-api",
 
     initialize(config: Record<string, unknown>): void {
-      const { endpoint: ep } = config as unknown as MetaConversionApiPluginConfig;
-      if (ep) {
-        endpoint = ep;
-      }
+      const c = config as unknown as MetaConversionApiPluginConfig;
+      if (c.endpoint) endpoint = c.endpoint;
+      testEventCode = c.testEventCode;
     },
 
     setUser(properties: UserProperties): void {
@@ -278,52 +230,38 @@ export function createMetaConversionApiPlugin(): FunnelPlugin {
       const metaEventName = EVENT_MAP[eventName] ?? eventName;
       const customData = transformParams(eventName, params);
       const userData = collectUserData();
+      const userProps = storedUserProperties;
+      const eventTime = Math.floor(Date.now() / 1000);
+      const sourceUrl = window.location.href;
+      const captured = endpoint;
+      const code = testEventCode;
 
-      if (storedUserProperties) {
-        if (storedUserProperties.email) userData.em = storedUserProperties.email;
-        if (storedUserProperties.phone_number) userData.ph = storedUserProperties.phone_number;
-        if (storedUserProperties.first_name) userData.fn = storedUserProperties.first_name;
-        if (storedUserProperties.last_name) userData.ln = storedUserProperties.last_name;
-        if (storedUserProperties.user_id) userData.external_id = storedUserProperties.user_id;
+      function send(): void {
+        const payload: MetaCapiPayload = {
+          event_name: metaEventName,
+          event_time: eventTime,
+          event_id: context.eventId,
+          event_source_url: sourceUrl,
+          action_source: "website",
+          user_data: userData,
+          custom_data: customData,
+        };
+        if (code) payload.test_event_code = code;
+        postJson(captured, JSON.stringify(payload));
       }
 
-      const payload: MetaCapiPayload = {
-        event_name: metaEventName,
-        event_time: Math.floor(Date.now() / 1000),
-        event_id: context.eventId,
-        event_source_url: window.location.href,
-        action_source: "website",
-        user_data: userData,
-        custom_data: customData,
-      };
-
-      const body = JSON.stringify(payload);
-
-      // Prefer sendBeacon for reliable delivery on page unload; fall back to fetch
-      if (typeof navigator !== "undefined" && navigator.sendBeacon) {
-        const blob = new Blob([body], { type: "application/json" });
-        const sent = navigator.sendBeacon(endpoint, blob);
-        if (!sent) {
-          // sendBeacon queue was full; fall back to fetch
-          fetch(endpoint, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body,
-            keepalive: true,
-          }).catch(() => {
-            // Silently ignore network errors — analytics must never throw
-          });
-        }
-      } else {
-        fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body,
-          keepalive: true,
-        }).catch(() => {
-          // Silently ignore network errors — analytics must never throw
-        });
+      if (!userProps) {
+        // Synchronous fast path — nothing to hash.
+        send();
+        return;
       }
+
+      // Hash PII before posting. The track method stays sync; the network
+      // dispatch is fire-and-forget after hashing completes.
+      void (async () => {
+        await applyHashedUserProperties(userData, userProps);
+        send();
+      })();
     },
   };
 }

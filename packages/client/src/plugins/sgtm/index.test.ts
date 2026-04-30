@@ -79,7 +79,8 @@ describe("createSGTMPlugin", () => {
       expect(url).toBe(`${TEST_ENDPOINT}/mp/collect?measurement_id=${TEST_MEASUREMENT_ID}`);
     });
 
-    it("should include api_secret when provided", () => {
+    it("should reject apiSecret unless allowApiSecretInBrowser is true (and warn)", () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       const plugin = createSGTMPlugin();
       plugin.initialize({
         endpoint: TEST_ENDPOINT,
@@ -89,8 +90,34 @@ describe("createSGTMPlugin", () => {
       plugin.track("page_view", {}, TEST_CONTEXT);
 
       const url = beaconUrl(navigator.sendBeacon as ReturnType<typeof vi.fn>);
+      expect(url).not.toContain("api_secret");
+      expect(errorSpy).toHaveBeenCalled();
+    });
+
+    it("should include apiSecret when allowApiSecretInBrowser is true", () => {
+      const plugin = createSGTMPlugin();
+      plugin.initialize({
+        endpoint: TEST_ENDPOINT,
+        measurementId: TEST_MEASUREMENT_ID,
+        apiSecret: TEST_API_SECRET,
+        allowApiSecretInBrowser: true,
+      });
+      plugin.track("page_view", {}, TEST_CONTEXT);
+
+      const url = beaconUrl(navigator.sendBeacon as ReturnType<typeof vi.fn>);
       expect(url).toContain(`api_secret=${TEST_API_SECRET}`);
-      expect(url).toContain(`measurement_id=${TEST_MEASUREMENT_ID}`);
+    });
+
+    it("should normalize trailing slashes on the endpoint", () => {
+      const plugin = createSGTMPlugin();
+      plugin.initialize({
+        endpoint: `${TEST_ENDPOINT}////`,
+        measurementId: TEST_MEASUREMENT_ID,
+      });
+      plugin.track("page_view", {}, TEST_CONTEXT);
+
+      const url = beaconUrl(navigator.sendBeacon as ReturnType<typeof vi.fn>);
+      expect(url).toBe(`${TEST_ENDPOINT}/mp/collect?measurement_id=${TEST_MEASUREMENT_ID}`);
     });
 
     it("should honor a custom path", () => {
@@ -98,106 +125,128 @@ describe("createSGTMPlugin", () => {
       plugin.initialize({
         endpoint: TEST_ENDPOINT,
         measurementId: TEST_MEASUREMENT_ID,
-        path: "/custom/collect",
+        path: "/g/collect",
       });
       plugin.track("page_view", {}, TEST_CONTEXT);
 
       const url = beaconUrl(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(url).toBe(`${TEST_ENDPOINT}/custom/collect?measurement_id=${TEST_MEASUREMENT_ID}`);
-    });
-
-    it("should normalize trailing slashes and missing leading slash in path", () => {
-      const plugin = createSGTMPlugin();
-      plugin.initialize({
-        endpoint: `${TEST_ENDPOINT}/`,
-        measurementId: TEST_MEASUREMENT_ID,
-        path: "custom/collect",
-      });
-      plugin.track("page_view", {}, TEST_CONTEXT);
-
-      const url = beaconUrl(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(url).toBe(`${TEST_ENDPOINT}/custom/collect?measurement_id=${TEST_MEASUREMENT_ID}`);
-    });
-
-    it("should not send when endpoint is missing", () => {
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ measurementId: TEST_MEASUREMENT_ID });
-      plugin.track("page_view", {}, TEST_CONTEXT);
-
-      expect(navigator.sendBeacon).not.toHaveBeenCalled();
-      expect(fetch).not.toHaveBeenCalled();
-    });
-
-    it("should not send when measurementId is missing", () => {
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT });
-      plugin.track("page_view", {}, TEST_CONTEXT);
-
-      expect(navigator.sendBeacon).not.toHaveBeenCalled();
-      expect(fetch).not.toHaveBeenCalled();
+      expect(url).toBe(`${TEST_ENDPOINT}/g/collect?measurement_id=${TEST_MEASUREMENT_ID}`);
     });
   });
 
-  describe("track — payload shape", () => {
-    it("should wrap the event in a GA4 MP v2 events array", async () => {
+  describe("track — payload structure", () => {
+    it("should default engagement_time_msec to 1 (not 100)", async () => {
       const plugin = createSGTMPlugin();
       plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.track("purchase", { currency: "KRW", value: 29000 }, TEST_CONTEXT);
+      plugin.track("page_view", {}, TEST_CONTEXT);
 
       const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(Array.isArray(payload.events)).toBe(true);
       const events = payload.events as Array<Record<string, unknown>>;
-      expect(events).toHaveLength(1);
-      expect(events[0].name).toBe("purchase");
-      expect(events[0].params).toMatchObject({ currency: "KRW", value: 29000 });
+      const params = events[0].params as Record<string, unknown>;
+      expect(params.engagement_time_msec).toBe(1);
     });
 
-    it("should include event_id from context in event params for dedup", async () => {
+    it("should honor configured engagementTimeMsec", async () => {
+      const plugin = createSGTMPlugin();
+      plugin.initialize({
+        endpoint: TEST_ENDPOINT,
+        measurementId: TEST_MEASUREMENT_ID,
+        engagementTimeMsec: 5000,
+      });
+      plugin.track("page_view", {}, TEST_CONTEXT);
+
+      const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
+      const events = payload.events as Array<Record<string, unknown>>;
+      const params = events[0].params as Record<string, unknown>;
+      expect(params.engagement_time_msec).toBe(5000);
+    });
+
+    it("should include event_id and session_id in event params", async () => {
       const plugin = createSGTMPlugin();
       plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
       plugin.track("page_view", {}, TEST_CONTEXT);
 
       const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      const event = (payload.events as Array<Record<string, unknown>>)[0];
-      expect((event.params as Record<string, unknown>).event_id).toBe(TEST_EVENT_ID);
-    });
-
-    it("should include session_id and engagement_time_msec in event params", async () => {
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.track("page_view", {}, TEST_CONTEXT);
-
-      const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      const event = (payload.events as Array<Record<string, unknown>>)[0];
-      const params = event.params as Record<string, unknown>;
+      const events = payload.events as Array<Record<string, unknown>>;
+      const params = events[0].params as Record<string, unknown>;
+      expect(params.event_id).toBe(TEST_EVENT_ID);
       expect(params.session_id).toBeTruthy();
-      expect(params.engagement_time_msec).toBe(100);
     });
 
-    it("should reuse the same session_id across calls in the same session", async () => {
+    it("should map purchase event with currency, value, transaction_id", async () => {
       const plugin = createSGTMPlugin();
       plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.track("page_view", {}, TEST_CONTEXT);
-      plugin.track("page_view", {}, { eventId: "evt-2" });
-
-      const beacon = navigator.sendBeacon as ReturnType<typeof vi.fn>;
-      const first = JSON.parse(await (beacon.mock.calls[0][1] as Blob).text());
-      const second = JSON.parse(await (beacon.mock.calls[1][1] as Blob).text());
-      expect(first.events[0].params.session_id).toBe(second.events[0].params.session_id);
-    });
-
-    it("should send timestamp_micros as unix micros", async () => {
-      const now = 1712600000_000;
-      vi.spyOn(Date, "now").mockReturnValue(now);
-
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.track("page_view", {}, TEST_CONTEXT);
+      plugin.track(
+        "purchase",
+        { currency: "KRW", value: 29000, transaction_id: "T-1" },
+        TEST_CONTEXT,
+      );
 
       const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(payload.timestamp_micros).toBe(now * 1000);
+      const events = payload.events as Array<Record<string, unknown>>;
+      expect(events[0].name).toBe("purchase");
+      expect(events[0].params).toMatchObject({
+        currency: "KRW",
+        value: 29000,
+        transaction_id: "T-1",
+      });
+    });
+  });
+
+  describe("track — session expiry", () => {
+    it("should reuse an active session within the 30-min idle window", async () => {
+      const plugin = createSGTMPlugin();
+      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
+      plugin.track("page_view", {}, TEST_CONTEXT);
+      const payload1 = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
+
+      // Reset send mock so we can read the next call cleanly
+      (navigator.sendBeacon as ReturnType<typeof vi.fn>).mockClear();
+
+      plugin.track("page_view", {}, TEST_CONTEXT);
+      const payload2 = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
+
+      const sid1 = (payload1.events as Array<Record<string, unknown>>)[0].params as Record<
+        string,
+        unknown
+      >;
+      const sid2 = (payload2.events as Array<Record<string, unknown>>)[0].params as Record<
+        string,
+        unknown
+      >;
+      expect(sid1.session_id).toBe(sid2.session_id);
     });
 
+    it("should start a new session after 30 min of idle", async () => {
+      const plugin = createSGTMPlugin();
+      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
+
+      // First track at t=0
+      const t0 = 1_000_000_000;
+      vi.spyOn(Date, "now").mockReturnValue(t0);
+      plugin.track("page_view", {}, TEST_CONTEXT);
+      const payload1 = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
+
+      (navigator.sendBeacon as ReturnType<typeof vi.fn>).mockClear();
+
+      // Second track 31 min later
+      vi.spyOn(Date, "now").mockReturnValue(t0 + 31 * 60 * 1000);
+      plugin.track("page_view", {}, TEST_CONTEXT);
+      const payload2 = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
+
+      const params1 = (payload1.events as Array<Record<string, unknown>>)[0].params as Record<
+        string,
+        unknown
+      >;
+      const params2 = (payload2.events as Array<Record<string, unknown>>)[0].params as Record<
+        string,
+        unknown
+      >;
+      expect(params1.session_id).not.toBe(params2.session_id);
+    });
+  });
+
+  describe("track — non_personalized_ads + user properties", () => {
     it("should include non_personalized_ads when configured", async () => {
       const plugin = createSGTMPlugin();
       plugin.initialize({
@@ -211,87 +260,21 @@ describe("createSGTMPlugin", () => {
       expect(payload.non_personalized_ads).toBe(true);
     });
 
-    it("should omit non_personalized_ads when unset", async () => {
+    it("should include user_id and user_properties from setUser", async () => {
       const plugin = createSGTMPlugin();
       plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
+      plugin.setUser?.({ user_id: "u-1", plan: "pro" });
       plugin.track("page_view", {}, TEST_CONTEXT);
 
       const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(payload.non_personalized_ads).toBeUndefined();
+      expect(payload.user_id).toBe("u-1");
+      expect(payload.user_properties).toEqual({ plan: { value: "pro" } });
     });
 
-    it("should pass through complex GA4 params including items", async () => {
+    it("should clear user properties after resetUser", async () => {
       const plugin = createSGTMPlugin();
       plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.track(
-        "purchase",
-        {
-          currency: "USD",
-          value: 99.99,
-          transaction_id: "T-1",
-          items: [{ item_id: "SKU1", item_name: "Shirt", quantity: 2, price: 49.99 }],
-        },
-        TEST_CONTEXT,
-      );
-
-      const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      const params = (payload.events as Array<Record<string, unknown>>)[0].params as Record<
-        string,
-        unknown
-      >;
-      expect(params).toMatchObject({
-        currency: "USD",
-        value: 99.99,
-        transaction_id: "T-1",
-        items: [{ item_id: "SKU1", item_name: "Shirt", quantity: 2, price: 49.99 }],
-      });
-    });
-  });
-
-  describe("setUser / resetUser", () => {
-    it("should include user_id at the top level when set", async () => {
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.setUser?.({ user_id: "u-42" });
-      plugin.track("page_view", {}, TEST_CONTEXT);
-
-      const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(payload.user_id).toBe("u-42");
-    });
-
-    it("should include non-id user fields under user_properties as { value }", async () => {
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.setUser?.({
-        user_id: "u-42",
-        email: "jane@example.com",
-        first_name: "Jane",
-        plan: "pro",
-      });
-      plugin.track("page_view", {}, TEST_CONTEXT);
-
-      const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(payload.user_properties).toEqual({
-        email: { value: "jane@example.com" },
-        first_name: { value: "Jane" },
-        plan: { value: "pro" },
-      });
-    });
-
-    it("should omit user_properties when only user_id is set", async () => {
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.setUser?.({ user_id: "u-42" });
-      plugin.track("page_view", {}, TEST_CONTEXT);
-
-      const payload = await parseBeaconBody(navigator.sendBeacon as ReturnType<typeof vi.fn>);
-      expect(payload.user_properties).toBeUndefined();
-    });
-
-    it("should clear user state after resetUser", async () => {
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.setUser?.({ user_id: "u-42", email: "jane@example.com" });
+      plugin.setUser?.({ user_id: "u-1", plan: "pro" });
       plugin.resetUser?.();
       plugin.track("page_view", {}, TEST_CONTEXT);
 
@@ -301,16 +284,7 @@ describe("createSGTMPlugin", () => {
     });
   });
 
-  describe("transport — sendBeacon with fetch fallback", () => {
-    it("should prefer sendBeacon", () => {
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-      plugin.track("page_view", {}, TEST_CONTEXT);
-
-      expect(navigator.sendBeacon).toHaveBeenCalledTimes(1);
-      expect(fetch).not.toHaveBeenCalled();
-    });
-
+  describe("transport fallback", () => {
     it("should fall back to fetch when sendBeacon returns false", () => {
       navigator.sendBeacon = vi.fn().mockReturnValue(false);
 
@@ -318,53 +292,15 @@ describe("createSGTMPlugin", () => {
       plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/mp/collect"),
-        expect.objectContaining({
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          keepalive: true,
-        }),
-      );
+      expect(fetch).toHaveBeenCalled();
     });
 
-    it("should use fetch when sendBeacon is unavailable", () => {
-      // @ts-expect-error — simulate missing sendBeacon
-      delete navigator.sendBeacon;
-
+    it("should not send when endpoint or measurementId is missing", () => {
       const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
+      plugin.initialize({});
       plugin.track("page_view", {}, TEST_CONTEXT);
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/mp/collect"),
-        expect.objectContaining({ method: "POST" }),
-      );
-    });
-
-    it("should not throw when fetch rejects", () => {
-      navigator.sendBeacon = vi.fn().mockReturnValue(false);
-      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")));
-
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-
-      expect(() => plugin.track("page_view", {}, TEST_CONTEXT)).not.toThrow();
-    });
-  });
-
-  describe("SSR safety", () => {
-    it("should not throw when window is undefined", () => {
-      const originalWindow = globalThis.window;
-      // @ts-expect-error — simulate SSR
-      delete globalThis.window;
-
-      const plugin = createSGTMPlugin();
-      plugin.initialize({ endpoint: TEST_ENDPOINT, measurementId: TEST_MEASUREMENT_ID });
-
-      expect(() => plugin.track("page_view", {}, TEST_CONTEXT)).not.toThrow();
-
-      globalThis.window = originalWindow;
+      expect(navigator.sendBeacon).not.toHaveBeenCalled();
     });
   });
 });

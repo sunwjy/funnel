@@ -4,6 +4,10 @@ import { createTikTokPixelPlugin } from "./index";
 describe("createTikTokPixelPlugin", () => {
   const mockContext = { eventId: "test-event-id" };
 
+  function mockTtq() {
+    window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+  }
+
   beforeEach(() => {
     vi.restoreAllMocks();
     // @ts-expect-error — reset global
@@ -17,7 +21,7 @@ describe("createTikTokPixelPlugin", () => {
 
   describe("initialize", () => {
     it("should call ttq.load with pixelId", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.initialize({ pixelId: "ABCDE12345" });
@@ -26,7 +30,7 @@ describe("createTikTokPixelPlugin", () => {
     });
 
     it("should not call ttq.load when pixelId is absent", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.initialize({});
@@ -43,7 +47,7 @@ describe("createTikTokPixelPlugin", () => {
 
   describe("track — event mapping", () => {
     it("should map page_view to ttq.page()", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("page_view", {}, mockContext);
@@ -52,8 +56,8 @@ describe("createTikTokPixelPlugin", () => {
       expect(window.ttq.track).not.toHaveBeenCalled();
     });
 
-    it("should map purchase to CompletePayment with params", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+    it("should map purchase to CompletePayment with order_id and event_id", () => {
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track(
@@ -61,6 +65,7 @@ describe("createTikTokPixelPlugin", () => {
         {
           currency: "KRW",
           value: 29000,
+          transaction_id: "T-1",
           items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 14500 }],
         },
         mockContext,
@@ -71,6 +76,8 @@ describe("createTikTokPixelPlugin", () => {
         expect.objectContaining({
           currency: "KRW",
           value: 29000,
+          order_id: "T-1",
+          event_id: "test-event-id",
           contents: [
             {
               content_id: "SKU1",
@@ -85,19 +92,19 @@ describe("createTikTokPixelPlugin", () => {
     });
 
     it("should map add_to_cart to AddToCart", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
 
       expect(window.ttq.track).toHaveBeenCalledWith(
         "AddToCart",
-        expect.objectContaining({ currency: "USD", value: 50 }),
+        expect.objectContaining({ currency: "USD", value: 50, event_id: "test-event-id" }),
       );
     });
 
     it("should map begin_checkout to InitiateCheckout", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("begin_checkout", { currency: "USD", value: 100 }, mockContext);
@@ -106,7 +113,7 @@ describe("createTikTokPixelPlugin", () => {
     });
 
     it("should map add_payment_info to AddPaymentInfo", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("add_payment_info", { currency: "USD", value: 100 }, mockContext);
@@ -115,7 +122,7 @@ describe("createTikTokPixelPlugin", () => {
     });
 
     it("should map search to Search with query param", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("search", { search_term: "sneakers" }, mockContext);
@@ -127,7 +134,7 @@ describe("createTikTokPixelPlugin", () => {
     });
 
     it("should map sign_up to CompleteRegistration", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("sign_up", {}, mockContext);
@@ -136,7 +143,7 @@ describe("createTikTokPixelPlugin", () => {
     });
 
     it("should map generate_lead to SubmitForm", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("generate_lead", {}, mockContext);
@@ -144,17 +151,20 @@ describe("createTikTokPixelPlugin", () => {
       expect(window.ttq.track).toHaveBeenCalledWith("SubmitForm", expect.any(Object));
     });
 
-    it("should map select_item to ClickButton", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+    it("should pass through select_item as a custom event (no longer mapped to ClickButton)", () => {
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("select_item", {}, mockContext);
 
-      expect(window.ttq.track).toHaveBeenCalledWith("ClickButton", expect.any(Object));
+      expect(window.ttq.track).toHaveBeenCalledWith(
+        "select_item",
+        expect.objectContaining({ event_id: "test-event-id" }),
+      );
     });
 
     it("should send unmapped events as custom event via ttq.track", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("refund", { currency: "KRW", value: 5000 }, mockContext);
@@ -167,8 +177,8 @@ describe("createTikTokPixelPlugin", () => {
   });
 
   describe("track — item transformation", () => {
-    it("should transform items to contents with content_id, content_name, content_type, quantity, price", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+    it("should transform items to contents and omit price when item.price is undefined", () => {
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track(
@@ -198,7 +208,6 @@ describe("createTikTokPixelPlugin", () => {
               content_name: "Item B",
               content_type: "product",
               quantity: 1,
-              price: 0,
             },
           ],
         }),
@@ -206,7 +215,7 @@ describe("createTikTokPixelPlugin", () => {
     });
 
     it("should not include contents when items is empty", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.track("view_item", { items: [] }, mockContext);
@@ -221,14 +230,18 @@ describe("createTikTokPixelPlugin", () => {
       const plugin = createTikTokPixelPlugin();
 
       expect(() =>
-        plugin.track("purchase", { currency: "KRW", value: 1000 }, mockContext),
+        plugin.track(
+          "purchase",
+          { currency: "KRW", value: 1000, transaction_id: "T-1" },
+          mockContext,
+        ),
       ).not.toThrow();
     });
   });
 
   describe("setUser", () => {
     it("should call ttq.identify with mapped properties", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.setUser?.({ email: "test@example.com", phone_number: "+821012345678" });
@@ -240,7 +253,7 @@ describe("createTikTokPixelPlugin", () => {
     });
 
     it("should map user_id to external_id", () => {
-      window.ttq = { load: vi.fn(), page: vi.fn(), track: vi.fn(), identify: vi.fn() };
+      mockTtq();
       const plugin = createTikTokPixelPlugin();
 
       plugin.setUser?.({ user_id: "user-123" });

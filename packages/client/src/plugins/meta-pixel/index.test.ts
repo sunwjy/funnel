@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMetaPixelPlugin } from "./index";
 
 describe("createMetaPixelPlugin", () => {
+  const mockContext = { eventId: "test-event-id-123" };
+
   beforeEach(() => {
     vi.restoreAllMocks();
     // @ts-expect-error — reset global
@@ -40,10 +42,35 @@ describe("createMetaPixelPlugin", () => {
   });
 
   describe("track — event mapping", () => {
-    it("should map page_view to PageView without params", () => {
+    it("should map page_view to PageView and forward page_title/location/referrer when provided", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
+
+      plugin.track(
+        "page_view",
+        {
+          page_title: "Home",
+          page_location: "https://example.com/",
+          page_referrer: "https://example.com/prev",
+        },
+        mockContext,
+      );
+
+      expect(window.fbq).toHaveBeenCalledWith(
+        "track",
+        "PageView",
+        expect.objectContaining({
+          page_title: "Home",
+          page_location: "https://example.com/",
+          page_referrer: "https://example.com/prev",
+        }),
+        { eventID: "test-event-id-123" },
+      );
+    });
+
+    it("should map page_view with no params to PageView with empty payload", () => {
+      window.fbq = vi.fn();
+      const plugin = createMetaPixelPlugin();
 
       plugin.track("page_view", {}, mockContext);
 
@@ -55,17 +82,17 @@ describe("createMetaPixelPlugin", () => {
       );
     });
 
-    it("should map purchase to Purchase with params", () => {
+    it("should map purchase to Purchase with order_id and per-item content fields", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       plugin.track(
         "purchase",
         {
           currency: "KRW",
           value: 29000,
-          items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2 }],
+          transaction_id: "T-1",
+          items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 14500 }],
         },
         mockContext,
       );
@@ -76,9 +103,10 @@ describe("createMetaPixelPlugin", () => {
         expect.objectContaining({
           currency: "KRW",
           value: 29000,
+          order_id: "T-1",
           content_ids: ["SKU1"],
           content_type: "product",
-          contents: [{ id: "SKU1", quantity: 2 }],
+          contents: [{ id: "SKU1", quantity: 2, item_price: 14500 }],
           num_items: 1,
         }),
         { eventID: "test-event-id-123" },
@@ -88,7 +116,6 @@ describe("createMetaPixelPlugin", () => {
     it("should map add_to_cart to AddToCart", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
 
@@ -103,7 +130,6 @@ describe("createMetaPixelPlugin", () => {
     it("should map begin_checkout to InitiateCheckout", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       plugin.track("begin_checkout", { currency: "USD", value: 100 }, mockContext);
 
@@ -115,7 +141,6 @@ describe("createMetaPixelPlugin", () => {
     it("should map sign_up to CompleteRegistration with status and content_name", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       plugin.track("sign_up", { method: "google" }, mockContext);
 
@@ -130,7 +155,6 @@ describe("createMetaPixelPlugin", () => {
     it("should map search with search_term to search_string", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       plugin.track("search", { search_term: "shoes" }, mockContext);
 
@@ -142,16 +166,13 @@ describe("createMetaPixelPlugin", () => {
       );
     });
 
-    it("should map view_item_list with content_type product_group", () => {
+    it("should set content_type product_group on view_item_list when items are present", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       plugin.track(
         "view_item_list",
-        {
-          items: [{ item_id: "SKU1", item_name: "Shirt" }],
-        },
+        { items: [{ item_id: "SKU1", item_name: "Shirt" }] },
         mockContext,
       );
 
@@ -163,10 +184,19 @@ describe("createMetaPixelPlugin", () => {
       );
     });
 
+    it("should NOT set content_type product_group on view_item_list when items are absent", () => {
+      window.fbq = vi.fn();
+      const plugin = createMetaPixelPlugin();
+
+      plugin.track("view_item_list", {}, mockContext);
+
+      const params = (window.fbq as ReturnType<typeof vi.fn>).mock.calls[0][2];
+      expect(params.content_type).toBeUndefined();
+    });
+
     it("should send unmapped events as trackCustom", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       plugin.track("refund", { currency: "KRW", value: 5000 }, mockContext);
 
@@ -183,13 +213,12 @@ describe("createMetaPixelPlugin", () => {
     it("should transform items to content_ids, contents, and num_items", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       plugin.track(
         "view_item",
         {
           items: [
-            { item_id: "A", item_name: "Item A", quantity: 3 },
+            { item_id: "A", item_name: "Item A", quantity: 3, price: 10 },
             { item_id: "B", item_name: "Item B" },
           ],
         },
@@ -202,7 +231,7 @@ describe("createMetaPixelPlugin", () => {
         expect.objectContaining({
           content_ids: ["A", "B"],
           contents: [
-            { id: "A", quantity: 3 },
+            { id: "A", quantity: 3, item_price: 10 },
             { id: "B", quantity: 1 },
           ],
           num_items: 2,
@@ -214,7 +243,6 @@ describe("createMetaPixelPlugin", () => {
     it("should not include item fields when items is empty", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       plugin.track("view_item", { items: [] }, mockContext);
 
@@ -227,10 +255,13 @@ describe("createMetaPixelPlugin", () => {
   describe("track — SSR safety", () => {
     it("should not throw when fbq is not available", () => {
       const plugin = createMetaPixelPlugin();
-      const mockContext = { eventId: "test-event-id-123" };
 
       expect(() =>
-        plugin.track("purchase", { currency: "KRW", value: 1000 }, mockContext),
+        plugin.track(
+          "purchase",
+          { currency: "KRW", value: 1000, transaction_id: "T-1" },
+          mockContext,
+        ),
       ).not.toThrow();
     });
   });
@@ -266,11 +297,9 @@ describe("createMetaPixelPlugin", () => {
     it("should not call fbq when pixelId is not set", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      // do not call initialize — pixelId remains undefined
 
       plugin.setUser?.({ email: "user@example.com" });
 
-      // Only the init from initialize should not have been called
       expect(window.fbq).not.toHaveBeenCalled();
     });
 
@@ -291,7 +320,11 @@ describe("createMetaPixelPlugin", () => {
     it("should pass eventId as eventID to fbq", () => {
       window.fbq = vi.fn();
       const plugin = createMetaPixelPlugin();
-      plugin.track("purchase", { currency: "KRW", value: 1000 }, { eventId: "abc-123" });
+      plugin.track(
+        "purchase",
+        { currency: "KRW", value: 1000, transaction_id: "T-1" },
+        { eventId: "abc-123" },
+      );
       expect(window.fbq).toHaveBeenCalledWith("track", "Purchase", expect.any(Object), {
         eventID: "abc-123",
       });

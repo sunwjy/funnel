@@ -23,6 +23,21 @@ describe("createGA4Plugin", () => {
       expect(window.gtag).toHaveBeenCalledWith("config", "G-TEST123");
     });
 
+    it("should forward additional config object to gtag", () => {
+      window.gtag = vi.fn();
+      const plugin = createGA4Plugin();
+
+      plugin.initialize({
+        measurementId: "G-TEST123",
+        config: { send_page_view: false, debug_mode: true },
+      });
+
+      expect(window.gtag).toHaveBeenCalledWith("config", "G-TEST123", {
+        send_page_view: false,
+        debug_mode: true,
+      });
+    });
+
     it("should not call gtag when measurementId is absent", () => {
       window.gtag = vi.fn();
       const plugin = createGA4Plugin();
@@ -42,14 +57,26 @@ describe("createGA4Plugin", () => {
   describe("track", () => {
     const mockContext = { eventId: "test-event-id" };
 
-    it("should call gtag event with event name and params", () => {
+    it("should call gtag event with event name, params, and event_id from context", () => {
       window.gtag = vi.fn();
       const plugin = createGA4Plugin();
 
-      const params = { currency: "KRW", value: 29000 };
-      plugin.track("purchase", params, mockContext);
+      plugin.track(
+        "purchase",
+        { currency: "KRW", value: 29000, transaction_id: "T-1" },
+        mockContext,
+      );
 
-      expect(window.gtag).toHaveBeenCalledWith("event", "purchase", params);
+      expect(window.gtag).toHaveBeenCalledWith(
+        "event",
+        "purchase",
+        expect.objectContaining({
+          currency: "KRW",
+          value: 29000,
+          transaction_id: "T-1",
+          event_id: "test-event-id",
+        }),
+      );
     });
 
     it("should silently skip when gtag is not available", () => {
@@ -109,6 +136,22 @@ describe("createGA4Plugin", () => {
       plugin.resetUser?.();
 
       expect(window.gtag).toHaveBeenCalledWith("set", { user_id: null });
+    });
+
+    it("should clear previously-set user_properties", () => {
+      window.gtag = vi.fn();
+      const plugin = createGA4Plugin();
+
+      plugin.setUser?.({ email: "user@example.com", plan: "pro" });
+      (window.gtag as ReturnType<typeof vi.fn>).mockClear();
+
+      plugin.resetUser?.();
+
+      expect(window.gtag).toHaveBeenCalledWith("set", { user_id: null });
+      expect(window.gtag).toHaveBeenCalledWith("set", "user_properties", {
+        email: null,
+        plan: null,
+      });
     });
   });
 });

@@ -7,7 +7,13 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@sunwjy/funnel-core";
+import type {
+  EventContext,
+  EventMap,
+  EventName,
+  FunnelPlugin,
+  UserProperties,
+} from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -22,6 +28,14 @@ declare global {
 export interface GA4PluginConfig {
   /** GA4 Measurement ID (e.g., "G-XXXXXXXXXX"). */
   measurementId?: string;
+  /**
+   * Additional config object forwarded to `gtag('config', id, config)`.
+   *
+   * @remarks
+   * Used to control GA4 SDK behavior such as `send_page_view`, `debug_mode`,
+   * `cookie_domain`, `anonymize_ip`, etc.
+   */
+  config?: Record<string, unknown>;
 }
 
 /**
@@ -30,40 +44,32 @@ export interface GA4PluginConfig {
  * @remarks
  * Sends events to Google Analytics 4 via `window.gtag`.
  * Automatically skipped in SSR environments where `window` is not available.
- *
- * @returns A GA4 {@link FunnelPlugin} instance.
- *
- * @example
- * ```ts
- * import { Funnel } from "@sunwjy/funnel-core";
- * import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
- *
- * const funnel = new Funnel({
- *   plugins: [createGA4Plugin()],
- * });
- *
- * funnel.initialize({
- *   ga4: { measurementId: "G-XXXXXXXXXX" },
- * });
- * ```
  */
 export function createGA4Plugin(): FunnelPlugin {
+  let trackedUserPropertyKeys = new Set<string>();
+
   return {
     name: "ga4",
 
     initialize(config: Record<string, unknown>): void {
-      const { measurementId } = config as GA4PluginConfig;
+      const { measurementId, config: gtagConfig } = config as GA4PluginConfig;
       if (measurementId && typeof window !== "undefined" && window.gtag) {
-        window.gtag("config", measurementId);
+        if (gtagConfig) {
+          window.gtag("config", measurementId, gtagConfig);
+        } else {
+          window.gtag("config", measurementId);
+        }
       }
     },
 
-    track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+    track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
       if (typeof window === "undefined" || !window.gtag) {
         return;
       }
-      // GA4 is the base format, so pass through directly
-      window.gtag("event", eventName, params);
+      window.gtag("event", eventName, {
+        ...(params as Record<string, unknown>),
+        event_id: context.eventId,
+      });
     },
 
     setUser(properties: UserProperties): void {
@@ -78,6 +84,7 @@ export function createGA4Plugin(): FunnelPlugin {
       for (const [key, value] of Object.entries(rest)) {
         if (value !== undefined) {
           userProperties[key] = value;
+          trackedUserPropertyKeys.add(key);
         }
       }
       if (Object.keys(userProperties).length > 0) {
@@ -90,6 +97,14 @@ export function createGA4Plugin(): FunnelPlugin {
         return;
       }
       window.gtag("set", { user_id: null });
+      if (trackedUserPropertyKeys.size > 0) {
+        const cleared: Record<string, null> = {};
+        for (const key of trackedUserPropertyKeys) {
+          cleared[key] = null;
+        }
+        window.gtag("set", "user_properties", cleared);
+        trackedUserPropertyKeys = new Set<string>();
+      }
     },
   };
 }

@@ -3,7 +3,8 @@
  *
  * @remarks
  * Transforms GA4-based events into Kakao Pixel standard events.
- * Unmapped events are silently ignored as Kakao Pixel does not support custom events.
+ * Kakao Pixel does not support custom events or client-server deduplication;
+ * unmapped events are silently ignored.
  *
  * @packageDocumentation
  */
@@ -51,31 +52,18 @@ function transformProducts(
 
 /**
  * Creates a Kakao Pixel plugin instance.
- *
- * @remarks
- * Automatically transforms GA4 events into Kakao Pixel standard events
- * and sends them via `window.kakaoPixel`.
- * Automatically skipped in SSR environments where `window` is not available.
- * Unmapped events are silently ignored as Kakao Pixel does not support custom events.
- *
- * @returns A Kakao Pixel {@link FunnelPlugin} instance.
- *
- * @example
- * ```ts
- * import { Funnel } from "@sunwjy/funnel-core";
- * import { createKakaoPixelPlugin } from "@sunwjy/funnel-client/kakao-pixel";
- *
- * const funnel = new Funnel({
- *   plugins: [createKakaoPixelPlugin()],
- * });
- *
- * funnel.initialize({
- *   "kakao-pixel": { trackId: "1234567890" },
- * });
- * ```
  */
 export function createKakaoPixelPlugin(): FunnelPlugin {
   let trackId: string | undefined;
+  let cachedPixel: KakaoPixelInstance | null = null;
+
+  function getPixel(): KakaoPixelInstance | null {
+    if (typeof window === "undefined" || !window.kakaoPixel || !trackId) return null;
+    if (!cachedPixel) {
+      cachedPixel = window.kakaoPixel(trackId);
+    }
+    return cachedPixel;
+  }
 
   return {
     name: "kakao-pixel",
@@ -83,14 +71,13 @@ export function createKakaoPixelPlugin(): FunnelPlugin {
     initialize(config: Record<string, unknown>): void {
       const pluginConfig = config as KakaoPixelPluginConfig;
       trackId = pluginConfig.trackId;
+      cachedPixel = null; // re-resolve on next track call
     },
 
     track<E extends EventName>(eventName: E, params: EventMap[E]): void {
-      if (typeof window === "undefined" || !window.kakaoPixel || !trackId) {
-        return;
-      }
+      const pixel = getPixel();
+      if (!pixel) return;
 
-      const pixel = window.kakaoPixel(trackId);
       const p = params as Record<string, unknown>;
 
       switch (eventName) {
@@ -105,23 +92,26 @@ export function createKakaoPixelPlugin(): FunnelPlugin {
           pixel.viewContent({ id: items?.[0]?.item_id ?? "" });
           break;
         }
-        case "view_item_list":
-          pixel.viewContent({ id: (p.item_list_id as string) ?? "" });
-          break;
         case "add_to_cart": {
           const items = p.items as Item[] | undefined;
           pixel.addToCart({ id: items?.[0]?.item_id ?? "" });
           break;
         }
         case "begin_checkout":
+        case "view_cart":
           pixel.viewCart();
           break;
         case "purchase": {
           const items = p.items as Item[] | undefined;
           const products = transformProducts(items);
+          // Kakao expects total_price = sum(quantity * price). When per-item
+          // pricing isn't available we fall back to the GA4 top-level value.
+          const computedTotal = products.reduce((sum, prod) => sum + prod.quantity * prod.price, 0);
+          const totalPrice =
+            computedTotal > 0 ? computedTotal : ((p.value as number | undefined) ?? 0);
           pixel.purchase({
             total_quantity: products.reduce((sum, prod) => sum + prod.quantity, 0),
-            total_price: (p.value as number) ?? 0,
+            total_price: totalPrice,
             currency: (p.currency as string) ?? "KRW",
             products,
           });
@@ -134,7 +124,8 @@ export function createKakaoPixelPlugin(): FunnelPlugin {
           pixel.participation();
           break;
         default:
-          // Kakao Pixel does not support custom events
+          // No mapping — Kakao Pixel cannot receive custom events.
+          // view_item_list / select_item / refund / etc. are silently dropped.
           break;
       }
     },

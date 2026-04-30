@@ -30,6 +30,16 @@ describe("createGTMPlugin", () => {
       );
     });
 
+    it("should be idempotent — calling initialize twice does not push gtm.start twice", () => {
+      const plugin = createGTMPlugin();
+
+      plugin.initialize({ containerId: "GTM-TEST" });
+      plugin.initialize({ containerId: "GTM-TEST" });
+
+      const starts = window.dataLayer.filter((e) => "gtm.start" in e);
+      expect(starts).toHaveLength(1);
+    });
+
     it("should initialize dataLayer without pushing gtm.js when no containerId", () => {
       const plugin = createGTMPlugin();
 
@@ -48,21 +58,21 @@ describe("createGTMPlugin", () => {
     });
   });
 
-  describe("track", () => {
+  describe("track — non-ecommerce events", () => {
     const mockContext = { eventId: "test-event-id" };
 
-    it("should push event name and params to dataLayer", () => {
+    it("should push event name, event_id, and params flat for page_view", () => {
       const plugin = createGTMPlugin();
       plugin.initialize({});
 
-      plugin.track("purchase", { currency: "KRW", value: 29000 }, mockContext);
+      plugin.track("page_view", { page_title: "Home" }, mockContext);
 
       expect(window.dataLayer).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            event: "purchase",
-            currency: "KRW",
-            value: 29000,
+            event: "page_view",
+            event_id: "test-event-id",
+            page_title: "Home",
           }),
         ]),
       );
@@ -79,18 +89,69 @@ describe("createGTMPlugin", () => {
     });
   });
 
-  describe("setUser", () => {
-    it("should push set_user_properties event to dataLayer", () => {
-      const plugin = createGTMPlugin();
-      const properties = { user_id: "abc123", email: "user@example.com" };
+  describe("track — ecommerce events", () => {
+    const mockContext = { eventId: "test-event-id" };
 
-      plugin.setUser?.(properties);
+    it("should clear ecommerce object before pushing purchase", () => {
+      const plugin = createGTMPlugin();
+      plugin.initialize({});
+
+      plugin.track(
+        "purchase",
+        { currency: "KRW", value: 29000, transaction_id: "T-1" },
+        mockContext,
+      );
+
+      // Find the index of the ecommerce: null clear and the purchase event
+      const clearIdx = window.dataLayer.findIndex((e) => "ecommerce" in e && e.ecommerce === null);
+      const purchaseIdx = window.dataLayer.findIndex((e) => e.event === "purchase");
+
+      expect(clearIdx).toBeGreaterThanOrEqual(0);
+      expect(purchaseIdx).toBeGreaterThan(clearIdx);
+    });
+
+    it("should nest currency/value/items under ecommerce for purchase", () => {
+      const plugin = createGTMPlugin();
+      plugin.initialize({});
+
+      plugin.track(
+        "purchase",
+        {
+          currency: "KRW",
+          value: 29000,
+          transaction_id: "T-42",
+          items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 14500 }],
+        },
+        mockContext,
+      );
+
+      const purchase = window.dataLayer.find((e) => e.event === "purchase");
+      expect(purchase).toEqual(
+        expect.objectContaining({
+          event: "purchase",
+          event_id: "test-event-id",
+          ecommerce: expect.objectContaining({
+            currency: "KRW",
+            value: 29000,
+            transaction_id: "T-42",
+            items: [{ item_id: "SKU1", item_name: "Shoes", quantity: 2, price: 14500 }],
+          }),
+        }),
+      );
+    });
+  });
+
+  describe("setUser", () => {
+    it("should push canonical funnel.set_user event with user_id and user_properties", () => {
+      const plugin = createGTMPlugin();
+      plugin.setUser?.({ user_id: "abc123", email: "user@example.com" });
 
       expect(window.dataLayer).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            event: "set_user_properties",
-            user_properties: properties,
+            event: "funnel.set_user",
+            user_id: "abc123",
+            user_properties: { email: "user@example.com" },
           }),
         ]),
       );
@@ -104,7 +165,7 @@ describe("createGTMPlugin", () => {
   });
 
   describe("resetUser", () => {
-    it("should push reset_user_properties event to dataLayer", () => {
+    it("should push funnel.reset_user with user_id null and user_properties null", () => {
       const plugin = createGTMPlugin();
 
       plugin.resetUser?.();
@@ -112,7 +173,8 @@ describe("createGTMPlugin", () => {
       expect(window.dataLayer).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            event: "reset_user_properties",
+            event: "funnel.reset_user",
+            user_id: null,
             user_properties: null,
           }),
         ]),

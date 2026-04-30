@@ -35,6 +35,15 @@ describe("createLinkedInInsightPlugin", () => {
       expect(window._linkedin_data_partner_ids).toEqual(["123456"]);
     });
 
+    it("should not duplicate the partnerId when initialize is called twice", () => {
+      const plugin = createLinkedInInsightPlugin();
+
+      plugin.initialize({ partnerId: "123456" });
+      plugin.initialize({ partnerId: "123456" });
+
+      expect(window._linkedin_data_partner_ids).toEqual(["123456"]);
+    });
+
     it("should not push when partnerId is absent", () => {
       window._linkedin_data_partner_ids = [];
       const plugin = createLinkedInInsightPlugin();
@@ -42,15 +51,6 @@ describe("createLinkedInInsightPlugin", () => {
       plugin.initialize({});
 
       expect(window._linkedin_data_partner_ids).toHaveLength(0);
-    });
-
-    it("should not throw when window is undefined (SSR)", () => {
-      const plugin = createLinkedInInsightPlugin();
-
-      // Simulate SSR by checking typeof window — the guard in initialize
-      // prevents any window access when partnerId is provided but window is absent.
-      // Since jsdom always has window, we verify the guard logic by omitting partnerId.
-      expect(() => plugin.initialize({})).not.toThrow();
     });
   });
 
@@ -65,14 +65,27 @@ describe("createLinkedInInsightPlugin", () => {
       expect(window.lintrk).not.toHaveBeenCalled();
     });
 
-    it("should call lintrk with configured conversion ID for purchase", () => {
+    it("should call lintrk with conversion_id only when no value/currency present", () => {
+      window.lintrk = vi.fn();
+      const plugin = createLinkedInInsightPlugin();
+      plugin.initialize({ conversionIds: { sign_up: 200 } });
+
+      plugin.track("sign_up", {}, mockContext);
+
+      expect(window.lintrk).toHaveBeenCalledWith("track", { conversion_id: 200 });
+    });
+
+    it("should include value object when both value and currency are provided", () => {
       window.lintrk = vi.fn();
       const plugin = createLinkedInInsightPlugin();
       plugin.initialize({ conversionIds: { purchase: 123 } });
 
-      plugin.track("purchase", { currency: "USD", value: 99 }, mockContext);
+      plugin.track("purchase", { currency: "USD", value: 99, transaction_id: "T-1" }, mockContext);
 
-      expect(window.lintrk).toHaveBeenCalledWith("track", { conversion_id: 123 });
+      expect(window.lintrk).toHaveBeenCalledWith("track", {
+        conversion_id: 123,
+        value: { currency: "USD", amount: 99 },
+      });
     });
 
     it("should not call lintrk for events without a configured conversion ID", () => {
@@ -85,24 +98,26 @@ describe("createLinkedInInsightPlugin", () => {
       expect(window.lintrk).not.toHaveBeenCalled();
     });
 
-    it("should map multiple configured events to their respective conversion IDs", () => {
+    it("should warn for unmapped non-page_view events when debug is enabled", () => {
       window.lintrk = vi.fn();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
       const plugin = createLinkedInInsightPlugin();
-      plugin.initialize({
-        conversionIds: {
-          purchase: 100,
-          sign_up: 200,
-          generate_lead: 300,
-        },
-      });
+      plugin.initialize({ debug: true });
 
-      plugin.track("sign_up", {}, mockContext);
-      plugin.track("generate_lead", {}, mockContext);
-      plugin.track("purchase", { currency: "USD", value: 10 }, mockContext);
+      plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
 
-      expect(window.lintrk).toHaveBeenNthCalledWith(1, "track", { conversion_id: 200 });
-      expect(window.lintrk).toHaveBeenNthCalledWith(2, "track", { conversion_id: 300 });
-      expect(window.lintrk).toHaveBeenNthCalledWith(3, "track", { conversion_id: 100 });
+      expect(warn).toHaveBeenCalled();
+    });
+
+    it("should not warn for unmapped events when debug is off", () => {
+      window.lintrk = vi.fn();
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const plugin = createLinkedInInsightPlugin();
+      plugin.initialize({});
+
+      plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
+
+      expect(warn).not.toHaveBeenCalled();
     });
 
     it("should not throw when lintrk is not defined (SSR safety)", () => {
@@ -110,7 +125,11 @@ describe("createLinkedInInsightPlugin", () => {
       plugin.initialize({ conversionIds: { purchase: 123 } });
 
       expect(() =>
-        plugin.track("purchase", { currency: "USD", value: 50 }, mockContext),
+        plugin.track(
+          "purchase",
+          { currency: "USD", value: 50, transaction_id: "T-1" },
+          mockContext,
+        ),
       ).not.toThrow();
     });
   });

@@ -3,17 +3,26 @@
  *
  * @remarks
  * Sends GA4-based events to Mixpanel with Title Case event names.
- * All event properties are passed through with items flattened.
+ * `$insert_id` is set from {@link EventContext.eventId} for server-side
+ * deduplication.
  *
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@sunwjy/funnel-core";
+import type {
+  EventContext,
+  EventMap,
+  EventName,
+  FunnelPlugin,
+  Item,
+  UserProperties,
+} from "@sunwjy/funnel-core";
+import { flattenItems, toTitleCase } from "../../internal/analytics-shared.js";
 
 declare global {
   interface Window {
     mixpanel: {
-      init: (token: string) => void;
+      init: (token: string, config?: Record<string, unknown>) => void;
       track: (eventName: string, properties?: Record<string, unknown>) => void;
       identify: (distinctId: string) => void;
       people: {
@@ -27,49 +36,16 @@ declare global {
 export interface MixpanelPluginConfig {
   /** Mixpanel project token. */
   token?: string;
+  /**
+   * Additional config object forwarded to `mixpanel.init(token, config)`.
+   *
+   * @remarks
+   * Used to configure `api_host` (e.g. `https://api-eu.mixpanel.com` for EU
+   * data residency), `debug`, `persistence`, `batch_requests`, etc.
+   */
+  config?: Record<string, unknown>;
 }
 
-/**
- * Converts a snake_case string to Title Case.
- * e.g., "page_view" → "Page View"
- *
- * @internal
- */
-function toTitleCase(str: string): string {
-  return str
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-/**
- * Flattens a GA4 {@link Item} array into Mixpanel-friendly properties.
- *
- * @internal
- */
-function flattenItems(items?: Item[]): Record<string, unknown> {
-  if (!items || items.length === 0) return {};
-  return {
-    item_ids: items.map((item) => item.item_id),
-    item_names: items.map((item) => item.item_name),
-    num_items: items.length,
-  };
-}
-
-/**
- * Transforms GA4 event parameters into Mixpanel properties.
- *
- * @remarks
- * Items are flattened into `item_ids`, `item_names`, and `num_items`.
- * All other properties pass through as-is.
- *
- * @typeParam E - The event name type.
- * @param _eventName - The GA4 event name (unused, reserved for future mapping).
- * @param params - The GA4 event parameters.
- * @returns Properties formatted for the Mixpanel API.
- *
- * @internal
- */
 function transformParams<E extends EventName>(
   _eventName: E,
   params: EventMap[E],
@@ -88,47 +64,31 @@ function transformParams<E extends EventName>(
   return result;
 }
 
-/**
- * Creates a Mixpanel plugin instance.
- *
- * @remarks
- * Converts GA4 event names to Title Case and sends them via `window.mixpanel.track`.
- * Automatically skipped in SSR environments where `window` is not available.
- *
- * @returns A Mixpanel {@link FunnelPlugin} instance.
- *
- * @example
- * ```ts
- * import { Funnel } from "@sunwjy/funnel-core";
- * import { createMixpanelPlugin } from "@sunwjy/funnel-client/mixpanel";
- *
- * const funnel = new Funnel({
- *   plugins: [createMixpanelPlugin()],
- * });
- *
- * funnel.initialize({
- *   mixpanel: { token: "your-project-token" },
- * });
- * ```
- */
 export function createMixpanelPlugin(): FunnelPlugin {
   return {
     name: "mixpanel",
 
     initialize(config: Record<string, unknown>): void {
-      const { token } = config as MixpanelPluginConfig;
+      const { token, config: mpConfig } = config as MixpanelPluginConfig;
       if (token && typeof window !== "undefined" && window.mixpanel) {
-        window.mixpanel.init(token);
+        if (mpConfig) {
+          window.mixpanel.init(token, mpConfig);
+        } else {
+          window.mixpanel.init(token);
+        }
       }
     },
 
-    track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+    track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
       if (typeof window === "undefined" || !window.mixpanel) {
         return;
       }
 
       const mixpanelEvent = toTitleCase(eventName);
-      const mixpanelParams = transformParams(eventName, params);
+      const mixpanelParams = {
+        ...transformParams(eventName, params),
+        $insert_id: context.eventId,
+      };
 
       window.mixpanel.track(mixpanelEvent, mixpanelParams);
     },

@@ -3,17 +3,26 @@
  *
  * @remarks
  * Sends GA4-based events to Amplitude with Title Case event names.
- * Purchase events map `value` to `revenue` for Amplitude's revenue tracking.
+ * Purchase/refund events map `value` to `revenue`. Each event carries
+ * `insert_id` from {@link EventContext.eventId} for server-side dedup.
  *
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item, UserProperties } from "@sunwjy/funnel-core";
+import type {
+  EventContext,
+  EventMap,
+  EventName,
+  FunnelPlugin,
+  Item,
+  UserProperties,
+} from "@sunwjy/funnel-core";
+import { flattenItems, toTitleCase } from "../../internal/analytics-shared.js";
 
 declare global {
   interface Window {
     amplitude: {
-      init: (apiKey: string) => void;
+      init: (apiKey: string, options?: Record<string, unknown>) => void;
       track: (eventName: string, properties?: Record<string, unknown>) => void;
       setUserId: (userId: string | null) => void;
       identify: (identifyObj: Record<string, unknown>) => void;
@@ -24,30 +33,17 @@ declare global {
 export interface AmplitudePluginConfig {
   /** Amplitude API key. */
   apiKey?: string;
+  /**
+   * Options forwarded to `amplitude.init(apiKey, options)`.
+   *
+   * @remarks
+   * Used to configure `serverZone` (e.g. `"EU"`), `defaultTracking`,
+   * `flushQueueSize`, etc.
+   */
+  options?: Record<string, unknown>;
 }
 
-/**
- * Converts a snake_case string to Title Case.
- * e.g., "page_view" → "Page View"
- */
-function toTitleCase(str: string): string {
-  return str
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-/** Events where `value` should be mapped to `revenue`. */
-const REVENUE_EVENTS: Set<EventName> = new Set(["purchase", "refund"]);
-
-function flattenItems(items?: Item[]): Record<string, unknown> {
-  if (!items || items.length === 0) return {};
-  return {
-    item_ids: items.map((item) => item.item_id),
-    item_names: items.map((item) => item.item_name),
-    num_items: items.length,
-  };
-}
+const REVENUE_EVENTS: ReadonlySet<EventName> = new Set<EventName>(["purchase", "refund"]);
 
 function transformParams<E extends EventName>(
   eventName: E,
@@ -55,11 +51,12 @@ function transformParams<E extends EventName>(
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   const p = params as Record<string, unknown>;
+  const isRevenueEvent = REVENUE_EVENTS.has(eventName);
 
   for (const [key, value] of Object.entries(p)) {
     if (key === "items" && Array.isArray(value)) {
       Object.assign(result, flattenItems(value as Item[]));
-    } else if (key === "value" && REVENUE_EVENTS.has(eventName)) {
+    } else if (key === "value" && isRevenueEvent) {
       result.revenue = value;
     } else {
       result[key] = value;
@@ -74,19 +71,26 @@ export function createAmplitudePlugin(): FunnelPlugin {
     name: "amplitude",
 
     initialize(config: Record<string, unknown>): void {
-      const { apiKey } = config as AmplitudePluginConfig;
+      const { apiKey, options } = config as AmplitudePluginConfig;
       if (apiKey && typeof window !== "undefined" && window.amplitude) {
-        window.amplitude.init(apiKey);
+        if (options) {
+          window.amplitude.init(apiKey, options);
+        } else {
+          window.amplitude.init(apiKey);
+        }
       }
     },
 
-    track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+    track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
       if (typeof window === "undefined" || !window.amplitude) {
         return;
       }
 
       const amplitudeEvent = toTitleCase(eventName);
-      const amplitudeParams = transformParams(eventName, params);
+      const amplitudeParams = {
+        ...transformParams(eventName, params),
+        insert_id: context.eventId,
+      };
 
       window.amplitude.track(amplitudeEvent, amplitudeParams);
     },

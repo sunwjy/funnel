@@ -23,10 +23,17 @@ export interface LinkedInInsightPluginConfig {
   partnerId?: string;
   /** Mapping of GA4 event names to LinkedIn conversion IDs. */
   conversionIds?: Partial<Record<EventName, number>>;
+  /**
+   * When true, emits a `console.warn` for non-`page_view` events that arrive
+   * without a `conversionIds` mapping. Off by default to keep production logs
+   * quiet.
+   */
+  debug?: boolean;
 }
 
 export function createLinkedInInsightPlugin(): FunnelPlugin {
   let conversionIds: Partial<Record<EventName, number>> = {};
+  let debug = false;
 
   return {
     name: "linkedin-insight",
@@ -34,14 +41,17 @@ export function createLinkedInInsightPlugin(): FunnelPlugin {
     initialize(config: Record<string, unknown>): void {
       const pluginConfig = config as LinkedInInsightPluginConfig;
       conversionIds = pluginConfig.conversionIds ?? {};
+      debug = pluginConfig.debug ?? false;
 
       if (pluginConfig.partnerId && typeof window !== "undefined") {
         window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
-        window._linkedin_data_partner_ids.push(pluginConfig.partnerId);
+        if (!window._linkedin_data_partner_ids.includes(pluginConfig.partnerId)) {
+          window._linkedin_data_partner_ids.push(pluginConfig.partnerId);
+        }
       }
     },
 
-    track<E extends EventName>(eventName: E, _params: EventMap[E]): void {
+    track<E extends EventName>(eventName: E, params: EventMap[E]): void {
       if (typeof window === "undefined" || !window.lintrk) {
         return;
       }
@@ -52,9 +62,24 @@ export function createLinkedInInsightPlugin(): FunnelPlugin {
       }
 
       const conversionId = conversionIds[eventName];
-      if (conversionId !== undefined) {
-        window.lintrk("track", { conversion_id: conversionId });
+      if (conversionId === undefined) {
+        if (debug) {
+          console.warn(
+            `[funnel/linkedin-insight] No conversion_id mapping for "${eventName}" — event dropped`,
+          );
+        }
+        return;
       }
+
+      const p = params as Record<string, unknown>;
+      const trackParams: Record<string, unknown> = { conversion_id: conversionId };
+
+      // LinkedIn supports a value object for revenue conversions.
+      if (typeof p.value === "number" && typeof p.currency === "string") {
+        trackParams.value = { currency: p.currency, amount: p.value };
+      }
+
+      window.lintrk("track", trackParams);
     },
   };
 }

@@ -8,13 +8,15 @@
  * @packageDocumentation
  */
 
-export type { FunnelConfig } from "./funnel";
+export type { FunnelConfig, FunnelErrorContext } from "./funnel";
 export { Funnel } from "./funnel";
+export { hashPii, normalizePii } from "./hash";
 export type { FunnelPlugin } from "./plugin";
 export type {
   AddPaymentInfoParams,
   AddShippingInfoParams,
   AddToCartParams,
+  AddToWishlistParams,
   BaseEventParams,
   BeginCheckoutParams,
   EventContext,
@@ -22,6 +24,7 @@ export type {
   EventName,
   GenerateLeadParams,
   Item,
+  LoginParams,
   PageViewParams,
   PurchaseParams,
   RefundParams,
@@ -29,9 +32,12 @@ export type {
   SearchParams,
   SelectItemParams,
   SelectPromotionParams,
+  ShareParams,
   SignUpParams,
   UserProperties,
+  ViewCartParams,
   ViewItemListParams,
   ViewItemParams,
   ViewPromotionParams,
+  ViewSearchResultsParams,
 } from "./types";

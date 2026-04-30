@@ -8,7 +8,13 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, UserProperties } from "@sunwjy/funnel-core";
+import type {
+  EventContext,
+  EventMap,
+  EventName,
+  FunnelPlugin,
+  UserProperties,
+} from "@sunwjy/funnel-core";
 
 declare global {
   interface Window {
@@ -22,15 +28,6 @@ export interface GoogleAdsPluginConfig {
   /** Mapping of GA4 event names to Google Ads conversion labels. */
   conversionLabels?: Partial<Record<EventName, string>>;
 }
-
-const DEFAULT_CONVERSION_EVENTS: Set<EventName> = new Set([
-  "purchase",
-  "generate_lead",
-  "sign_up",
-  "add_to_cart",
-  "begin_checkout",
-  "add_payment_info",
-]);
 
 export function createGoogleAdsPlugin(): FunnelPlugin {
   let conversionId: string | undefined;
@@ -49,31 +46,29 @@ export function createGoogleAdsPlugin(): FunnelPlugin {
       }
     },
 
-    track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+    track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
       if (typeof window === "undefined" || !window.gtag) {
         return;
       }
 
       const p = params as Record<string, unknown>;
       const label = conversionLabels[eventName];
+      const enriched: Record<string, unknown> = {
+        ...p,
+        event_id: context.eventId,
+      };
 
       if (label && conversionId) {
-        // Send as conversion event with send_to
+        // Conversion event: forward all GA4 params (items, coupon, etc.) plus send_to.
+        // The GA4 event name is replaced with 'conversion' but the params survive
+        // so Google Ads Enhanced Conversions can read items/transaction_id/etc.
         const conversionParams: Record<string, unknown> = {
+          ...enriched,
           send_to: `${conversionId}/${label}`,
         };
-
-        if ("value" in p) conversionParams.value = p.value;
-        if ("currency" in p) conversionParams.currency = p.currency;
-        if ("transaction_id" in p) conversionParams.transaction_id = p.transaction_id;
-
         window.gtag("event", "conversion", conversionParams);
-      } else if (DEFAULT_CONVERSION_EVENTS.has(eventName)) {
-        // Send as standard gtag event (can still be picked up by auto-tagging)
-        window.gtag("event", eventName, params);
       } else {
-        // Non-conversion events — pass through
-        window.gtag("event", eventName, params);
+        window.gtag("event", eventName, enriched);
       }
     },
 
@@ -92,6 +87,8 @@ export function createGoogleAdsPlugin(): FunnelPlugin {
       }
 
       if (Object.keys(userData).length > 0) {
+        // gtag.js auto-hashes user_data when the consumer's tag config has
+        // enhanced conversions enabled. Raw values are documented as acceptable.
         window.gtag("set", "user_data", userData);
       }
     },

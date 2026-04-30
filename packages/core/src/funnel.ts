@@ -24,6 +24,19 @@ function generateEventId(): string {
 }
 
 /**
+ * Context object passed to {@link FunnelConfig.onError | onError} when a
+ * plugin throws.
+ */
+export interface FunnelErrorContext {
+  /** Plugin name where the error originated. */
+  plugin: string;
+  /** Lifecycle method that threw. */
+  phase: "initialize" | "track" | "setUser" | "resetUser";
+  /** Event name when `phase === "track"`. */
+  eventName?: EventName;
+}
+
+/**
  * Configuration object passed to the {@link Funnel} constructor.
  */
 export interface FunnelConfig {
@@ -31,6 +44,15 @@ export interface FunnelConfig {
   plugins: FunnelPlugin[];
   /** When `true`, debug logs are printed to the console. @defaultValue `false` */
   debug?: boolean;
+  /**
+   * Called when any plugin throws during a lifecycle method.
+   *
+   * @remarks
+   * When provided, replaces the default `console.error` log so applications
+   * can forward errors to Sentry/Bugsnag/etc. Errors are still isolated:
+   * one plugin throwing never blocks the others.
+   */
+  onError?: (error: unknown, context: FunnelErrorContext) => void;
 }
 
 /**
@@ -51,14 +73,16 @@ export interface FunnelConfig {
  * });
  *
  * funnel.initialize({ ga4: { measurementId: "G-XXXXXXX" } });
- * funnel.track("purchase", { currency: "KRW", value: 29000 });
+ * funnel.track("purchase", { currency: "KRW", value: 29000, transaction_id: "T-1" });
  * ```
  */
 export class Funnel {
   private plugins: FunnelPlugin[] = [];
   private debug: boolean;
   private initialized = false;
+  private initializedPlugins = new Set<string>();
   private userProperties: UserProperties | null = null;
+  private onError?: (error: unknown, context: FunnelErrorContext) => void;
 
   /**
    * Creates a new Funnel instance.
@@ -68,39 +92,41 @@ export class Funnel {
   constructor(config: FunnelConfig) {
     this.plugins = config.plugins;
     this.debug = config.debug ?? false;
+    this.onError = config.onError;
   }
 
   /**
-   * Initializes all registered plugins.
+   * Initializes registered plugins.
    *
    * @remarks
-   * Passes the configuration from `pluginConfigs[plugin.name]` to each plugin's
-   * {@link FunnelPlugin.initialize} method.
-   * {@link track} will not work until this method has been called.
+   * Idempotent at the per-plugin level: a plugin that has already been
+   * initialized is skipped on subsequent calls (useful for HMR/dev reloads).
    *
    * @param pluginConfigs - A map of plugin names to their configuration objects.
    */
   initialize(pluginConfigs?: Record<string, Record<string, unknown>>): void {
     for (const plugin of this.plugins) {
+      if (this.initializedPlugins.has(plugin.name)) continue;
       const config = pluginConfigs?.[plugin.name] ?? {};
-      plugin.initialize(config);
-      if (this.debug) {
-        console.log(`[funnel] Plugin "${plugin.name}" initialized`);
+      try {
+        plugin.initialize(config);
+        this.initializedPlugins.add(plugin.name);
+        if (this.debug) {
+          console.log(`[funnel] Plugin "${plugin.name}" initialized`);
+        }
+      } catch (error) {
+        this.handleError(error, { plugin: plugin.name, phase: "initialize" });
       }
     }
     this.initialized = true;
 
-    // Replay stored user properties to newly initialized plugins
     if (this.userProperties) {
       for (const plugin of this.plugins) {
         if (!plugin.setUser) continue;
         try {
           plugin.setUser(this.userProperties);
         } catch (error) {
-          console.error(
-            `[funnel] Plugin "${plugin.name}" failed to setUser during initialize`,
-            error,
-          );
+          this.handleError(error, { plugin: plugin.name, phase: "setUser" });
         }
       }
     }
@@ -108,10 +134,6 @@ export class Funnel {
 
   /**
    * Sends an event to all registered plugins.
-   *
-   * @remarks
-   * Errors thrown by individual plugins are logged via `console.error`
-   * and do not affect other plugins.
    *
    * @typeParam E - The event name type.
    * @param eventName - Name of the event to track.
@@ -132,7 +154,7 @@ export class Funnel {
           console.log(`[funnel] "${plugin.name}" tracked "${eventName}"`, params);
         }
       } catch (error) {
-        console.error(`[funnel] Plugin "${plugin.name}" failed to track "${eventName}"`, error);
+        this.handleError(error, { plugin: plugin.name, phase: "track", eventName });
       }
     }
   }
@@ -165,7 +187,7 @@ export class Funnel {
           console.log(`[funnel] "${plugin.name}" setUser`, properties);
         }
       } catch (error) {
-        console.error(`[funnel] Plugin "${plugin.name}" failed to setUser`, error);
+        this.handleError(error, { plugin: plugin.name, phase: "setUser" });
       }
     }
   }
@@ -192,8 +214,24 @@ export class Funnel {
           console.log(`[funnel] "${plugin.name}" resetUser`);
         }
       } catch (error) {
-        console.error(`[funnel] Plugin "${plugin.name}" failed to resetUser`, error);
+        this.handleError(error, { plugin: plugin.name, phase: "resetUser" });
       }
     }
+  }
+
+  private handleError(error: unknown, context: FunnelErrorContext): void {
+    if (this.onError) {
+      try {
+        this.onError(error, context);
+      } catch {
+        // onError must never escape the dispatcher
+      }
+      return;
+    }
+    const eventSuffix = context.eventName ? ` "${context.eventName}"` : "";
+    console.error(
+      `[funnel] Plugin "${context.plugin}" failed during ${context.phase}${eventSuffix}`,
+      error,
+    );
   }
 }
