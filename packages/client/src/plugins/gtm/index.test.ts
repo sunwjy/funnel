@@ -139,6 +139,59 @@ describe("createGTMPlugin", () => {
         }),
       );
     });
+
+    it("should keep custom (non-GA4-ecommerce) params at the top level of the push", () => {
+      const plugin = createGTMPlugin();
+      plugin.initialize({});
+
+      plugin.track(
+        "purchase",
+        {
+          currency: "KRW",
+          value: 29000,
+          transaction_id: "T-1",
+          items: [{ item_id: "SKU1", item_name: "Shoes" }],
+          // Custom param via the EventMap index signature — GTM triggers
+          // read these as plain dataLayer variables, not ecommerce fields.
+          campaign_source: "newsletter",
+        },
+        mockContext,
+      );
+
+      const purchase = window.dataLayer.find((e) => e.event === "purchase");
+      expect(purchase?.campaign_source).toBe("newsletter");
+      const ecommerce = purchase?.ecommerce as Record<string, unknown>;
+      expect(ecommerce.campaign_source).toBeUndefined();
+      // Spec keys stay nested.
+      expect(ecommerce.transaction_id).toBe("T-1");
+    });
+
+    it("should nest shipping/tax/coupon and list/promotion keys under ecommerce", () => {
+      const plugin = createGTMPlugin();
+      plugin.initialize({});
+
+      plugin.track(
+        "purchase",
+        {
+          transaction_id: "T-2",
+          value: 100,
+          coupon: "SAVE10",
+          shipping: 5,
+          tax: 10,
+        },
+        mockContext,
+      );
+
+      const purchase = window.dataLayer.find((e) => e.event === "purchase");
+      const ecommerce = purchase?.ecommerce as Record<string, unknown>;
+      expect(ecommerce).toEqual({
+        transaction_id: "T-2",
+        value: 100,
+        coupon: "SAVE10",
+        shipping: 5,
+        tax: 10,
+      });
+    });
   });
 
   describe("setUser", () => {

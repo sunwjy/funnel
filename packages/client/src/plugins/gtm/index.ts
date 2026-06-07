@@ -53,16 +53,41 @@ const ECOMMERCE_EVENTS: ReadonlySet<EventName> = new Set<EventName>([
 ]);
 
 /**
+ * GA4 ecommerce-spec parameter keys that belong inside the `ecommerce`
+ * object. Anything else (custom params via the EventMap index signature)
+ * stays at the top level of the dataLayer push, where GTM triggers and
+ * variables conventionally read them.
+ */
+const ECOMMERCE_PARAM_KEYS: ReadonlySet<string> = new Set([
+  "items",
+  "currency",
+  "value",
+  "coupon",
+  "transaction_id",
+  "shipping",
+  "tax",
+  "payment_type",
+  "shipping_tier",
+  "item_list_id",
+  "item_list_name",
+  "promotion_id",
+  "promotion_name",
+  "creative_name",
+  "creative_slot",
+  "location_id",
+]);
+
+/**
  * Creates a GTM plugin instance.
  */
-export function createGTMPlugin(): FunnelPlugin {
+export function createGTMPlugin(factoryConfig?: GTMPluginConfig): FunnelPlugin {
   let started = false;
 
   return {
     name: "gtm",
 
     initialize(config: Record<string, unknown>): void {
-      const { containerId } = config as GTMPluginConfig;
+      const { containerId } = { ...factoryConfig, ...(config as GTMPluginConfig) };
       if (typeof window === "undefined") {
         return;
       }
@@ -88,12 +113,19 @@ export function createGTMPlugin(): FunnelPlugin {
         window.dataLayer.push({ ecommerce: null });
         const p = params as Record<string, unknown>;
         const ecommerce: Record<string, unknown> = {};
+        const topLevel: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(p)) {
-          if (value !== undefined) ecommerce[key] = value;
+          if (value === undefined) continue;
+          if (ECOMMERCE_PARAM_KEYS.has(key)) {
+            ecommerce[key] = value;
+          } else {
+            topLevel[key] = value;
+          }
         }
         window.dataLayer.push({
           event: eventName,
           event_id: context.eventId,
+          ...topLevel,
           ecommerce,
         });
         return;
