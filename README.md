@@ -39,13 +39,14 @@ import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@sunwjy/funnel-c
 // import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
 
 const funnel = new Funnel({
-  plugins: [createGA4Plugin(), createMetaPixelPlugin()],
+  plugins: [
+    // Typed config at the factory — checked at compile time
+    createGA4Plugin({ measurementId: "G-XXXXXXXXXX" }),
+    createMetaPixelPlugin({ pixelId: "1234567890" }),
+  ],
 });
 
-funnel.initialize({
-  ga4: { measurementId: "G-XXXXXXXXXX" },
-  "meta-pixel": { pixelId: "1234567890" },
-});
+funnel.initialize();
 
 // Type-safe event tracking — only matching params are allowed per event name
 funnel.track("purchase", {
@@ -59,6 +60,19 @@ funnel.track("purchase", {
 ```
 
 A single `track` call sends the event to both GA4 and Meta Pixel.
+
+Config can also be supplied (or overridden key-by-key) at runtime via `initialize()` — useful when IDs come from a remote config:
+
+```ts
+funnel.initialize({
+  ga4: { measurementId: "G-RUNTIME" }, // overrides the factory value
+  "meta-pixel": { pixelId: "1234567890" },
+});
+```
+
+### Events before `initialize()`
+
+`track()` calls made before `initialize()` are not lost: up to 100 events are queued and replayed in order once initialization completes (after `setUser`/`setConsent` replay). Each queued event keeps the `eventId` generated at call time, so cross-platform deduplication stays intact.
 
 ## User Identification (`setUser` / `resetUser`)
 
@@ -96,18 +110,45 @@ funnel.resetUser();
 
 | Plugin | `setUser` | `resetUser` |
 |--------|-----------|-------------|
-| GA4 | `gtag("set", { user_id })` + `gtag("set", "user_properties", {...})` | `gtag("set", { user_id: null })` |
-| GTM | `dataLayer.push({ event: "set_user_properties", user_properties })` | `dataLayer.push({ event: "reset_user_properties" })` |
-| Meta Pixel | `fbq("init", pixelId, { em, fn, ln, ph, external_id })` | — |
-| Meta CAPI | Merges `em`, `ph`, `fn`, `ln`, `external_id` into `user_data` on every `track` | Clears stored data |
-| TikTok Pixel | `ttq.identify({ email, phone_number, external_id })` | — |
+| GA4 | `gtag("set", { user_id })` + `gtag("set", "user_properties", {...})` | `gtag("set", { user_id: null })` + clears set user properties |
+| GTM | `dataLayer.push({ event: "funnel.set_user", user_id, user_properties })` | `dataLayer.push({ event: "funnel.reset_user", ... })` |
+| Meta Pixel | `fbq("init", pixelId, { em, fn, ln, ph, external_id })` | — (Meta has no documented clear API; data persists until page unload) |
+| Meta CAPI | SHA-256-hashes `em`/`ph`/`fn`/`ln`/`external_id` once, merges into `user_data` on every `track` | Clears stored data |
+| TikTok Pixel | `ttq.identify({ email, phone_number, external_id })` | — (TikTok has no un-identify API) |
 | Mixpanel | `mixpanel.identify(user_id)` + `mixpanel.people.set({ $email, ... })` | `mixpanel.reset()` |
-| Amplitude | `amplitude.setUserId(user_id)` + `amplitude.identify({...})` | `amplitude.setUserId(null)` |
-| Google Ads | `gtag("set", "user_data", { email, phone_number, address })` | — |
-| X Pixel | `twq("config", pixelId, { em, ph_number })` | — |
+| Amplitude | `amplitude.setUserId(user_id)` + `new amplitude.Identify().set(...)` | `amplitude.setUserId(null)` |
+| Google Ads | `gtag("set", "user_data", { email, phone_number, address })` | `gtag("set", "user_data", null)` |
+| X Pixel | Stores normalized `email_address` / E.164 `phone_number`, attached to every event (pixel auto-hashes) | Clears stored data |
 | Kakao Pixel | — (no API) | — |
 | Naver Ad | — (no API) | — |
 | LinkedIn | — (no API) | — |
+
+## Consent Mode (`setConsent`)
+
+Consent follows the [Google Consent Mode v2](https://developers.google.com/tag-platform/security/concepts/consent-mode) signal model. Partial updates are merged into the last known state and forwarded to every plugin; calls before `initialize()` are stored and applied first during initialization.
+
+```ts
+// e.g., wired to your CMP / cookie banner
+funnel.setConsent({
+  ad_storage: "denied",
+  analytics_storage: "granted",
+  ad_user_data: "denied",
+  ad_personalization: "denied",
+});
+```
+
+### Per-platform behavior
+
+| Plugin | Behavior |
+|--------|----------|
+| GA4 / Google Ads / GTM | `gtag("consent", "update", state)` — Google's modeling (cookieless pings) keeps working on denied. GTM is a no-op without the gtag stub. |
+| Meta Pixel | `fbq("consent", "grant" \| "revoke")` down-mapped from `ad_storage` |
+| All others | No native consent API. By default events keep flowing (platform delegation). Set `consentRequired: true` in the plugin config to drop events until the relevant signal is granted — ad platforms (Meta CAPI, TikTok, Kakao, Naver, X, LinkedIn) key off `ad_storage`; analytics tools (sGTM, Mixpanel, Amplitude) key off `analytics_storage`. |
+
+```ts
+// Opt-in gating example: hold TikTok events until ad_storage is granted
+createTikTokPixelPlugin({ pixelId: "XXXX", consentRequired: true });
+```
 
 ## Event Deduplication (`eventId`)
 
@@ -134,7 +175,7 @@ Only GA4 standard events relevant to the marketing funnel are included.
 
 The GA4 plugin passes events through directly via `gtag("event", ...)`.
 
-The GTM plugin pushes events to `dataLayer` with the GA4 event name as the `event` key. GTM containers then route each event to the appropriate tags based on configured triggers.
+The GTM plugin pushes events to `dataLayer` with the GA4 event name as the `event` key. GTM containers then route each event to the appropriate tags based on configured triggers. For ecommerce events, GA4-spec keys (`items`, `currency`, `value`, `coupon`, `transaction_id`, `shipping`, `tax`, …) are nested under the conventional `ecommerce` object (cleared with `ecommerce: null` before each push), while custom params stay at the top level of the push where GTM variables read them.
 
 The Meta Pixel plugin maps events to standard Meta events:
 
@@ -157,11 +198,13 @@ The `items` array is automatically transformed into Meta Pixel's `content_ids`, 
 
 Collects client-side event data + user data (`_fbp`, `_fbc` cookies, `userAgent`, page URL) and POSTs to a configured server endpoint via `sendBeacon`/`fetch`. The server then forwards to Meta's Conversion API. Each payload includes `event_id` from `EventContext` for deduplication with the Meta Pixel.
 
-Config: `{ endpoint: "https://your-server.com/api/meta-capi" }`
+PII from `setUser` (`email`, `phone_number`, `first_name`, `last_name`, `user_id`) is normalized and SHA-256-hashed **in the browser** — hashed once per `setUser` and reused across events — so the server endpoint never receives raw PII. When no `_fbc` cookie exists, `fbc` is synthesized from the `fbclid` query param once and kept stable across events.
+
+Config: `{ endpoint: "https://your-server.com/api/meta-capi", testEventCode?: "TEST123", consentRequired?: true }`
 
 ### Google Ads
 
-Sends conversion events via `gtag("event", "conversion", { send_to })`. Requires `conversionId` and `conversionLabels` mapping in config. Events with a configured conversion label are sent as conversions; others pass through as standard gtag events.
+Sends conversion events via `gtag("event", "conversion", { send_to })`. Requires `conversionId` and `conversionLabels` mapping in config. Only events with a configured conversion label are sent — unlabeled events are dropped, because a bare `gtag("event")` call without `send_to` would be routed to **all** configured gtag destinations and double-count in GA4 when the GA4 plugin is also registered.
 
 ### TikTok Pixel
 
@@ -176,8 +219,9 @@ Sends conversion events via `gtag("event", "conversion", { send_to })`. Requires
 | `search` | `Search` |
 | `sign_up` | `CompleteRegistration` |
 | `generate_lead` | `SubmitForm` |
-| `select_item` | `ClickButton` |
 | Others | Custom event (original name) |
+
+`select_item` is intentionally NOT mapped to `ClickButton` — TikTok's `ClickButton` is for non-product CTAs, and conflating product-list clicks with it inflates that counter in Ads Manager.
 
 ### Kakao Pixel
 
@@ -195,15 +239,23 @@ Sends conversion events via `gtag("event", "conversion", { send_to })`. Requires
 
 ### Naver Ad (WCSLOG)
 
+Uses Naver's **new conversion script API** (`wcs.trans` version) — the legacy `wcs.cnv` string API is deprecated by Naver and not supported. Conversions are sent as `wcs.trans({ type, id, value, items })`; `page_view` fires the PV beacon via `wcs_do()`.
+
+Config: `{ accountId: "공통키 (wcs_add[\"wa\"])", siteDomain?: "example.com" }`
+
 | GA4 Event | Naver Conversion Type |
 |-----------|-----------------------|
-| `page_view` | Page view (`wcs_do()` without conversion) |
-| `purchase` | Type 1 (Purchase) |
-| `sign_up` | Type 2 (Registration) |
-| `add_to_cart` | Type 3 (Cart) |
-| `generate_lead` | Type 4 (Lead) |
-| `begin_checkout` / `add_payment_info` | Type 5 (Other) |
-| Others | Ignored |
+| `page_view` | PV beacon (`wcs_do()`) |
+| `purchase` | `purchase` (with `id` = `transaction_id`, `value`, `items`) |
+| `sign_up` | `sign_up` |
+| `add_to_cart` | `add_to_cart` |
+| `generate_lead` | `lead` |
+| `add_to_wishlist` | `add_to_wishlist` |
+| `begin_checkout` | `begin_checkout` |
+| `view_item` | `view_content` |
+| Others | Ignored (fixed taxonomy) |
+
+GA4 `items` map to Naver's item schema (`id`, `name`, `quantity`, `payAmount` = unit price × quantity, `category` ← `item_category`, `option` ← `item_variant`). When `purchase` has no top-level `value`, the summed per-line `payAmount` is used.
 
 ### X (Twitter) Pixel
 
@@ -219,6 +271,8 @@ Sends conversion events via `gtag("event", "conversion", { send_to })`. Requires
 | `generate_lead` | `Lead` |
 | `add_payment_info` | `AddPaymentInfo` |
 | Others | Custom event (original name) |
+
+Advanced matching: after `setUser`, normalized `email_address` and E.164 `phone_number` are attached to every event as X's documented event parameters — the uwt.js pixel SHA-256-hashes them client-side before transmission.
 
 ### LinkedIn Insight Tag
 
@@ -260,6 +314,12 @@ export function createMyPlugin(): FunnelPlugin {
     // Optional — implement for logout support
     resetUser() {
       // Clear user identity in the target tool
+    },
+
+    // Optional — receive Consent Mode v2 signals
+    setConsent(state) {
+      // Map state.ad_storage / state.analytics_storage / ... to the
+      // target tool's consent API, or gate dispatch internally
     },
   };
 }

@@ -16,13 +16,13 @@ npm install @sunwjy/funnel-core @sunwjy/funnel-client
 import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@sunwjy/funnel-client";
 
 const funnel = new Funnel({
-  plugins: [createGA4Plugin(), createMetaPixelPlugin()],
+  plugins: [
+    createGA4Plugin({ measurementId: "G-XXXXXXXXXX" }),
+    createMetaPixelPlugin({ pixelId: "1234567890" }),
+  ],
 });
 
-funnel.initialize({
-  ga4: { measurementId: "G-XXXXXXXXXX" },
-  "meta-pixel": { pixelId: "1234567890" },
-});
+funnel.initialize();
 
 funnel.track("purchase", {
   currency: "USD",
@@ -59,7 +59,9 @@ import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
 | `@sunwjy/funnel-client/mixpanel` | Mixpanel |
 | `@sunwjy/funnel-client/amplitude` | Amplitude |
 
-See the [repository README](https://github.com/sunwjy/funnel#readme) for full event mapping tables, user identification, and event deduplication (`eventId`) details.
+Every factory accepts a typed config object; config passed to `initialize()` overrides it key-by-key at runtime.
+
+See the [repository README](https://github.com/sunwjy/funnel#readme) for full event mapping tables, user identification (`setUser`/`resetUser`), Consent Mode (`setConsent` + per-plugin `consentRequired` gating), pre-initialize event queueing, and event deduplication (`eventId`) details.
 
 ## License
 

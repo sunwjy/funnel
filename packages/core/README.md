@@ -17,13 +17,11 @@ import { Funnel } from "@sunwjy/funnel-core";
 import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 
 const funnel = new Funnel({
-  plugins: [createGA4Plugin()],
+  plugins: [createGA4Plugin({ measurementId: "G-XXXXXXXXXX" })],
   debug: true,
 });
 
-funnel.initialize({
-  ga4: { measurementId: "G-XXXXXXXXXX" },
-});
+funnel.initialize();
 
 funnel.track("purchase", {
   currency: "USD",
@@ -41,14 +39,25 @@ funnel.track("purchase", {
 |--------|------|-------------|
 | `plugins` | `FunnelPlugin[]` | List of plugins to register |
 | `debug` | `boolean` | Enable debug logging (default: `false`) |
+| `onError` | `(error, context) => void` | Replaces the default `console.error` for plugin failures (e.g., forward to Sentry). Errors stay isolated either way. |
 
 ### `funnel.initialize(pluginConfigs?)`
 
-Initializes all registered plugins. Each plugin receives `pluginConfigs[plugin.name]` as its configuration.
+Initializes all registered plugins. Each plugin receives `pluginConfigs[plugin.name]` merged over its factory config (runtime wins key-by-key). Idempotent per plugin (safe for HMR). Afterwards, stored consent, stored user properties, and queued events are replayed — in that order.
 
 ### `funnel.track(eventName, params)`
 
-Sends a type-safe event to all plugins. Errors from individual plugins are isolated — one failure does not block others.
+Sends a type-safe event to all plugins with an `EventContext` containing a unique `eventId` (UUID) for cross-platform deduplication. Errors from individual plugins are isolated — one failure does not block others.
+
+Events tracked **before** `initialize()` are queued (up to 100, then dropped with a warning) and replayed in order after initialization; the `eventId` is fixed at call time.
+
+### `funnel.setUser(properties)` / `funnel.resetUser()`
+
+Propagates user identity (GA4 user-properties model) to every plugin that implements `setUser`/`resetUser`. Calls before `initialize()` are stored and replayed.
+
+### `funnel.setConsent(state)`
+
+Updates consent using the Google Consent Mode v2 signals (`ad_storage`, `analytics_storage`, `ad_user_data`, `ad_personalization`). Partial updates are merged; the full accumulated state is forwarded to plugins implementing `setConsent`. Calls before `initialize()` are stored and applied first during initialization.
 
 ### `FunnelPlugin` interface
 
@@ -56,9 +65,16 @@ Sends a type-safe event to all plugins. Errors from individual plugins are isola
 interface FunnelPlugin {
   name: string;
   initialize(config: Record<string, unknown>): void;
-  track<E extends EventName>(eventName: E, params: EventMap[E]): void;
+  track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void;
+  setUser?(properties: UserProperties): void;
+  resetUser?(): void;
+  setConsent?(state: ConsentState): void;
 }
 ```
+
+### PII helpers
+
+`normalizePii(value, kind)` / `hashPii(value, kind)` centralize the normalization + SHA-256 hashing that ad platforms expect for advanced matching. Kinds: `"email"`, `"phone"` (digits only — Meta/Google), `"phone_e164"` (leading `+` preserved — X), `"name"`, `"id"`. `hashPii` returns `undefined` when SubtleCrypto is unavailable so callers omit the field instead of sending raw PII.
 
 ## Supported Events
 
