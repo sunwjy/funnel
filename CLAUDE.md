@@ -25,7 +25,7 @@ Single-package commands: `pnpm --filter @sunwjy/funnel-core build`
 **Monorepo** (`packages/*`) with two packages:
 
 - **`@sunwjy/funnel-core`** — `EventMap` type definitions (GA4-based), `FunnelPlugin` interface, `Funnel` dispatcher class, `EventContext` (auto-generated `eventId` for deduplication)
-- **`@sunwjy/funnel-client`** — All client-side plugins consolidated into one package with subpath exports for tree-shaking (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok Pixel, Kakao Pixel, Naver Ad, X Pixel, LinkedIn Insight, Mixpanel, Amplitude)
+- **`@sunwjy/funnel-client`** — All client-side plugins consolidated into one package with subpath exports for tree-shaking (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok Pixel, Kakao Pixel, Naver Ad, X Pixel, LinkedIn Insight, Mixpanel, Amplitude, Toss Ads, Reddit Pixel, Daangn Ads, Pinterest Tag)
 
 **Import styles:**
 ```ts

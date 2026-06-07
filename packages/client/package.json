@@ -1,7 +1,7 @@
 {
   "name": "@sunwjy/funnel-client",
   "version": "0.2.0",
-  "description": "Client-side analytics plugins for @sunwjy/funnel-core (GA4, GTM, Meta Pixel, Meta CAPI, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude)",
+  "description": "Client-side analytics plugins for @sunwjy/funnel-core (GA4, GTM, Meta Pixel, Meta CAPI, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude, Toss Ads, Reddit, Daangn, Pinterest)",
   "keywords": [
     "analytics",
     "tracking",
@@ -18,7 +18,11 @@
     "x-pixel",
     "linkedin-insight",
     "mixpanel",
-    "amplitude"
+    "amplitude",
+    "toss-ads",
+    "reddit-pixel",
+    "daangn-ads",
+    "pinterest-tag"
   ],
   "author": "sunwjy",
   "license": "MIT",
@@ -181,6 +185,46 @@
       "require": {
         "types": "./dist/plugins/amplitude.d.cts",
         "default": "./dist/plugins/amplitude.cjs"
+      }
+    },
+    "./toss-ads": {
+      "import": {
+        "types": "./dist/plugins/toss-ads.d.mts",
+        "default": "./dist/plugins/toss-ads.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/toss-ads.d.cts",
+        "default": "./dist/plugins/toss-ads.cjs"
+      }
+    },
+    "./reddit-pixel": {
+      "import": {
+        "types": "./dist/plugins/reddit-pixel.d.mts",
+        "default": "./dist/plugins/reddit-pixel.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/reddit-pixel.d.cts",
+        "default": "./dist/plugins/reddit-pixel.cjs"
+      }
+    },
+    "./daangn-ads": {
+      "import": {
+        "types": "./dist/plugins/daangn-ads.d.mts",
+        "default": "./dist/plugins/daangn-ads.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/daangn-ads.d.cts",
+        "default": "./dist/plugins/daangn-ads.cjs"
+      }
+    },
+    "./pinterest-tag": {
+      "import": {
+        "types": "./dist/plugins/pinterest-tag.d.mts",
+        "default": "./dist/plugins/pinterest-tag.mjs"
+      },
+      "require": {
+        "types": "./dist/plugins/pinterest-tag.d.cts",
+        "default": "./dist/plugins/pinterest-tag.cjs"
       }
     }
   },
