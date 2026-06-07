@@ -9,7 +9,7 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 | Package | Description |
 |---------|-------------|
 | `@sunwjy/funnel-core` | Event types, plugin interface, Funnel class, `EventContext` (auto-generated `eventId`) |
-| `@sunwjy/funnel-client` | All client-side plugins (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude) |
+| `@sunwjy/funnel-client` | All client-side plugins (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude, Toss Ads, Reddit, Daangn, Pinterest) |
 
 ### Client Plugins
 
@@ -27,6 +27,10 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 | `@sunwjy/funnel-client/mixpanel` | Mixpanel (`mixpanel`) |
 | `@sunwjy/funnel-client/meta-conversion-api` | Meta Conversion API (server-side relay via `sendBeacon`/`fetch`) |
 | `@sunwjy/funnel-client/amplitude` | Amplitude (`amplitude`) |
+| `@sunwjy/funnel-client/toss-ads` | Toss Ads Pixel (`TossPixel`) |
+| `@sunwjy/funnel-client/reddit-pixel` | Reddit Pixel (`rdt`) |
+| `@sunwjy/funnel-client/daangn-ads` | Daangn Business conversion tracking (`karrotPixel`) |
+| `@sunwjy/funnel-client/pinterest-tag` | Pinterest Tag (`pintrk`) |
 
 ## Usage
 
@@ -119,9 +123,13 @@ funnel.resetUser();
 | Amplitude | `amplitude.setUserId(user_id)` + `new amplitude.Identify().set(...)` | `amplitude.setUserId(null)` |
 | Google Ads | `gtag("set", "user_data", { email, phone_number, address })` | `gtag("set", "user_data", null)` |
 | X Pixel | Stores normalized `email_address` / E.164 `phone_number`, attached to every event (pixel auto-hashes) | Clears stored data |
+| Pinterest Tag | `pintrk("set", { em, ph, external_id, fn, ln })` (tag hashes raw values) | — |
 | Kakao Pixel | — (no API) | — |
 | Naver Ad | — (no API) | — |
 | LinkedIn | — (no API) | — |
+| Toss Ads | — (no public API) | — |
+| Reddit Pixel | — (no API) | — |
+| Daangn Ads | — (no API) | — |
 
 ## Consent Mode (`setConsent`)
 
@@ -285,6 +293,66 @@ All events are sent via `mixpanel.track()` with Title Case event names (e.g., `p
 ### Amplitude
 
 All events are sent via `amplitude.track()` with Title Case event names. For `purchase` and `refund` events, `value` is mapped to `revenue` for Amplitude's revenue tracking. The `items` array is flattened the same way as Mixpanel.
+
+### Toss Ads Pixel (토스애즈)
+
+| GA4 Event | Toss Pixel Method |
+|-----------|-------------------|
+| `page_view` | `pageView()` |
+| `view_item` | `productView({ product_id, product_name, ... })` |
+| `add_to_cart` | `addToCart({ products, revenue, currency })` |
+| `add_to_wishlist` | `addToWishlist({ products, ... })` |
+| `begin_checkout` | `initiateCheckout({ order_id, revenue, products, ... })` |
+| `purchase` | `purchase({ order_id, revenue, total_quantity, currency, products })` |
+| `search` | `search()` (`search_term` → `custom_param2`) |
+| `sign_up` | `signUp()` |
+| `login` | `signIn()` |
+| `generate_lead` | `lead()` |
+| Others | Ignored (no custom event support) |
+
+Toss Pixel has no native deduplication ID, so the `eventId` is forwarded via `custom_param1` for server-side reconciliation. Default currency is `KRW`.
+
+### Reddit Pixel
+
+| GA4 Event | Reddit Pixel Event |
+|-----------|-------------------|
+| `page_view` | `PageVisit` |
+| `view_item` | `ViewContent` |
+| `add_to_cart` | `AddToCart` |
+| `add_to_wishlist` | `AddToWishlist` |
+| `purchase` | `Purchase` |
+| `generate_lead` | `Lead` |
+| `sign_up` | `SignUp` |
+| `search` | `Search` |
+| Others | `Custom` (original name preserved via `customEventName`) |
+
+Every event includes `conversionId: eventId` for deduplication against Reddit's Conversions API.
+
+### Daangn (당근비즈니스) 전환 추적
+
+| GA4 Event | Daangn Event |
+|-----------|--------------|
+| `page_view` | `ViewPage` |
+| `view_item` | `ViewContent({ id })` |
+| `add_to_cart` | `AddToCart({ products })` |
+| `sign_up` | `CompleteRegistration` |
+| `purchase` | `Purchase({ total_price, total_quantity, products })` |
+| Others | Ignored (no custom event support) |
+
+### Pinterest Tag
+
+| GA4 Event | Pinterest Event |
+|-----------|-----------------|
+| `page_view` | `pagevisit` |
+| `view_item_list` / `select_promotion` | `viewcategory` |
+| `search` / `view_search_results` | `search` (`search_query`) |
+| `add_to_cart` | `addtocart` |
+| `purchase` | `checkout` (`order_id`, `order_quantity`, `line_items`) |
+| `sign_up` | `signup` |
+| `generate_lead` | `lead` |
+| Others | `custom` (original name preserved via `event_name`) |
+
+`begin_checkout` is intentionally NOT mapped to `checkout` — Pinterest's `checkout` represents a *completed* purchase, so it falls through to `custom`. Every event includes `event_id: eventId` for Conversions API deduplication.
 
 ## Custom Plugins
 

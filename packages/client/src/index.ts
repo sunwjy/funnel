@@ -12,6 +12,7 @@ export type {
 export { Funnel } from "@sunwjy/funnel-core";
 export { createAmplitudePlugin } from "./plugins/amplitude/index.js";
 // Client-side plugins
+export { createDaangnAdsPlugin } from "./plugins/daangn-ads/index.js";
 export { createGA4Plugin } from "./plugins/ga4/index.js";
 export { createGoogleAdsPlugin } from "./plugins/google-ads/index.js";
 export { createGTMPlugin } from "./plugins/gtm/index.js";
@@ -21,6 +22,9 @@ export { createMetaConversionApiPlugin } from "./plugins/meta-conversion-api/ind
 export { createMetaPixelPlugin } from "./plugins/meta-pixel/index.js";
 export { createMixpanelPlugin } from "./plugins/mixpanel/index.js";
 export { createNaverAdPlugin } from "./plugins/naver-ad/index.js";
+export { createPinterestTagPlugin } from "./plugins/pinterest-tag/index.js";
+export { createRedditPixelPlugin } from "./plugins/reddit-pixel/index.js";
 export { createSGTMPlugin } from "./plugins/sgtm/index.js";
 export { createTikTokPixelPlugin } from "./plugins/tiktok-pixel/index.js";
+export { createTossAdsPlugin } from "./plugins/toss-ads/index.js";
 export { createXPixelPlugin } from "./plugins/x-pixel/index.js";
