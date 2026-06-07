@@ -4,12 +4,22 @@ import { createAmplitudePlugin } from "./index";
 const TEST_EVENT_ID = "test-event-id";
 const mockContext = { eventId: TEST_EVENT_ID };
 
+/**
+ * Mirrors the real Browser SDK 2 surface: `amplitude.identify()` accepts an
+ * Identify INSTANCE built via `new amplitude.Identify().set(k, v)` — not a
+ * plain object.
+ */
+class MockIdentify {
+  set = vi.fn().mockReturnThis();
+}
+
 function mockAmplitude() {
   window.amplitude = {
     init: vi.fn(),
     track: vi.fn(),
     setUserId: vi.fn(),
     identify: vi.fn(),
+    Identify: MockIdentify,
   };
 }
 
@@ -220,16 +230,40 @@ describe("createAmplitudePlugin", () => {
       expect(window.amplitude.setUserId).toHaveBeenCalledWith("user-123");
     });
 
-    it("should call amplitude.identify with remaining properties", () => {
+    it("should build an Identify instance via set() and pass it to amplitude.identify", () => {
       mockAmplitude();
       const plugin = createAmplitudePlugin();
 
       plugin.setUser?.({ user_id: "user-123", email: "test@example.com", plan: "pro" });
 
-      expect(window.amplitude.identify).toHaveBeenCalledWith({
-        email: "test@example.com",
-        plan: "pro",
-      });
+      const identifyMock = window.amplitude.identify as ReturnType<typeof vi.fn>;
+      expect(identifyMock).toHaveBeenCalledTimes(1);
+      const identifyArg = identifyMock.mock.calls[0][0] as MockIdentify;
+      // Browser SDK 2 requires an Identify instance — a plain object is ignored.
+      expect(identifyArg).toBeInstanceOf(MockIdentify);
+      expect(identifyArg.set).toHaveBeenCalledWith("email", "test@example.com");
+      expect(identifyArg.set).toHaveBeenCalledWith("plan", "pro");
+    });
+
+    it("should not call amplitude.identify when only user_id is provided", () => {
+      mockAmplitude();
+      const plugin = createAmplitudePlugin();
+
+      plugin.setUser?.({ user_id: "user-123" });
+
+      expect(window.amplitude.identify).not.toHaveBeenCalled();
+    });
+
+    it("should skip undefined-valued properties when building Identify", () => {
+      mockAmplitude();
+      const plugin = createAmplitudePlugin();
+
+      plugin.setUser?.({ user_id: "user-123", email: "test@example.com", plan: undefined });
+
+      const identifyMock = window.amplitude.identify as ReturnType<typeof vi.fn>;
+      const identifyArg = identifyMock.mock.calls[0][0] as MockIdentify;
+      expect(identifyArg.set).toHaveBeenCalledWith("email", "test@example.com");
+      expect(identifyArg.set).not.toHaveBeenCalledWith("plan", undefined);
     });
 
     it("should not throw in SSR", () => {

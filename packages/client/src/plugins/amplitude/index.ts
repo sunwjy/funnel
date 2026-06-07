@@ -19,13 +19,26 @@ import type {
 } from "@sunwjy/funnel-core";
 import { flattenItems, toTitleCase } from "../../internal/analytics-shared.js";
 
+/**
+ * Identify object from the Amplitude Browser SDK 2.
+ *
+ * @remarks
+ * `amplitude.identify()` only accepts an instance created via
+ * `new amplitude.Identify()` whose user properties are registered through
+ * `set()` — passing a plain object is silently ignored by the real SDK.
+ */
+interface AmplitudeIdentify {
+  set: (property: string, value: unknown) => AmplitudeIdentify;
+}
+
 declare global {
   interface Window {
     amplitude: {
       init: (apiKey: string, options?: Record<string, unknown>) => void;
       track: (eventName: string, properties?: Record<string, unknown>) => void;
       setUserId: (userId: string | null) => void;
-      identify: (identifyObj: Record<string, unknown>) => void;
+      identify: (identifyEvent: AmplitudeIdentify) => void;
+      Identify: new () => AmplitudeIdentify;
     };
   }
 }
@@ -106,8 +119,13 @@ export function createAmplitudePlugin(): FunnelPlugin {
         window.amplitude.setUserId(user_id);
       }
 
-      if (Object.keys(rest).length > 0) {
-        window.amplitude.identify(rest);
+      const entries = Object.entries(rest).filter(([, value]) => value !== undefined);
+      if (entries.length > 0 && typeof window.amplitude.Identify === "function") {
+        const identifyEvent = new window.amplitude.Identify();
+        for (const [key, value] of entries) {
+          identifyEvent.set(key, value);
+        }
+        window.amplitude.identify(identifyEvent);
       }
     },
 
