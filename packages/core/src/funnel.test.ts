@@ -108,14 +108,12 @@ describe("Funnel", () => {
       expect(id1).not.toBe(id2);
     });
 
-    it("should warn and skip when not initialized", () => {
-      const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    it("should not dispatch to plugins before initialize", () => {
       const plugin = createMockPlugin("p1");
       const funnel = new Funnel({ plugins: [plugin] });
 
       funnel.track("page_view", {});
 
-      expect(spy).toHaveBeenCalledWith("[funnel] Not initialized. Call initialize() first.");
       expect(plugin.track).not.toHaveBeenCalled();
     });
 
@@ -187,6 +185,98 @@ describe("Funnel", () => {
       funnel.track("search", params);
 
       expect(spy).toHaveBeenCalledWith('[funnel] "p1" tracked "search"', params);
+    });
+  });
+
+  describe("track before initialize — event queueing", () => {
+    it("should queue pre-initialize events and replay them in order after initialize", () => {
+      const plugin = createMockPlugin("p1");
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      funnel.track("page_view", { page_title: "Home" });
+      funnel.track("sign_up", { method: "email" });
+      expect(plugin.track).not.toHaveBeenCalled();
+
+      funnel.initialize();
+
+      const calls = (plugin.track as ReturnType<typeof vi.fn>).mock.calls;
+      expect(calls).toHaveLength(2);
+      expect(calls[0][0]).toBe("page_view");
+      expect(calls[0][1]).toEqual({ page_title: "Home" });
+      expect(calls[1][0]).toBe("sign_up");
+    });
+
+    it("should fix the eventId at call time — queued events keep distinct ids", () => {
+      const plugin = createMockPlugin("p1");
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      funnel.track("page_view", {});
+      funnel.track("page_view", {});
+      funnel.initialize();
+
+      const calls = (plugin.track as ReturnType<typeof vi.fn>).mock.calls;
+      const id1 = calls[0][2].eventId;
+      const id2 = calls[1][2].eventId;
+      expect(id1).toEqual(expect.any(String));
+      expect(id2).toEqual(expect.any(String));
+      expect(id1).not.toBe(id2);
+    });
+
+    it("should apply stored setUser before replaying queued events", () => {
+      const order: string[] = [];
+      const plugin: FunnelPlugin = {
+        name: "p1",
+        initialize: vi.fn(() => order.push("initialize")),
+        setUser: vi.fn(() => order.push("setUser")),
+        track: vi.fn(() => order.push("track")),
+      };
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      funnel.setUser({ user_id: "u-1" });
+      funnel.track("page_view", {});
+      funnel.initialize();
+
+      expect(order).toEqual(["initialize", "setUser", "track"]);
+    });
+
+    it("should not replay queued events twice on repeated initialize", () => {
+      const plugin = createMockPlugin("p1");
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      funnel.track("page_view", {});
+      funnel.initialize();
+      funnel.initialize();
+
+      expect(plugin.track).toHaveBeenCalledTimes(1);
+    });
+
+    it("should warn and drop events beyond the queue cap of 100", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const plugin = createMockPlugin("p1");
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      for (let i = 0; i < 105; i++) {
+        funnel.track("page_view", {});
+      }
+      funnel.initialize();
+
+      expect(plugin.track).toHaveBeenCalledTimes(100);
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("queue"), expect.anything());
+    });
+
+    it("should isolate plugin errors during replay", () => {
+      vi.spyOn(console, "error").mockImplementation(() => {});
+      const failing = createMockPlugin("failing");
+      (failing.track as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        throw new Error("crash");
+      });
+      const healthy = createMockPlugin("healthy");
+      const funnel = new Funnel({ plugins: [failing, healthy] });
+
+      funnel.track("page_view", {});
+      funnel.initialize();
+
+      expect(healthy.track).toHaveBeenCalledTimes(1);
     });
   });
 

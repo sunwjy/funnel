@@ -24,6 +24,19 @@ function generateEventId(): string {
 }
 
 /**
+ * Maximum number of events queued before {@link Funnel.initialize} is called.
+ * Beyond this, new events are dropped with a console warning.
+ */
+const MAX_PENDING_EVENTS = 100;
+
+/** Pre-initialize queued event. @internal */
+interface QueuedEvent {
+  eventName: EventName;
+  params: EventMap[EventName];
+  context: EventContext;
+}
+
+/**
  * Context object passed to {@link FunnelConfig.onError | onError} when a
  * plugin throws.
  */
@@ -82,6 +95,7 @@ export class Funnel {
   private initialized = false;
   private initializedPlugins = new Set<string>();
   private userProperties: UserProperties | null = null;
+  private pendingEvents: QueuedEvent[] = [];
   private onError?: (error: unknown, context: FunnelErrorContext) => void;
 
   /**
@@ -130,23 +144,54 @@ export class Funnel {
         }
       }
     }
+
+    // Replay events tracked before initialize — after setUser so plugins
+    // already carry the user identity when the queued events arrive.
+    const pending = this.pendingEvents;
+    this.pendingEvents = [];
+    for (const event of pending) {
+      this.dispatch(event.eventName, event.params, event.context);
+    }
   }
 
   /**
    * Sends an event to all registered plugins.
+   *
+   * @remarks
+   * Events tracked before {@link initialize} are queued (up to 100) and
+   * replayed in order once initialization completes. The `eventId` is
+   * generated at call time, so queued events keep their original identity.
    *
    * @typeParam E - The event name type.
    * @param eventName - Name of the event to track.
    * @param params - Parameters corresponding to the event.
    */
   track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+    const context: EventContext = { eventId: generateEventId() };
+
     if (!this.initialized) {
-      console.warn("[funnel] Not initialized. Call initialize() first.");
+      if (this.pendingEvents.length >= MAX_PENDING_EVENTS) {
+        console.warn(
+          `[funnel] Pre-initialize event queue is full (${MAX_PENDING_EVENTS}); dropping event`,
+          eventName,
+        );
+        return;
+      }
+      this.pendingEvents.push({ eventName, params, context });
+      if (this.debug) {
+        console.log(`[funnel] Queued "${eventName}" until initialize()`);
+      }
       return;
     }
 
-    const context: EventContext = { eventId: generateEventId() };
+    this.dispatch(eventName, params, context);
+  }
 
+  private dispatch<E extends EventName>(
+    eventName: E,
+    params: EventMap[E],
+    context: EventContext,
+  ): void {
     for (const plugin of this.plugins) {
       try {
         plugin.track(eventName, params, context);
