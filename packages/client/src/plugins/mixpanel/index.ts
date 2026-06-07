@@ -64,12 +64,12 @@ function transformParams<E extends EventName>(
   return result;
 }
 
-export function createMixpanelPlugin(): FunnelPlugin {
+export function createMixpanelPlugin(factoryConfig?: MixpanelPluginConfig): FunnelPlugin {
   return {
     name: "mixpanel",
 
     initialize(config: Record<string, unknown>): void {
-      const { token, config: mpConfig } = config as MixpanelPluginConfig;
+      const { token, config: mpConfig } = { ...factoryConfig, ...(config as MixpanelPluginConfig) };
       if (token && typeof window !== "undefined" && window.mixpanel) {
         if (mpConfig) {
           window.mixpanel.init(token, mpConfig);

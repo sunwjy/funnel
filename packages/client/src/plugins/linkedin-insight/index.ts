@@ -31,7 +31,9 @@ export interface LinkedInInsightPluginConfig {
   debug?: boolean;
 }
 
-export function createLinkedInInsightPlugin(): FunnelPlugin {
+export function createLinkedInInsightPlugin(
+  factoryConfig?: LinkedInInsightPluginConfig,
+): FunnelPlugin {
   let conversionIds: Partial<Record<EventName, number>> = {};
   let debug = false;
 
@@ -39,7 +41,7 @@ export function createLinkedInInsightPlugin(): FunnelPlugin {
     name: "linkedin-insight",
 
     initialize(config: Record<string, unknown>): void {
-      const pluginConfig = config as LinkedInInsightPluginConfig;
+      const pluginConfig = { ...factoryConfig, ...(config as LinkedInInsightPluginConfig) };
       conversionIds = pluginConfig.conversionIds ?? {};
       debug = pluginConfig.debug ?? false;
 

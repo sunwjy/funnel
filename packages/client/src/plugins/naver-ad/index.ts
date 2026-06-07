@@ -91,12 +91,12 @@ function transformItems(items?: Item[]): NaverConversionItem[] | undefined {
 /**
  * Creates a Naver Ad plugin instance (wcs.trans conversion script).
  */
-export function createNaverAdPlugin(): FunnelPlugin {
+export function createNaverAdPlugin(factoryConfig?: NaverAdPluginConfig): FunnelPlugin {
   return {
     name: "naver-ad",
 
     initialize(config: Record<string, unknown>): void {
-      const { accountId, siteDomain } = config as NaverAdPluginConfig;
+      const { accountId, siteDomain } = { ...factoryConfig, ...(config as NaverAdPluginConfig) };
       if (typeof window === "undefined" || !window.wcs) {
         return;
       }

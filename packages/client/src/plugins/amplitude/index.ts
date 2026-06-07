@@ -79,12 +79,12 @@ function transformParams<E extends EventName>(
   return result;
 }
 
-export function createAmplitudePlugin(): FunnelPlugin {
+export function createAmplitudePlugin(factoryConfig?: AmplitudePluginConfig): FunnelPlugin {
   return {
     name: "amplitude",
 
     initialize(config: Record<string, unknown>): void {
-      const { apiKey, options } = config as AmplitudePluginConfig;
+      const { apiKey, options } = { ...factoryConfig, ...(config as AmplitudePluginConfig) };
       if (apiKey && typeof window !== "undefined" && window.amplitude) {
         if (options) {
           window.amplitude.init(apiKey, options);

@@ -201,7 +201,7 @@ function buildUserProperties(
 /**
  * Creates a server-side Google Tag Manager (sGTM) plugin instance.
  */
-export function createSGTMPlugin(): FunnelPlugin {
+export function createSGTMPlugin(factoryConfig?: Partial<SGTMPluginConfig>): FunnelPlugin {
   let endpoint = "";
   let measurementId = "";
   let apiSecret: string | undefined;
@@ -216,7 +216,10 @@ export function createSGTMPlugin(): FunnelPlugin {
     name: "sgtm",
 
     initialize(config: Record<string, unknown>): void {
-      const c = config as unknown as SGTMPluginConfig;
+      const c = {
+        ...factoryConfig,
+        ...(config as unknown as Partial<SGTMPluginConfig>),
+      } as SGTMPluginConfig;
       if (c.endpoint) endpoint = c.endpoint;
       if (c.measurementId) measurementId = c.measurementId;
 

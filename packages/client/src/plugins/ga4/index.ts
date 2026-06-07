@@ -45,14 +45,18 @@ export interface GA4PluginConfig {
  * Sends events to Google Analytics 4 via `window.gtag`.
  * Automatically skipped in SSR environments where `window` is not available.
  */
-export function createGA4Plugin(): FunnelPlugin {
+export function createGA4Plugin(factoryConfig?: GA4PluginConfig): FunnelPlugin {
   let trackedUserPropertyKeys = new Set<string>();
 
   return {
     name: "ga4",
 
     initialize(config: Record<string, unknown>): void {
-      const { measurementId, config: gtagConfig } = config as GA4PluginConfig;
+      // Shallow merge — runtime config from initialize() wins key-by-key.
+      const { measurementId, config: gtagConfig } = {
+        ...factoryConfig,
+        ...(config as GA4PluginConfig),
+      };
       if (measurementId && typeof window !== "undefined" && window.gtag) {
         if (gtagConfig) {
           window.gtag("config", measurementId, gtagConfig);

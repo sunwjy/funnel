@@ -104,7 +104,7 @@ function transformParams<E extends EventName>(
 /**
  * Creates an X Pixel plugin instance.
  */
-export function createXPixelPlugin(): FunnelPlugin {
+export function createXPixelPlugin(factoryConfig?: XPixelPluginConfig): FunnelPlugin {
   let pixelId: string | undefined;
   let userParams: Record<string, string> = {};
 
@@ -112,7 +112,7 @@ export function createXPixelPlugin(): FunnelPlugin {
     name: "x-pixel",
 
     initialize(config: Record<string, unknown>): void {
-      const pluginConfig = config as XPixelPluginConfig;
+      const pluginConfig = { ...factoryConfig, ...(config as XPixelPluginConfig) };
       pixelId = pluginConfig.pixelId;
       if (pixelId && typeof window !== "undefined" && window.twq) {
         window.twq("config", pixelId);

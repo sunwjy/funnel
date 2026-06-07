@@ -53,7 +53,7 @@ function transformProducts(
 /**
  * Creates a Kakao Pixel plugin instance.
  */
-export function createKakaoPixelPlugin(): FunnelPlugin {
+export function createKakaoPixelPlugin(factoryConfig?: KakaoPixelPluginConfig): FunnelPlugin {
   let trackId: string | undefined;
   let cachedPixel: KakaoPixelInstance | null = null;
 
@@ -69,7 +69,7 @@ export function createKakaoPixelPlugin(): FunnelPlugin {
     name: "kakao-pixel",
 
     initialize(config: Record<string, unknown>): void {
-      const pluginConfig = config as KakaoPixelPluginConfig;
+      const pluginConfig = { ...factoryConfig, ...(config as KakaoPixelPluginConfig) };
       trackId = pluginConfig.trackId;
       cachedPixel = null; // re-resolve on next track call
     },

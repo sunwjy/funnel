@@ -197,7 +197,9 @@ async function computeHashedUserData(properties: UserProperties): Promise<MetaCa
 /**
  * Creates a Meta Conversion API (CAPI) client plugin instance.
  */
-export function createMetaConversionApiPlugin(): FunnelPlugin {
+export function createMetaConversionApiPlugin(
+  factoryConfig?: MetaConversionApiPluginConfig,
+): FunnelPlugin {
   let endpoint = "";
   let testEventCode: string | undefined;
   let hashedUserData: Promise<MetaCapiUserData> | null = null;
@@ -222,7 +224,10 @@ export function createMetaConversionApiPlugin(): FunnelPlugin {
     name: "meta-conversion-api",
 
     initialize(config: Record<string, unknown>): void {
-      const c = config as unknown as MetaConversionApiPluginConfig;
+      const c = {
+        ...factoryConfig,
+        ...(config as unknown as MetaConversionApiPluginConfig),
+      };
       if (c.endpoint) endpoint = c.endpoint;
       testEventCode = c.testEventCode;
     },
