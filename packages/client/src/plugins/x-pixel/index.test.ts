@@ -261,12 +261,17 @@ describe("createXPixelPlugin", () => {
       plugin.initialize({ pixelId: "o12345" });
 
       plugin.setUser?.({ email: "test@example.com", phone_number: "+821012345678" });
-      // setUser hashes asynchronously
-      await new Promise((r) => setTimeout(r, 0));
+      // setUser hashes asynchronously — wait deterministically until the
+      // config call lands instead of racing it with a single timer tick.
+      const findCall = () =>
+        (window.twq as ReturnType<typeof vi.fn>).mock.calls.find(
+          (c) => c[0] === "config" && c[1] === "o12345" && c[2],
+        );
+      await vi.waitFor(() => {
+        expect(findCall()).toBeDefined();
+      });
 
-      const call = (window.twq as ReturnType<typeof vi.fn>).mock.calls.find(
-        (c) => c[0] === "config" && c[1] === "o12345" && c[2],
-      );
+      const call = findCall();
       expect(call).toBeDefined();
       const data = call?.[2] as Record<string, string>;
       // Hashed values are 64-char hex; raw values must NOT appear.

@@ -380,8 +380,12 @@ describe("createMetaConversionApiPlugin", () => {
       });
 
       plugin.track("page_view", {}, TEST_CONTEXT);
-      // wait for the async hash + dispatch
-      await new Promise((r) => setTimeout(r, 0));
+      // Deterministically wait for the async hash + dispatch — a single
+      // setTimeout(0) tick races against the SubtleCrypto digests and is
+      // flaky under full-suite load.
+      await vi.waitFor(() => {
+        expect(navigator.sendBeacon).toHaveBeenCalled();
+      });
 
       const payload = await lastBeaconPayload();
       const userData = payload.user_data as Record<string, string>;
