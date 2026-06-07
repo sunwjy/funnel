@@ -151,7 +151,7 @@ funnel.setConsent({
 |--------|----------|
 | GA4 / Google Ads / GTM | `gtag("consent", "update", state)` — Google's modeling (cookieless pings) keeps working on denied. GTM is a no-op without the gtag stub. |
 | Meta Pixel | `fbq("consent", "grant" \| "revoke")` down-mapped from `ad_storage` |
-| All others | No native consent API. By default events keep flowing (platform delegation). Set `consentRequired: true` in the plugin config to drop events until the relevant signal is granted — ad platforms (Meta CAPI, TikTok, Kakao, Naver, X, LinkedIn) key off `ad_storage`; analytics tools (sGTM, Mixpanel, Amplitude) key off `analytics_storage`. |
+| All others | No native consent API. By default events keep flowing (platform delegation). Set `consentRequired: true` in the plugin config to drop events until the relevant signal is granted — ad platforms (Meta CAPI, TikTok, Kakao, Naver, X, LinkedIn, Toss Ads, Reddit, Daangn, Pinterest) key off `ad_storage`; analytics tools (sGTM, Mixpanel, Amplitude) key off `analytics_storage`. |
 
 ```ts
 // Opt-in gating example: hold TikTok events until ad_storage is granted

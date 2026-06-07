@@ -58,6 +58,10 @@ import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
 | `@sunwjy/funnel-client/linkedin-insight` | LinkedIn Insight Tag (`lintrk`) |
 | `@sunwjy/funnel-client/mixpanel` | Mixpanel |
 | `@sunwjy/funnel-client/amplitude` | Amplitude |
+| `@sunwjy/funnel-client/toss-ads` | Toss Ads Pixel (`TossPixel`) |
+| `@sunwjy/funnel-client/reddit-pixel` | Reddit Pixel (`rdt`) |
+| `@sunwjy/funnel-client/daangn-ads` | Daangn Business conversion tracking (`karrotPixel`) |
+| `@sunwjy/funnel-client/pinterest-tag` | Pinterest Tag (`pintrk`) |
 
 Every factory accepts a typed config object; config passed to `initialize()` overrides it key-by-key at runtime.
 

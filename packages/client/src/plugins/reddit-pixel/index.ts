@@ -12,7 +12,15 @@
  * @packageDocumentation
  */
 
-import type { EventContext, EventMap, EventName, FunnelPlugin, Item } from "@sunwjy/funnel-core";
+import type {
+  ConsentState,
+  EventContext,
+  EventMap,
+  EventName,
+  FunnelPlugin,
+  Item,
+} from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 
 declare global {
   interface Window {
@@ -26,6 +34,11 @@ declare global {
 export interface RedditPixelPluginConfig {
   /** Reddit Pixel (advertiser) ID. */
   pixelId?: string;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 /**
@@ -88,18 +101,27 @@ function transformParams<E extends EventName>(
 /**
  * Creates a Reddit Pixel plugin instance.
  */
-export function createRedditPixelPlugin(): FunnelPlugin {
+export function createRedditPixelPlugin(factoryConfig?: RedditPixelPluginConfig): FunnelPlugin {
+  let consentRequired = false;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
+
   return {
     name: "reddit-pixel",
 
     initialize(config: Record<string, unknown>): void {
-      const { pixelId } = config as RedditPixelPluginConfig;
-      if (pixelId && typeof window !== "undefined" && window.rdt) {
-        window.rdt("init", pixelId);
+      const pluginConfig = { ...factoryConfig, ...(config as RedditPixelPluginConfig) };
+      consentRequired = pluginConfig.consentRequired ?? false;
+      if (pluginConfig.pixelId && typeof window !== "undefined" && window.rdt) {
+        window.rdt("init", pluginConfig.pixelId);
       }
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
+      if (gate.blocked()) return;
       if (typeof window === "undefined" || !window.rdt) {
         return;
       }

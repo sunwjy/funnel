@@ -10,6 +10,7 @@
  */
 
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
@@ -17,6 +18,7 @@ import type {
   Item,
   UserProperties,
 } from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 
 declare global {
   interface Window {
@@ -31,6 +33,11 @@ declare global {
 export interface PinterestTagPluginConfig {
   /** Pinterest Tag ID (advertiser ad account tag). */
   tagId?: string;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 /**
@@ -134,19 +141,28 @@ function transformParams<E extends EventName>(
 /**
  * Creates a Pinterest Tag plugin instance.
  */
-export function createPinterestTagPlugin(): FunnelPlugin {
+export function createPinterestTagPlugin(factoryConfig?: PinterestTagPluginConfig): FunnelPlugin {
+  let consentRequired = false;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
+
   return {
     name: "pinterest-tag",
 
     initialize(config: Record<string, unknown>): void {
-      const { tagId } = config as PinterestTagPluginConfig;
-      if (tagId && typeof window !== "undefined" && window.pintrk) {
-        window.pintrk("load", tagId);
+      const pluginConfig = { ...factoryConfig, ...(config as PinterestTagPluginConfig) };
+      consentRequired = pluginConfig.consentRequired ?? false;
+      if (pluginConfig.tagId && typeof window !== "undefined" && window.pintrk) {
+        window.pintrk("load", pluginConfig.tagId);
         window.pintrk("page");
       }
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
+      if (gate.blocked()) return;
       if (typeof window === "undefined" || !window.pintrk) {
         return;
       }

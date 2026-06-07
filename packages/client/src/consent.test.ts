@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAmplitudePlugin } from "./plugins/amplitude/index";
+import { createDaangnAdsPlugin } from "./plugins/daangn-ads/index";
 import { createGA4Plugin } from "./plugins/ga4/index";
 import { createGoogleAdsPlugin } from "./plugins/google-ads/index";
 import { createGTMPlugin } from "./plugins/gtm/index";
@@ -9,8 +10,11 @@ import { createMetaConversionApiPlugin } from "./plugins/meta-conversion-api/ind
 import { createMetaPixelPlugin } from "./plugins/meta-pixel/index";
 import { createMixpanelPlugin } from "./plugins/mixpanel/index";
 import { createNaverAdPlugin } from "./plugins/naver-ad/index";
+import { createPinterestTagPlugin } from "./plugins/pinterest-tag/index";
+import { createRedditPixelPlugin } from "./plugins/reddit-pixel/index";
 import { createSGTMPlugin } from "./plugins/sgtm/index";
 import { createTikTokPixelPlugin } from "./plugins/tiktok-pixel/index";
+import { createTossAdsPlugin } from "./plugins/toss-ads/index";
 import { createXPixelPlugin } from "./plugins/x-pixel/index";
 
 /**
@@ -44,6 +48,10 @@ describe("consent mode", () => {
       "_linkedin_data_partner_ids",
       "mixpanel",
       "amplitude",
+      "TossPixel",
+      "rdt",
+      "karrotPixel",
+      "pintrk",
     ]) {
       // @ts-expect-error — reset globals between cases
       delete window[key];
@@ -218,6 +226,73 @@ describe("consent mode", () => {
       plugin.setConsent?.({ ad_storage: "granted" });
       plugin.track("sign_up", {}, mockContext);
       expect(window.lintrk).toHaveBeenCalledTimes(1);
+    });
+
+    it("toss-ads should gate until ad_storage is granted", () => {
+      const instance = {
+        pageView: vi.fn(),
+        viewHome: vi.fn(),
+        productView: vi.fn(),
+        addToCart: vi.fn(),
+        addToWishlist: vi.fn(),
+        initiateCheckout: vi.fn(),
+        purchase: vi.fn(),
+        search: vi.fn(),
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        lead: vi.fn(),
+      };
+      window.TossPixel = vi.fn(() => instance);
+      const plugin = createTossAdsPlugin({ conversionCode: "TS-1", consentRequired: true });
+      plugin.initialize({});
+
+      plugin.track("page_view", {}, mockContext);
+      expect(instance.pageView).not.toHaveBeenCalled();
+
+      plugin.setConsent?.({ ad_storage: "granted" });
+      plugin.track("page_view", {}, mockContext);
+      expect(instance.pageView).toHaveBeenCalledTimes(1);
+    });
+
+    it("reddit-pixel should gate until ad_storage is granted", () => {
+      window.rdt = vi.fn();
+      const plugin = createRedditPixelPlugin({ pixelId: "RD-1", consentRequired: true });
+      plugin.initialize({});
+      (window.rdt as ReturnType<typeof vi.fn>).mockClear(); // drop the init call
+
+      plugin.track("page_view", {}, mockContext);
+      expect(window.rdt).not.toHaveBeenCalled();
+
+      plugin.setConsent?.({ ad_storage: "granted" });
+      plugin.track("page_view", {}, mockContext);
+      expect(window.rdt).toHaveBeenCalledTimes(1);
+    });
+
+    it("daangn-ads should gate until ad_storage is granted", () => {
+      window.karrotPixel = { init: vi.fn(), track: vi.fn() };
+      const plugin = createDaangnAdsPlugin({ trackId: "DG-1", consentRequired: true });
+      plugin.initialize({});
+
+      plugin.track("page_view", {}, mockContext);
+      expect(window.karrotPixel.track).not.toHaveBeenCalled();
+
+      plugin.setConsent?.({ ad_storage: "granted" });
+      plugin.track("page_view", {}, mockContext);
+      expect(window.karrotPixel.track).toHaveBeenCalledTimes(1);
+    });
+
+    it("pinterest-tag should gate until ad_storage is granted", () => {
+      window.pintrk = vi.fn();
+      const plugin = createPinterestTagPlugin({ tagId: "PT-1", consentRequired: true });
+      plugin.initialize({});
+      (window.pintrk as ReturnType<typeof vi.fn>).mockClear(); // drop load/page calls
+
+      plugin.track("page_view", {}, mockContext);
+      expect(window.pintrk).not.toHaveBeenCalled();
+
+      plugin.setConsent?.({ ad_storage: "granted" });
+      plugin.track("page_view", {}, mockContext);
+      expect(window.pintrk).toHaveBeenCalledTimes(1);
     });
   });
 

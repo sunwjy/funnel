@@ -31,7 +31,8 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item } from "@sunwjy/funnel-core";
+import type { ConsentState, EventMap, EventName, FunnelPlugin, Item } from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 
 interface KarrotPixelProduct {
   id: string;
@@ -70,6 +71,11 @@ export interface DaangnAdsPluginConfig {
    * 당근비즈니스 → 광고도구 → 전환 추적 관리.
    */
   trackId?: string;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 function transformProducts(items?: Item[]): KarrotPixelProduct[] {
@@ -85,9 +91,11 @@ function transformProducts(items?: Item[]): KarrotPixelProduct[] {
 /**
  * Creates a Daangn Business (당근비즈니스) conversion tracking plugin instance.
  */
-export function createDaangnAdsPlugin(): FunnelPlugin {
+export function createDaangnAdsPlugin(factoryConfig?: DaangnAdsPluginConfig): FunnelPlugin {
   let trackId: string | undefined;
   let initialized = false;
+  let consentRequired = false;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
 
   function getPixel(): KarrotPixel | null {
     if (typeof window === "undefined" || !window.karrotPixel || !trackId) return null;
@@ -102,12 +110,18 @@ export function createDaangnAdsPlugin(): FunnelPlugin {
     name: "daangn-ads",
 
     initialize(config: Record<string, unknown>): void {
-      const pluginConfig = config as DaangnAdsPluginConfig;
+      const pluginConfig = { ...factoryConfig, ...(config as DaangnAdsPluginConfig) };
       trackId = pluginConfig.trackId;
+      consentRequired = pluginConfig.consentRequired ?? false;
       initialized = false; // re-init on next track call
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+      if (gate.blocked()) return;
       const pixel = getPixel();
       if (!pixel) return;
 

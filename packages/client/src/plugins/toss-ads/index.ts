@@ -32,7 +32,15 @@
  * @packageDocumentation
  */
 
-import type { EventContext, EventMap, EventName, FunnelPlugin, Item } from "@sunwjy/funnel-core";
+import type {
+  ConsentState,
+  EventContext,
+  EventMap,
+  EventName,
+  FunnelPlugin,
+  Item,
+} from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 
 /** A single product entry in a Toss Pixel `products` array. */
 interface TossProduct {
@@ -94,6 +102,11 @@ declare global {
 export interface TossAdsPluginConfig {
   /** Toss Ads conversion code (전환 코드), issued per ad account in the dashboard. */
   conversionCode?: string;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 /** Default currency for Toss (Korean platform). */
@@ -208,9 +221,11 @@ function transformParams<E extends EventName>(
 /**
  * Creates a Toss Ads (토스애즈) Pixel plugin instance.
  */
-export function createTossAdsPlugin(): FunnelPlugin {
+export function createTossAdsPlugin(factoryConfig?: TossAdsPluginConfig): FunnelPlugin {
   let conversionCode: string | undefined;
   let cachedPixel: TossPixelInstance | null = null;
+  let consentRequired = false;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
 
   function getPixel(): TossPixelInstance | null {
     if (typeof window === "undefined" || !window.TossPixel || !conversionCode) return null;
@@ -224,12 +239,18 @@ export function createTossAdsPlugin(): FunnelPlugin {
     name: "toss-ads",
 
     initialize(config: Record<string, unknown>): void {
-      const pluginConfig = config as TossAdsPluginConfig;
+      const pluginConfig = { ...factoryConfig, ...(config as TossAdsPluginConfig) };
       conversionCode = pluginConfig.conversionCode;
+      consentRequired = pluginConfig.consentRequired ?? false;
       cachedPixel = null; // re-resolve on next track call
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
+      if (gate.blocked()) return;
       const pixel = getPixel();
       if (!pixel) return;
 

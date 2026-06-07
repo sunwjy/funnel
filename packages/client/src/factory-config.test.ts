@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createAmplitudePlugin } from "./plugins/amplitude/index";
+import { createDaangnAdsPlugin } from "./plugins/daangn-ads/index";
 import { createGA4Plugin } from "./plugins/ga4/index";
 import { createGoogleAdsPlugin } from "./plugins/google-ads/index";
 import { createGTMPlugin } from "./plugins/gtm/index";
@@ -9,8 +10,11 @@ import { createMetaConversionApiPlugin } from "./plugins/meta-conversion-api/ind
 import { createMetaPixelPlugin } from "./plugins/meta-pixel/index";
 import { createMixpanelPlugin } from "./plugins/mixpanel/index";
 import { createNaverAdPlugin } from "./plugins/naver-ad/index";
+import { createPinterestTagPlugin } from "./plugins/pinterest-tag/index";
+import { createRedditPixelPlugin } from "./plugins/reddit-pixel/index";
 import { createSGTMPlugin } from "./plugins/sgtm/index";
 import { createTikTokPixelPlugin } from "./plugins/tiktok-pixel/index";
+import { createTossAdsPlugin } from "./plugins/toss-ads/index";
 import { createXPixelPlugin } from "./plugins/x-pixel/index";
 
 /**
@@ -37,6 +41,10 @@ describe("factory-level plugin config", () => {
       "_linkedin_data_partner_ids",
       "mixpanel",
       "amplitude",
+      "TossPixel",
+      "rdt",
+      "karrotPixel",
+      "pintrk",
     ]) {
       // @ts-expect-error — reset globals between cases
       delete window[key];
@@ -339,6 +347,74 @@ describe("factory-level plugin config", () => {
       plugin.initialize({ apiKey: "AMP-RUNTIME" });
 
       expect(window.amplitude.init).toHaveBeenCalledWith("AMP-RUNTIME");
+    });
+  });
+
+  describe("toss-ads", () => {
+    it("should initialize from factory config", () => {
+      const instance = {
+        pageView: vi.fn(),
+        viewHome: vi.fn(),
+        productView: vi.fn(),
+        addToCart: vi.fn(),
+        addToWishlist: vi.fn(),
+        initiateCheckout: vi.fn(),
+        purchase: vi.fn(),
+        search: vi.fn(),
+        signUp: vi.fn(),
+        signIn: vi.fn(),
+        lead: vi.fn(),
+      };
+      window.TossPixel = vi.fn(() => instance);
+      const plugin = createTossAdsPlugin({ conversionCode: "TS-FACTORY" });
+
+      plugin.initialize({});
+      plugin.track("page_view", {}, mockContext);
+
+      expect(window.TossPixel).toHaveBeenCalledWith("TS-FACTORY");
+    });
+  });
+
+  describe("reddit-pixel", () => {
+    it("should initialize from factory config", () => {
+      window.rdt = vi.fn();
+      const plugin = createRedditPixelPlugin({ pixelId: "RD-FACTORY" });
+
+      plugin.initialize({});
+
+      expect(window.rdt).toHaveBeenCalledWith("init", "RD-FACTORY");
+    });
+
+    it("should let initialize-time config override factory config", () => {
+      window.rdt = vi.fn();
+      const plugin = createRedditPixelPlugin({ pixelId: "RD-FACTORY" });
+
+      plugin.initialize({ pixelId: "RD-RUNTIME" });
+
+      expect(window.rdt).toHaveBeenCalledWith("init", "RD-RUNTIME");
+    });
+  });
+
+  describe("daangn-ads", () => {
+    it("should initialize from factory config", () => {
+      window.karrotPixel = { init: vi.fn(), track: vi.fn() };
+      const plugin = createDaangnAdsPlugin({ trackId: "DG-FACTORY" });
+
+      plugin.initialize({});
+      plugin.track("page_view", {}, mockContext);
+
+      expect(window.karrotPixel.init).toHaveBeenCalledWith("DG-FACTORY");
+    });
+  });
+
+  describe("pinterest-tag", () => {
+    it("should initialize from factory config", () => {
+      window.pintrk = vi.fn();
+      const plugin = createPinterestTagPlugin({ tagId: "PT-FACTORY" });
+
+      plugin.initialize({});
+
+      expect(window.pintrk).toHaveBeenCalledWith("load", "PT-FACTORY");
     });
   });
 });
