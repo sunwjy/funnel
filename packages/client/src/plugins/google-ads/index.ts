@@ -29,7 +29,7 @@ export interface GoogleAdsPluginConfig {
   conversionLabels?: Partial<Record<EventName, string>>;
 }
 
-export function createGoogleAdsPlugin(): FunnelPlugin {
+export function createGoogleAdsPlugin(factoryConfig?: GoogleAdsPluginConfig): FunnelPlugin {
   let conversionId: string | undefined;
   let conversionLabels: Partial<Record<EventName, string>> = {};
 
@@ -37,7 +37,7 @@ export function createGoogleAdsPlugin(): FunnelPlugin {
     name: "google-ads",
 
     initialize(config: Record<string, unknown>): void {
-      const pluginConfig = config as GoogleAdsPluginConfig;
+      const pluginConfig = { ...factoryConfig, ...(config as GoogleAdsPluginConfig) };
       conversionId = pluginConfig.conversionId;
       conversionLabels = pluginConfig.conversionLabels ?? {};
 
@@ -90,6 +90,14 @@ export function createGoogleAdsPlugin(): FunnelPlugin {
         // enhanced conversions enabled. Raw values are documented as acceptable.
         window.gtag("set", "user_data", userData);
       }
+    },
+
+    resetUser(): void {
+      if (typeof window === "undefined" || !window.gtag) return;
+
+      // Clear enhanced-conversions user_data so PII set before logout does
+      // not ride along on conversions fired by the next visitor/session.
+      window.gtag("set", "user_data", null);
     },
   };
 }

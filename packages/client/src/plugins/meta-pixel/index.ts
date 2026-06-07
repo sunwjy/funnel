@@ -136,20 +136,28 @@ function transformParams<E extends EventName>(eventName: E, params: EventMap[E])
 /**
  * Creates a Meta Pixel plugin instance.
  */
-export function createMetaPixelPlugin(): FunnelPlugin {
+export function createMetaPixelPlugin(factoryConfig?: MetaPixelPluginConfig): FunnelPlugin {
   let pixelId: string | undefined;
 
   return {
     name: "meta-pixel",
 
     initialize(config: Record<string, unknown>): void {
-      const { pixelId: id } = config as MetaPixelPluginConfig;
+      const { pixelId: id } = { ...factoryConfig, ...(config as MetaPixelPluginConfig) };
       pixelId = id;
       if (pixelId && typeof window !== "undefined" && window.fbq) {
         window.fbq("init", pixelId);
       }
     },
 
+    /**
+     * @remarks
+     * Meta Pixel has no documented way to CLEAR advanced-matching data once
+     * passed to `fbq("init", ...)` — re-initializing with an empty object is
+     * undefined behavior. This plugin therefore implements no `resetUser`;
+     * the data persists until the page unloads. Sites with strict logout
+     * requirements should reload the page after logout.
+     */
     setUser(properties: UserProperties): void {
       if (typeof window === "undefined" || !window.fbq || !pixelId) return;
 

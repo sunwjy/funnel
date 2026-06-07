@@ -99,12 +99,12 @@ function transformParams<E extends EventName>(
 /**
  * Creates a TikTok Pixel plugin instance.
  */
-export function createTikTokPixelPlugin(): FunnelPlugin {
+export function createTikTokPixelPlugin(factoryConfig?: TikTokPixelPluginConfig): FunnelPlugin {
   return {
     name: "tiktok-pixel",
 
     initialize(config: Record<string, unknown>): void {
-      const { pixelId } = config as TikTokPixelPluginConfig;
+      const { pixelId } = { ...factoryConfig, ...(config as TikTokPixelPluginConfig) };
       if (pixelId && typeof window !== "undefined" && window.ttq) {
         window.ttq.load(pixelId);
       }
@@ -133,6 +133,13 @@ export function createTikTokPixelPlugin(): FunnelPlugin {
       }
     },
 
+    /**
+     * @remarks
+     * TikTok Pixel exposes no documented "un-identify" call — `ttq.identify`
+     * data persists for the page lifetime. This plugin therefore implements
+     * no `resetUser`; sites with strict logout requirements should reload
+     * the page after logout.
+     */
     setUser(properties: UserProperties): void {
       if (typeof window === "undefined" || !window.ttq) return;
 

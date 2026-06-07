@@ -218,4 +218,22 @@ describe("createGoogleAdsPlugin", () => {
       expect(() => plugin.setUser?.({ email: "test@example.com" })).not.toThrow();
     });
   });
+
+  describe("resetUser", () => {
+    it("should clear enhanced-conversions user_data on logout", () => {
+      window.gtag = vi.fn();
+      const plugin = createGoogleAdsPlugin();
+
+      plugin.setUser?.({ email: "test@example.com" });
+      plugin.resetUser?.();
+
+      expect(window.gtag).toHaveBeenCalledWith("set", "user_data", null);
+    });
+
+    it("should not throw in SSR", () => {
+      const plugin = createGoogleAdsPlugin();
+
+      expect(() => plugin.resetUser?.()).not.toThrow();
+    });
+  });
 });
