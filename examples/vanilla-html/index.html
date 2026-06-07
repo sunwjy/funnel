@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Funnel — Vanilla TS Example</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 24px;
+        background: #f5f5f5;
+        color: #1a1a1a;
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 32px;
+        font-size: 0.9rem;
+      }
+
+      .section {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      .section h2 {
+        font-size: 1rem;
+        margin: 0 0 16px 0;
+        color: #333;
+      }
+
+      .product-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 12px;
+        background: #f9f9f9;
+        border-radius: 6px;
+        margin-bottom: 16px;
+      }
+
+      .product-card .product-image {
+        width: 64px;
+        height: 64px;
+        background: #d1c4e9;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+      }
+
+      .product-card .product-info h3 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+      }
+
+      .product-card .product-info p {
+        margin: 0;
+        color: #555;
+        font-size: 0.875rem;
+      }
+
+      .btn-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: opacity 0.15s;
+      }
+
+      button:hover {
+        opacity: 0.85;
+      }
+
+      .btn-primary {
+        background: #6200ee;
+        color: #fff;
+      }
+
+      .btn-secondary {
+        background: #03dac6;
+        color: #000;
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: #6200ee;
+        border: 1px solid #6200ee;
+      }
+
+      .btn-danger {
+        background: #cf6679;
+        color: #fff;
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .toggle-row span {
+        font-size: 0.875rem;
+        color: #555;
+      }
+
+      #log-panel {
+        max-height: 320px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 0.8rem;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 6px;
+        padding: 12px;
+      }
+
+      .log-entry {
+        margin-bottom: 8px;
+        border-bottom: 1px solid #333;
+        padding-bottom: 8px;
+      }
+
+      .log-entry:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+
+      .log-entry .log-time {
+        color: #858585;
+      }
+
+      .log-entry .log-event {
+        color: #9cdcfe;
+        font-weight: bold;
+      }
+
+      .log-entry .log-id {
+        color: #ce9178;
+      }
+
+      .log-entry .log-params {
+        color: #b5cea8;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      .log-empty {
+        color: #858585;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Funnel — Vanilla TS Example</h1>
+    <p class="subtitle">
+      가상 쇼핑 퍼널 데모. 버튼을 클릭하면 이벤트 로그 패널에 기록됩니다.
+    </p>
+
+    <!-- 상품 카드 -->
+    <div class="section">
+      <h2>상품</h2>
+      <div class="product-card">
+        <div class="product-image">👟</div>
+        <div class="product-info">
+          <h3>클래식 러닝화</h3>
+          <p>SKU: SHOE-001 · ₩89,000 · 스포츠/신발</p>
+        </div>
+      </div>
+
+      <!-- 퍼널 버튼 4개 -->
+      <div class="btn-group">
+        <button type="button" id="btn-view-item" class="btn-primary">View Item</button>
+        <button type="button" id="btn-add-to-cart" class="btn-primary">Add to Cart</button>
+        <button type="button" id="btn-begin-checkout" class="btn-primary">Begin Checkout</button>
+        <button type="button" id="btn-purchase" class="btn-secondary">Purchase</button>
+      </div>
+    </div>
+
+    <!-- 사용자 상태 -->
+    <div class="section">
+      <h2>사용자</h2>
+      <div class="toggle-row">
+        <span id="user-status">비로그인 상태</span>
+        <button type="button" id="btn-login" class="btn-outline">로그인 (setUser)</button>
+        <button type="button" id="btn-logout" class="btn-danger" style="display: none">로그아웃 (resetUser)</button>
+      </div>
+    </div>
+
+    <!-- 동의 상태 -->
+    <div class="section">
+      <h2>Consent</h2>
+      <div class="toggle-row">
+        <span id="consent-status">동의 상태: denied</span>
+        <button type="button" id="btn-consent-grant" class="btn-outline">동의 허용 (setConsent granted)</button>
+        <button type="button" id="btn-consent-deny" class="btn-danger" style="display: none">동의 철회 (setConsent denied)</button>
+      </div>
+    </div>
+
+    <!-- 이벤트 로그 패널 -->
+    <div class="section">
+      <h2>이벤트 로그</h2>
+      <div id="log-panel">
+        <p class="log-empty">아직 이벤트가 없습니다. 위 버튼을 클릭해보세요.</p>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

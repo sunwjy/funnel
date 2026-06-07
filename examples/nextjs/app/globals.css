@@ -1,0 +1,412 @@
+/* 기본 리셋 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #111;
+  background: #f8f9fa;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 320px;
+  min-height: 100vh;
+}
+
+/* 헤더 */
+.site-header {
+  grid-column: 1 / -1;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 24px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.nav-logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111;
+  text-decoration: none;
+}
+
+/* 메인 콘텐츠 */
+.main-content {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* 사이드바 */
+.sidebar {
+  background: #fff;
+  border-left: 1px solid #e5e7eb;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* 상품 목록 */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.product-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.product-info {
+  padding: 16px;
+}
+
+.product-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.product-category {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.product-price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  margin-bottom: 12px;
+}
+
+.product-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 상품 상세 */
+.product-detail {
+  max-width: 600px;
+}
+
+.product-detail img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.product-detail h1 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+
+.product-detail .product-description {
+  color: #4b5563;
+  margin-bottom: 20px;
+}
+
+.product-detail .product-price {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+/* 체크아웃 */
+.checkout-page {
+  max-width: 500px;
+}
+
+.checkout-page h1 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+}
+
+.order-summary {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.order-summary h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #6b7280;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.order-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 8px;
+}
+
+/* 버튼 */
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+.btn-primary {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #111;
+}
+
+.btn-success {
+  background: #16a34a;
+  color: #fff;
+  padding: 12px 24px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.btn-login {
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 0.875rem;
+}
+
+.btn-logout {
+  background: #f3f4f6;
+  color: #111;
+  font-size: 0.875rem;
+}
+
+.btn-accept {
+  background: #16a34a;
+  color: #fff;
+}
+
+.btn-decline {
+  background: #f3f4f6;
+  color: #111;
+}
+
+.btn-clear {
+  background: transparent;
+  color: #6b7280;
+  font-size: 0.8rem;
+  padding: 4px 8px;
+}
+
+/* 동의 배너 */
+.consent-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px;
+  background: #fef3c7;
+  border-radius: 6px;
+}
+
+.consent-banner p {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.consent-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.consent-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.875rem;
+}
+
+/* 사용자 패널 */
+.user-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-status {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+/* 이벤트 로그 */
+.event-log {
+  height: 100%;
+}
+
+.event-log-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.event-log-header h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.log-count {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.log-empty {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.log-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.log-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 6px 8px;
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+.badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.badge-event {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.badge-user {
+  background: #dcfce7;
+  color: #16a34a;
+}
+.badge-consent {
+  background: #fef3c7;
+  color: #92400e;
+}
+.badge-reset {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.log-name {
+  flex: 1;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.log-event-id {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: #9ca3af;
+}
+
+.log-time {
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* 뒤로 가기 링크 */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #1d4ed8;
+  text-decoration: none;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+/* 결제 완료 */
+.purchase-complete {
+  text-align: center;
+  padding: 40px;
+}
+
+.purchase-complete h2 {
+  font-size: 1.5rem;
+  color: #16a34a;
+  margin-bottom: 8px;
+}
+
+/* 홈 페이지 헤더 */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.page-header p {
+  color: #6b7280;
+}

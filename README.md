@@ -393,6 +393,20 @@ export function createMyPlugin(): FunnelPlugin {
 }
 ```
 
+## Examples
+
+Three standalone examples live in `examples/*`. Each is a pnpm workspace package that references the library via `workspace:*`, so it always reflects the current source.
+
+| Path | Stack | Key demo | Run |
+|------|-------|----------|-----|
+| `examples/vanilla-html` | Vite + vanilla TS | Single-page funnel buttons, event log panel, `setUser` / `setConsent` | `pnpm --filter @examples/vanilla-html dev` |
+| `examples/react-vite` | React 19 + Vite | Multi-step funnel (product list → cart → checkout → complete), debug plugin wired to React state | `pnpm --filter @examples/react-vite dev` |
+| `examples/nextjs` | Next.js 15 App Router | Multi-page funnel (`/` → `/product/[id]` → `/checkout`), `page_view` on route change, SSR-safe | `pnpm --filter @examples/nextjs dev` |
+
+By default all examples run in **placeholder / log-demo mode** — no real platform IDs required. A debug plugin logs every event (including `eventId`) to the browser console and an on-screen event log panel. To send real events, copy `.env.example` to `.env.local` in the example directory and fill in your GA4 / Meta Pixel IDs.
+
+> **Rule:** when a library API changes, update all three examples so they remain consistent with the library and pass CI (`pnpm build && pnpm typecheck`).
+
 ## Development
 
 ```bash
@@ -406,7 +420,7 @@ pnpm lint:fix    # Auto-fix lint issues
 ## Pre-release Backlog
 
 - [ ] Contributing guide — `CONTRIBUTING.md` with development setup and PR guidelines
-- [ ] Examples — Standalone usage examples (vanilla HTML, React/Next.js integration)
+- [x] Examples — Standalone usage examples (vanilla HTML, React/Next.js integration)
 - [ ] API docs — Auto-generated API reference via TypeDoc or API Extractor
 
 ## Tech Stack
