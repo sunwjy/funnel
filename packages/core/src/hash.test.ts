@@ -24,6 +24,26 @@ describe("normalizePii", () => {
     expect(normalizePii("", "email")).toBe("");
     expect(normalizePii("   ", "email")).toBe("");
   });
+
+  describe("phone_e164 (X Ads format — leading + preserved)", () => {
+    it("should preserve the leading + and strip other non-digits", () => {
+      expect(normalizePii("+82 10-1234-5678", "phone_e164")).toBe("+821012345678");
+      expect(normalizePii("  +1 (123) 456-7890  ", "phone_e164")).toBe("+11234567890");
+    });
+
+    it("should not invent a + when the input has none", () => {
+      expect(normalizePii("82 10-1234-5678", "phone_e164")).toBe("821012345678");
+    });
+
+    it("should strip + signs that are not leading", () => {
+      expect(normalizePii("+82+10+1234", "phone_e164")).toBe("+82101234");
+    });
+
+    it("should return empty string for empty input", () => {
+      expect(normalizePii(undefined, "phone_e164")).toBe("");
+      expect(normalizePii("   ", "phone_e164")).toBe("");
+    });
+  });
 });
 
 describe("hashPii", () => {
@@ -49,5 +69,13 @@ describe("hashPii", () => {
     const a = await hashPii("+1 (555) 123-4567", "phone");
     const b = await hashPii("15551234567", "phone");
     expect(a).toBe(b);
+  });
+
+  it("hashes phone_e164 with the + included (differs from Meta-style phone)", async () => {
+    const e164 = await hashPii("+1 (555) 123-4567", "phone_e164");
+    const meta = await hashPii("+1 (555) 123-4567", "phone");
+    expect(e164).toMatch(/^[a-f0-9]{64}$/);
+    // "+15551234567" and "15551234567" must produce different digests.
+    expect(e164).not.toBe(meta);
   });
 });

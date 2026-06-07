@@ -10,6 +10,7 @@
 
 export type { FunnelConfig, FunnelErrorContext } from "./funnel";
 export { Funnel } from "./funnel";
+export type { PiiKind } from "./hash";
 export { hashPii, normalizePii } from "./hash";
 export type { FunnelPlugin } from "./plugin";
 export type {

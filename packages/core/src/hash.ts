@@ -32,19 +32,26 @@ function getSubtleCrypto(): SubtleCrypto | undefined {
 }
 
 /**
+ * Supported PII kinds for {@link normalizePii} / {@link hashPii}.
+ *
+ * Phone normalization is platform-specific:
+ * - `phone` — Meta/Google style: digits only, no "+".
+ * - `phone_e164` — X (Twitter) style: leading "+" preserved (e.g. `+11234567890`).
+ */
+export type PiiKind = "email" | "phone" | "phone_e164" | "name" | "id";
+
+/**
  * Normalizes a value according to the rules for the given PII kind.
  *
  * - `email`: trim + lowercase
  * - `phone`: keep digits only (drops "+", spaces, dashes, parentheses)
+ * - `phone_e164`: keep digits, preserving a single leading "+"
  * - `name`: trim + lowercase
  * - `id`: trim
  *
  * Returns an empty string for null/undefined/empty input.
  */
-export function normalizePii(
-  value: string | null | undefined,
-  kind: "email" | "phone" | "name" | "id",
-): string {
+export function normalizePii(value: string | null | undefined, kind: PiiKind): string {
   if (!value) return "";
   const trimmed = value.trim();
   if (!trimmed) return "";
@@ -53,6 +60,10 @@ export function normalizePii(
       return trimmed.toLowerCase();
     case "phone":
       return trimmed.replace(/\D+/g, "");
+    case "phone_e164": {
+      const prefix = trimmed.startsWith("+") ? "+" : "";
+      return prefix + trimmed.replace(/\D+/g, "");
+    }
     case "name":
       return trimmed.toLowerCase();
     case "id":
@@ -68,7 +79,7 @@ export function normalizePii(
  */
 export async function hashPii(
   value: string | null | undefined,
-  kind: "email" | "phone" | "name" | "id",
+  kind: PiiKind,
 ): Promise<string | undefined> {
   const normalized = normalizePii(value, kind);
   if (!normalized) return undefined;
