@@ -101,7 +101,7 @@ describe("createGoogleAdsPlugin", () => {
       expect(window.gtag).toHaveBeenCalledWith("event", "conversion", expect.any(Object));
     });
 
-    it("should not send conversion event when label is set but conversionId is absent", () => {
+    it("should not send any event when label is set but conversionId is absent", () => {
       window.gtag = vi.fn();
       const plugin = createGoogleAdsPlugin();
 
@@ -111,15 +111,17 @@ describe("createGoogleAdsPlugin", () => {
 
       plugin.track("purchase", { currency: "USD", value: 100, transaction_id: "T-1" }, mockContext);
 
-      // Falls through to default conversion event path, not "conversion" event
-      expect(window.gtag).toHaveBeenCalledWith("event", "purchase", expect.any(Object));
+      // Without conversionId there is no send_to target — sending a bare
+      // gtag event would be routed to ALL configured gtag destinations
+      // (e.g., GA4) and double-count alongside the ga4 plugin.
+      expect(window.gtag).not.toHaveBeenCalled();
     });
   });
 
-  describe("track — default conversion events without labels", () => {
+  describe("track — events without labels are dropped (no GA4 double-counting)", () => {
     const mockContext = { eventId: "test-event-id" };
 
-    it("should send purchase via gtag event when no label configured", () => {
+    it("should not send purchase when no label configured", () => {
       window.gtag = vi.fn();
       const plugin = createGoogleAdsPlugin();
 
@@ -131,14 +133,12 @@ describe("createGoogleAdsPlugin", () => {
         mockContext,
       );
 
-      expect(window.gtag).toHaveBeenCalledWith(
-        "event",
-        "purchase",
-        expect.objectContaining({ currency: "KRW", value: 29000 }),
-      );
+      // initialize() legitimately calls gtag("config", ...) — only assert
+      // that no *event* was dispatched.
+      expect(window.gtag).not.toHaveBeenCalledWith("event", expect.anything(), expect.anything());
     });
 
-    it("should send add_to_cart via gtag event when no label configured", () => {
+    it("should not send add_to_cart when no label configured", () => {
       window.gtag = vi.fn();
       const plugin = createGoogleAdsPlugin();
 
@@ -146,25 +146,10 @@ describe("createGoogleAdsPlugin", () => {
 
       plugin.track("add_to_cart", { currency: "USD", value: 50 }, mockContext);
 
-      expect(window.gtag).toHaveBeenCalledWith("event", "add_to_cart", expect.any(Object));
+      expect(window.gtag).not.toHaveBeenCalled();
     });
 
-    it("should send begin_checkout via gtag event when no label configured", () => {
-      window.gtag = vi.fn();
-      const plugin = createGoogleAdsPlugin();
-
-      plugin.initialize({});
-
-      plugin.track("begin_checkout", { currency: "USD", value: 100 }, mockContext);
-
-      expect(window.gtag).toHaveBeenCalledWith("event", "begin_checkout", expect.any(Object));
-    });
-  });
-
-  describe("track — non-conversion events", () => {
-    const mockContext = { eventId: "test-event-id" };
-
-    it("should pass through page_view via gtag event", () => {
+    it("should not send page_view when no label configured", () => {
       window.gtag = vi.fn();
       const plugin = createGoogleAdsPlugin();
 
@@ -172,10 +157,10 @@ describe("createGoogleAdsPlugin", () => {
 
       plugin.track("page_view", {}, mockContext);
 
-      expect(window.gtag).toHaveBeenCalledWith("event", "page_view", expect.any(Object));
+      expect(window.gtag).not.toHaveBeenCalled();
     });
 
-    it("should pass through custom/unmapped events via gtag event", () => {
+    it("should not send unmapped events when no label configured", () => {
       window.gtag = vi.fn();
       const plugin = createGoogleAdsPlugin();
 
@@ -183,7 +168,7 @@ describe("createGoogleAdsPlugin", () => {
 
       plugin.track("search", { search_term: "shoes" }, mockContext);
 
-      expect(window.gtag).toHaveBeenCalledWith("event", "search", expect.any(Object));
+      expect(window.gtag).not.toHaveBeenCalled();
     });
   });
 

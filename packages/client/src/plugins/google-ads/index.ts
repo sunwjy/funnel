@@ -51,25 +51,24 @@ export function createGoogleAdsPlugin(): FunnelPlugin {
         return;
       }
 
-      const p = params as Record<string, unknown>;
       const label = conversionLabels[eventName];
-      const enriched: Record<string, unknown> = {
-        ...p,
-        event_id: context.eventId,
-      };
-
-      if (label && conversionId) {
-        // Conversion event: forward all GA4 params (items, coupon, etc.) plus send_to.
-        // The GA4 event name is replaced with 'conversion' but the params survive
-        // so Google Ads Enhanced Conversions can read items/transaction_id/etc.
-        const conversionParams: Record<string, unknown> = {
-          ...enriched,
-          send_to: `${conversionId}/${label}`,
-        };
-        window.gtag("event", "conversion", conversionParams);
-      } else {
-        window.gtag("event", eventName, enriched);
+      if (!label || !conversionId) {
+        // No conversion mapping — do NOT forward. A bare gtag("event", ...)
+        // call has no send_to and is routed to ALL configured gtag
+        // destinations (e.g., the GA4 property), double-counting events
+        // when the ga4 plugin is also registered.
+        return;
       }
+
+      // Conversion event: forward all GA4 params (items, coupon, etc.) plus send_to.
+      // The GA4 event name is replaced with 'conversion' but the params survive
+      // so Google Ads Enhanced Conversions can read items/transaction_id/etc.
+      const conversionParams: Record<string, unknown> = {
+        ...(params as Record<string, unknown>),
+        event_id: context.eventId,
+        send_to: `${conversionId}/${label}`,
+      };
+      window.gtag("event", "conversion", conversionParams);
     },
 
     setUser(properties: UserProperties): void {
