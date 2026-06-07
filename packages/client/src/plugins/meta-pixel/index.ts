@@ -9,6 +9,7 @@
  */
 
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
@@ -171,6 +172,13 @@ export function createMetaPixelPlugin(factoryConfig?: MetaPixelPluginConfig): Fu
       if (Object.keys(metaUserData).length > 0) {
         window.fbq("init", pixelId, metaUserData);
       }
+    },
+
+    setConsent(state: ConsentState): void {
+      if (typeof window === "undefined" || !window.fbq) return;
+      // Meta Pixel has a binary consent API — down-map from ad_storage.
+      if (state.ad_storage === undefined) return;
+      window.fbq("consent", state.ad_storage === "granted" ? "grant" : "revoke");
     },
 
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {

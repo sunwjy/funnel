@@ -10,6 +10,7 @@
  */
 
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
@@ -18,6 +19,7 @@ import type {
   UserProperties,
 } from "@sunwjy/funnel-core";
 import { flattenItems, toTitleCase } from "../../internal/analytics-shared.js";
+import { createConsentGate } from "../../internal/consent.js";
 
 /**
  * Identify object from the Amplitude Browser SDK 2.
@@ -54,6 +56,11 @@ export interface AmplitudePluginConfig {
    * `flushQueueSize`, etc.
    */
   options?: Record<string, unknown>;
+  /**
+   * When `true`, events are dropped until `analytics_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 const REVENUE_EVENTS: ReadonlySet<EventName> = new Set<EventName>(["purchase", "refund"]);
@@ -80,11 +87,19 @@ function transformParams<E extends EventName>(
 }
 
 export function createAmplitudePlugin(factoryConfig?: AmplitudePluginConfig): FunnelPlugin {
+  let consentRequired = false;
+  const gate = createConsentGate("analytics_storage", () => consentRequired);
+
   return {
     name: "amplitude",
 
     initialize(config: Record<string, unknown>): void {
-      const { apiKey, options } = { ...factoryConfig, ...(config as AmplitudePluginConfig) };
+      const {
+        apiKey,
+        options,
+        consentRequired: required,
+      } = { ...factoryConfig, ...(config as AmplitudePluginConfig) };
+      consentRequired = required ?? false;
       if (apiKey && typeof window !== "undefined" && window.amplitude) {
         if (options) {
           window.amplitude.init(apiKey, options);
@@ -94,8 +109,12 @@ export function createAmplitudePlugin(factoryConfig?: AmplitudePluginConfig): Fu
       }
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
-      if (typeof window === "undefined" || !window.amplitude) {
+      if (typeof window === "undefined" || !window.amplitude || gate.blocked()) {
         return;
       }
 

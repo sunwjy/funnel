@@ -366,6 +366,100 @@ describe("Funnel", () => {
     });
   });
 
+  describe("setConsent", () => {
+    it("should forward consent state to plugins that implement setConsent", () => {
+      const plugin = createMockPlugin("p1");
+      plugin.setConsent = vi.fn();
+      const funnel = new Funnel({ plugins: [plugin] });
+      funnel.initialize();
+
+      funnel.setConsent({ ad_storage: "denied", analytics_storage: "granted" });
+
+      expect(plugin.setConsent).toHaveBeenCalledWith({
+        ad_storage: "denied",
+        analytics_storage: "granted",
+      });
+    });
+
+    it("should merge partial updates and forward the full accumulated state", () => {
+      const plugin = createMockPlugin("p1");
+      plugin.setConsent = vi.fn();
+      const funnel = new Funnel({ plugins: [plugin] });
+      funnel.initialize();
+
+      funnel.setConsent({ ad_storage: "denied", analytics_storage: "granted" });
+      funnel.setConsent({ ad_storage: "granted" });
+
+      expect(plugin.setConsent).toHaveBeenLastCalledWith({
+        ad_storage: "granted",
+        analytics_storage: "granted",
+      });
+    });
+
+    it("should store consent before initialize and replay it during initialize", () => {
+      const plugin = createMockPlugin("p1");
+      plugin.setConsent = vi.fn();
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      funnel.setConsent({ ad_storage: "denied" });
+      expect(plugin.setConsent).not.toHaveBeenCalled();
+
+      funnel.initialize();
+
+      expect(plugin.setConsent).toHaveBeenCalledWith({ ad_storage: "denied" });
+    });
+
+    it("should replay consent before setUser and queued events during initialize", () => {
+      const order: string[] = [];
+      const plugin: FunnelPlugin = {
+        name: "p1",
+        initialize: vi.fn(() => order.push("initialize")),
+        setConsent: vi.fn(() => order.push("setConsent")),
+        setUser: vi.fn(() => order.push("setUser")),
+        track: vi.fn(() => order.push("track")),
+      };
+      const funnel = new Funnel({ plugins: [plugin] });
+
+      funnel.track("page_view", {});
+      funnel.setUser({ user_id: "u-1" });
+      funnel.setConsent({ analytics_storage: "granted" });
+      funnel.initialize();
+
+      expect(order).toEqual(["initialize", "setConsent", "setUser", "track"]);
+    });
+
+    it("should skip plugins without setConsent", () => {
+      const withConsent = createMockPlugin("with");
+      withConsent.setConsent = vi.fn();
+      const withoutConsent = createMockPlugin("without");
+      const funnel = new Funnel({ plugins: [withConsent, withoutConsent] });
+      funnel.initialize();
+
+      expect(() => funnel.setConsent({ ad_storage: "granted" })).not.toThrow();
+      expect(withConsent.setConsent).toHaveBeenCalled();
+    });
+
+    it("should isolate errors and report phase setConsent", () => {
+      const onError = vi.fn();
+      const failing = createMockPlugin("failing");
+      failing.setConsent = vi.fn(() => {
+        throw new Error("crash");
+      });
+      const healthy = createMockPlugin("healthy");
+      healthy.setConsent = vi.fn();
+      const funnel = new Funnel({ plugins: [failing, healthy], onError });
+      funnel.initialize();
+
+      funnel.setConsent({ ad_storage: "granted" });
+
+      expect(healthy.setConsent).toHaveBeenCalled();
+      expect(onError).toHaveBeenCalledWith(
+        expect.any(Error),
+        expect.objectContaining({ plugin: "failing", phase: "setConsent" }),
+      );
+    });
+  });
+
   describe("resetUser", () => {
     it("should call resetUser on plugins that implement it", () => {
       const plugin = createMockPlugin("p1");

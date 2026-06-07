@@ -10,6 +10,7 @@
  */
 
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
@@ -18,6 +19,7 @@ import type {
   UserProperties,
 } from "@sunwjy/funnel-core";
 import { flattenItems, toTitleCase } from "../../internal/analytics-shared.js";
+import { createConsentGate } from "../../internal/consent.js";
 
 declare global {
   interface Window {
@@ -44,6 +46,11 @@ export interface MixpanelPluginConfig {
    * data residency), `debug`, `persistence`, `batch_requests`, etc.
    */
   config?: Record<string, unknown>;
+  /**
+   * When `true`, events are dropped until `analytics_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 function transformParams<E extends EventName>(
@@ -65,11 +72,19 @@ function transformParams<E extends EventName>(
 }
 
 export function createMixpanelPlugin(factoryConfig?: MixpanelPluginConfig): FunnelPlugin {
+  let consentRequired = false;
+  const gate = createConsentGate("analytics_storage", () => consentRequired);
+
   return {
     name: "mixpanel",
 
     initialize(config: Record<string, unknown>): void {
-      const { token, config: mpConfig } = { ...factoryConfig, ...(config as MixpanelPluginConfig) };
+      const {
+        token,
+        config: mpConfig,
+        consentRequired: required,
+      } = { ...factoryConfig, ...(config as MixpanelPluginConfig) };
+      consentRequired = required ?? false;
       if (token && typeof window !== "undefined" && window.mixpanel) {
         if (mpConfig) {
           window.mixpanel.init(token, mpConfig);
@@ -79,8 +94,12 @@ export function createMixpanelPlugin(factoryConfig?: MixpanelPluginConfig): Funn
       }
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
-      if (typeof window === "undefined" || !window.mixpanel) {
+      if (typeof window === "undefined" || !window.mixpanel || gate.blocked()) {
         return;
       }
 

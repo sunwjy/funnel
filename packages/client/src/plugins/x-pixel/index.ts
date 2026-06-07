@@ -17,6 +17,7 @@
  */
 
 import {
+  type ConsentState,
   type EventContext,
   type EventMap,
   type EventName,
@@ -25,6 +26,7 @@ import {
   normalizePii,
   type UserProperties,
 } from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 
 declare global {
   interface Window {
@@ -38,6 +40,11 @@ declare global {
 export interface XPixelPluginConfig {
   /** X Pixel ID. */
   pixelId?: string;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 const EVENT_MAP: Partial<Record<EventName, string>> = {
@@ -107,6 +114,8 @@ function transformParams<E extends EventName>(
 export function createXPixelPlugin(factoryConfig?: XPixelPluginConfig): FunnelPlugin {
   let pixelId: string | undefined;
   let userParams: Record<string, string> = {};
+  let consentRequired = false;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
 
   return {
     name: "x-pixel",
@@ -114,13 +123,18 @@ export function createXPixelPlugin(factoryConfig?: XPixelPluginConfig): FunnelPl
     initialize(config: Record<string, unknown>): void {
       const pluginConfig = { ...factoryConfig, ...(config as XPixelPluginConfig) };
       pixelId = pluginConfig.pixelId;
+      consentRequired = pluginConfig.consentRequired ?? false;
       if (pixelId && typeof window !== "undefined" && window.twq) {
         window.twq("config", pixelId);
       }
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
-      if (typeof window === "undefined" || !window.twq) {
+      if (typeof window === "undefined" || !window.twq || gate.blocked()) {
         return;
       }
 

@@ -457,6 +457,34 @@ export interface EventContext {
 }
 
 /**
+ * Consent status for a single consent signal.
+ */
+export type ConsentStatus = "granted" | "denied";
+
+/**
+ * Consent state following the Google Consent Mode v2 signal model.
+ *
+ * @remarks
+ * The four signals map 1:1 to `gtag("consent", "update", ...)`. Plugins for
+ * platforms with simpler consent APIs down-map from these signals (e.g.,
+ * Meta Pixel derives grant/revoke from `ad_storage`). All fields are
+ * optional — {@link Funnel.setConsent} merges partial updates into the last
+ * known state before forwarding.
+ *
+ * @see {@link https://developers.google.com/tag-platform/security/concepts/consent-mode | Google Consent Mode}
+ */
+export interface ConsentState {
+  /** Cookies/identifiers for advertising purposes. */
+  ad_storage?: ConsentStatus;
+  /** Cookies/identifiers for analytics purposes. */
+  analytics_storage?: ConsentStatus;
+  /** Sending user data to Google for advertising (Consent Mode v2). */
+  ad_user_data?: ConsentStatus;
+  /** Personalized advertising (Consent Mode v2). */
+  ad_personalization?: ConsentStatus;
+}
+
+/**
  * User properties following the GA4 user data model.
  *
  * @remarks

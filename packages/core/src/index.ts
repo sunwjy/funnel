@@ -20,6 +20,8 @@ export type {
   AddToWishlistParams,
   BaseEventParams,
   BeginCheckoutParams,
+  ConsentState,
+  ConsentStatus,
   EventContext,
   EventMap,
   EventName,

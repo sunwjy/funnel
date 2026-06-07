@@ -17,7 +17,8 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item } from "@sunwjy/funnel-core";
+import type { ConsentState, EventMap, EventName, FunnelPlugin, Item } from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 
 /** Item entry of a Naver `_conv` conversion object. @internal */
 interface NaverConversionItem {
@@ -57,6 +58,11 @@ export interface NaverAdPluginConfig {
   accountId?: string;
   /** Site domain forwarded to `wcs.inflow()` for cookie-domain setup. */
   siteDomain?: string;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 /**
@@ -92,11 +98,19 @@ function transformItems(items?: Item[]): NaverConversionItem[] | undefined {
  * Creates a Naver Ad plugin instance (wcs.trans conversion script).
  */
 export function createNaverAdPlugin(factoryConfig?: NaverAdPluginConfig): FunnelPlugin {
+  let consentRequired = false;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
+
   return {
     name: "naver-ad",
 
     initialize(config: Record<string, unknown>): void {
-      const { accountId, siteDomain } = { ...factoryConfig, ...(config as NaverAdPluginConfig) };
+      const {
+        accountId,
+        siteDomain,
+        consentRequired: required,
+      } = { ...factoryConfig, ...(config as NaverAdPluginConfig) };
+      consentRequired = required ?? false;
       if (typeof window === "undefined" || !window.wcs) {
         return;
       }
@@ -109,8 +123,12 @@ export function createNaverAdPlugin(factoryConfig?: NaverAdPluginConfig): Funnel
       }
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E]): void {
-      if (typeof window === "undefined" || !window.wcs) {
+      if (typeof window === "undefined" || !window.wcs || gate.blocked()) {
         return;
       }
 

@@ -9,6 +9,7 @@
  */
 
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
@@ -16,6 +17,7 @@ import type {
   Item,
   UserProperties,
 } from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 
 declare global {
   interface Window {
@@ -34,6 +36,11 @@ declare global {
 export interface TikTokPixelPluginConfig {
   /** TikTok Pixel ID. */
   pixelId?: string;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 /**
@@ -100,18 +107,29 @@ function transformParams<E extends EventName>(
  * Creates a TikTok Pixel plugin instance.
  */
 export function createTikTokPixelPlugin(factoryConfig?: TikTokPixelPluginConfig): FunnelPlugin {
+  let consentRequired = false;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
+
   return {
     name: "tiktok-pixel",
 
     initialize(config: Record<string, unknown>): void {
-      const { pixelId } = { ...factoryConfig, ...(config as TikTokPixelPluginConfig) };
+      const { pixelId, consentRequired: required } = {
+        ...factoryConfig,
+        ...(config as TikTokPixelPluginConfig),
+      };
+      consentRequired = required ?? false;
       if (pixelId && typeof window !== "undefined" && window.ttq) {
         window.ttq.load(pixelId);
       }
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
-      if (typeof window === "undefined" || !window.ttq) {
+      if (typeof window === "undefined" || !window.ttq || gate.blocked()) {
         return;
       }
 

@@ -9,6 +9,7 @@
  */
 
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
@@ -90,6 +91,13 @@ export function createGoogleAdsPlugin(factoryConfig?: GoogleAdsPluginConfig): Fu
         // enhanced conversions enabled. Raw values are documented as acceptable.
         window.gtag("set", "user_data", userData);
       }
+    },
+
+    setConsent(state: ConsentState): void {
+      if (typeof window === "undefined" || !window.gtag) return;
+
+      // ConsentState mirrors gtag's Consent Mode v2 signals 1:1.
+      window.gtag("consent", "update", state);
     },
 
     resetUser(): void {

@@ -16,6 +16,7 @@
  */
 
 import {
+  type ConsentState,
   type EventContext,
   type EventMap,
   type EventName,
@@ -24,6 +25,7 @@ import {
   type Item,
   type UserProperties,
 } from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 import { postJson } from "../../internal/transport.js";
 
 /**
@@ -42,6 +44,11 @@ export interface MetaConversionApiPluginConfig {
    * "Test Events" tab.
    */
   testEventCode?: string;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 /** @internal */
@@ -202,8 +209,10 @@ export function createMetaConversionApiPlugin(
 ): FunnelPlugin {
   let endpoint = "";
   let testEventCode: string | undefined;
+  let consentRequired = false;
   let hashedUserData: Promise<MetaCapiUserData> | null = null;
   let synthesizedFbc: string | undefined;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
 
   function resolveFbc(): string | undefined {
     const cookie = getCookie("_fbc");
@@ -230,6 +239,11 @@ export function createMetaConversionApiPlugin(
       };
       if (c.endpoint) endpoint = c.endpoint;
       testEventCode = c.testEventCode;
+      consentRequired = c.consentRequired ?? false;
+    },
+
+    setConsent(state: ConsentState): void {
+      gate.update(state);
     },
 
     setUser(properties: UserProperties): void {
@@ -243,7 +257,7 @@ export function createMetaConversionApiPlugin(
     },
 
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
-      if (typeof window === "undefined" || !endpoint) {
+      if (typeof window === "undefined" || !endpoint || gate.blocked()) {
         return;
       }
 

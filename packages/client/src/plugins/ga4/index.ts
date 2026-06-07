@@ -8,6 +8,7 @@
  */
 
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
@@ -94,6 +95,14 @@ export function createGA4Plugin(factoryConfig?: GA4PluginConfig): FunnelPlugin {
       if (Object.keys(userProperties).length > 0) {
         window.gtag("set", "user_properties", userProperties);
       }
+    },
+
+    setConsent(state: ConsentState): void {
+      if (typeof window === "undefined" || !window.gtag) {
+        return;
+      }
+      // ConsentState mirrors gtag's Consent Mode v2 signals 1:1.
+      window.gtag("consent", "update", state);
     },
 
     resetUser(): void {

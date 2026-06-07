@@ -1,5 +1,5 @@
 import type { FunnelPlugin } from "./plugin";
-import type { EventContext, EventMap, EventName, UserProperties } from "./types";
+import type { ConsentState, EventContext, EventMap, EventName, UserProperties } from "./types";
 
 /**
  * Generates a unique event ID for deduplication across client and server.
@@ -44,7 +44,7 @@ export interface FunnelErrorContext {
   /** Plugin name where the error originated. */
   plugin: string;
   /** Lifecycle method that threw. */
-  phase: "initialize" | "track" | "setUser" | "resetUser";
+  phase: "initialize" | "track" | "setUser" | "resetUser" | "setConsent";
   /** Event name when `phase === "track"`. */
   eventName?: EventName;
 }
@@ -95,6 +95,7 @@ export class Funnel {
   private initialized = false;
   private initializedPlugins = new Set<string>();
   private userProperties: UserProperties | null = null;
+  private consentState: ConsentState | null = null;
   private pendingEvents: QueuedEvent[] = [];
   private onError?: (error: unknown, context: FunnelErrorContext) => void;
 
@@ -133,6 +134,12 @@ export class Funnel {
       }
     }
     this.initialized = true;
+
+    // Consent is applied first so platforms are in the right consent state
+    // before user identity and queued events reach them.
+    if (this.consentState) {
+      this.forwardConsent(this.consentState);
+    }
 
     if (this.userProperties) {
       for (const plugin of this.plugins) {
@@ -233,6 +240,45 @@ export class Funnel {
         }
       } catch (error) {
         this.handleError(error, { plugin: plugin.name, phase: "setUser" });
+      }
+    }
+  }
+
+  /**
+   * Updates the user's consent state across all plugins.
+   *
+   * @remarks
+   * Accepts partial updates: the given signals are merged into the last
+   * known state, and the full accumulated {@link ConsentState} is forwarded
+   * to every plugin that implements `setConsent`. If called before
+   * {@link initialize}, the state is stored and applied during
+   * initialization — before user identity and queued events.
+   *
+   * @param state - Consent signals to update (Google Consent Mode v2 model).
+   */
+  setConsent(state: ConsentState): void {
+    this.consentState = { ...this.consentState, ...state };
+
+    if (!this.initialized) {
+      if (this.debug) {
+        console.log("[funnel] setConsent stored (will apply after initialize)");
+      }
+      return;
+    }
+
+    this.forwardConsent(this.consentState);
+  }
+
+  private forwardConsent(state: ConsentState): void {
+    for (const plugin of this.plugins) {
+      if (!plugin.setConsent) continue;
+      try {
+        plugin.setConsent(state);
+        if (this.debug) {
+          console.log(`[funnel] "${plugin.name}" setConsent`, state);
+        }
+      } catch (error) {
+        this.handleError(error, { plugin: plugin.name, phase: "setConsent" });
       }
     }
   }

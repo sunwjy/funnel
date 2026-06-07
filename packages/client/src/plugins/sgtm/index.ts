@@ -17,12 +17,14 @@
  */
 
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
   FunnelPlugin,
   UserProperties,
 } from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 import { postJson } from "../../internal/transport.js";
 
 /**
@@ -75,6 +77,11 @@ export interface SGTMPluginConfig {
    * GA4 engagement metrics.
    */
   engagementTimeMsec?: number;
+  /**
+   * When `true`, events are dropped until `analytics_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 const CLIENT_ID_STORAGE_KEY = "_funnel_sgtm_cid";
@@ -211,6 +218,8 @@ export function createSGTMPlugin(factoryConfig?: Partial<SGTMPluginConfig>): Fun
   let engagementTimeMsec = DEFAULT_ENGAGEMENT_TIME_MSEC;
   let resolvedClientId = "";
   let storedUserProperties: UserProperties | null = null;
+  let consentRequired = false;
+  const gate = createConsentGate("analytics_storage", () => consentRequired);
 
   return {
     name: "sgtm",
@@ -240,6 +249,7 @@ export function createSGTMPlugin(factoryConfig?: Partial<SGTMPluginConfig>): Fun
       clientIdOverride = c.clientId;
       nonPersonalizedAds = c.nonPersonalizedAds;
       engagementTimeMsec = c.engagementTimeMsec ?? DEFAULT_ENGAGEMENT_TIME_MSEC;
+      consentRequired = c.consentRequired ?? false;
 
       if (typeof window !== "undefined") {
         resolvedClientId = resolveClientId(clientIdOverride);
@@ -254,8 +264,12 @@ export function createSGTMPlugin(factoryConfig?: Partial<SGTMPluginConfig>): Fun
       storedUserProperties = null;
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
-      if (typeof window === "undefined" || !endpoint || !measurementId) return;
+      if (typeof window === "undefined" || !endpoint || !measurementId || gate.blocked()) return;
       if (!resolvedClientId) resolvedClientId = resolveClientId(clientIdOverride);
 
       const eventParams: Record<string, unknown> = {

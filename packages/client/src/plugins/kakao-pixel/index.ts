@@ -9,7 +9,8 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin, Item } from "@sunwjy/funnel-core";
+import type { ConsentState, EventMap, EventName, FunnelPlugin, Item } from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 
 interface KakaoPixelInstance {
   pageView: () => void;
@@ -36,6 +37,11 @@ declare global {
 export interface KakaoPixelPluginConfig {
   /** Kakao Pixel Track ID. */
   trackId?: string;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 function transformProducts(
@@ -56,6 +62,8 @@ function transformProducts(
 export function createKakaoPixelPlugin(factoryConfig?: KakaoPixelPluginConfig): FunnelPlugin {
   let trackId: string | undefined;
   let cachedPixel: KakaoPixelInstance | null = null;
+  let consentRequired = false;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
 
   function getPixel(): KakaoPixelInstance | null {
     if (typeof window === "undefined" || !window.kakaoPixel || !trackId) return null;
@@ -71,10 +79,16 @@ export function createKakaoPixelPlugin(factoryConfig?: KakaoPixelPluginConfig): 
     initialize(config: Record<string, unknown>): void {
       const pluginConfig = { ...factoryConfig, ...(config as KakaoPixelPluginConfig) };
       trackId = pluginConfig.trackId;
+      consentRequired = pluginConfig.consentRequired ?? false;
       cachedPixel = null; // re-resolve on next track call
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E]): void {
+      if (gate.blocked()) return;
       const pixel = getPixel();
       if (!pixel) return;
 

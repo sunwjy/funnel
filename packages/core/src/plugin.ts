@@ -1,4 +1,4 @@
-import type { EventContext, EventMap, EventName, UserProperties } from "./types";
+import type { ConsentState, EventContext, EventMap, EventName, UserProperties } from "./types";
 
 /**
  * Interface that all Funnel plugins must implement.
@@ -55,4 +55,16 @@ export interface FunnelPlugin {
    * Optional. Plugins should reset any stored user state.
    */
   resetUser?(): void;
+
+  /**
+   * Applies the user's consent state to this plugin.
+   *
+   * @remarks
+   * Optional. Receives the full accumulated {@link ConsentState} (Google
+   * Consent Mode v2 signals). Platform plugins map the signals to their
+   * native consent API, or gate event dispatch when the platform has none.
+   *
+   * @param state - The full accumulated consent state.
+   */
+  setConsent?(state: ConsentState): void;
 }

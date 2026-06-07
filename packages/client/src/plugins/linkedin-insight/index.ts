@@ -9,7 +9,8 @@
  * @packageDocumentation
  */
 
-import type { EventMap, EventName, FunnelPlugin } from "@sunwjy/funnel-core";
+import type { ConsentState, EventMap, EventName, FunnelPlugin } from "@sunwjy/funnel-core";
+import { createConsentGate } from "../../internal/consent.js";
 
 declare global {
   interface Window {
@@ -29,6 +30,11 @@ export interface LinkedInInsightPluginConfig {
    * quiet.
    */
   debug?: boolean;
+  /**
+   * When `true`, events are dropped until `ad_storage` is granted via
+   * `setConsent`. Default: platform delegation (no gating).
+   */
+  consentRequired?: boolean;
 }
 
 export function createLinkedInInsightPlugin(
@@ -36,6 +42,8 @@ export function createLinkedInInsightPlugin(
 ): FunnelPlugin {
   let conversionIds: Partial<Record<EventName, number>> = {};
   let debug = false;
+  let consentRequired = false;
+  const gate = createConsentGate("ad_storage", () => consentRequired);
 
   return {
     name: "linkedin-insight",
@@ -44,6 +52,7 @@ export function createLinkedInInsightPlugin(
       const pluginConfig = { ...factoryConfig, ...(config as LinkedInInsightPluginConfig) };
       conversionIds = pluginConfig.conversionIds ?? {};
       debug = pluginConfig.debug ?? false;
+      consentRequired = pluginConfig.consentRequired ?? false;
 
       if (pluginConfig.partnerId && typeof window !== "undefined") {
         window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
@@ -53,8 +62,12 @@ export function createLinkedInInsightPlugin(
       }
     },
 
+    setConsent(state: ConsentState): void {
+      gate.update(state);
+    },
+
     track<E extends EventName>(eventName: E, params: EventMap[E]): void {
-      if (typeof window === "undefined" || !window.lintrk) {
+      if (typeof window === "undefined" || !window.lintrk || gate.blocked()) {
         return;
       }
 

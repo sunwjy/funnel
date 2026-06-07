@@ -9,6 +9,7 @@
  */
 
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
@@ -166,6 +167,21 @@ export function createGTMPlugin(factoryConfig?: GTMPluginConfig): FunnelPlugin {
         user_id: null,
         user_properties: null,
       });
+    },
+
+    setConsent(state: ConsentState): void {
+      if (typeof window === "undefined") {
+        return;
+      }
+      // GTM's Consent Mode rides on the gtag stub (`function gtag(){
+      // dataLayer.push(arguments)}`), which is present whenever the
+      // container uses consent. Without the stub there is nothing that
+      // would interpret a consent update, so this is a no-op.
+      const gtag = (window as { gtag?: (...args: unknown[]) => void }).gtag;
+      if (typeof gtag !== "function") {
+        return;
+      }
+      gtag("consent", "update", state);
     },
   };
 }
