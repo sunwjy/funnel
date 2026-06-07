@@ -1,6 +1,6 @@
 {
   "name": "@sunwjy/funnel-client",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Client-side analytics plugins for @sunwjy/funnel-core (GA4, GTM, Meta Pixel, Meta CAPI, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude)",
   "keywords": [
     "analytics",
