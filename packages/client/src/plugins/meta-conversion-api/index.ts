@@ -156,20 +156,11 @@ function transformParams<E extends EventName>(
   return result;
 }
 
-function collectUserData(): MetaCapiUserData {
+function collectUserData(fbc: string | undefined): MetaCapiUserData {
   const userData: MetaCapiUserData = {};
 
   const fbp = getCookie("_fbp");
   if (fbp) userData.fbp = fbp;
-
-  let fbc = getCookie("_fbc");
-  if (!fbc) {
-    const fbclid = getQueryParam("fbclid");
-    if (fbclid) {
-      // Meta's documented synthesis: fb.<subdomainIndex>.<creationTime>.<fbclid>
-      fbc = `fb.1.${Date.now()}.${fbclid}`;
-    }
-  }
   if (fbc) userData.fbc = fbc;
 
   if (typeof navigator !== "undefined") {
@@ -179,10 +170,14 @@ function collectUserData(): MetaCapiUserData {
   return userData;
 }
 
-async function applyHashedUserProperties(
-  userData: MetaCapiUserData,
-  properties: UserProperties,
-): Promise<void> {
+/**
+ * Hashes the PII fields of {@link UserProperties} once. The result is cached
+ * by the plugin so repeated `track()` calls reuse the digests instead of
+ * re-hashing on every event.
+ *
+ * @internal
+ */
+async function computeHashedUserData(properties: UserProperties): Promise<MetaCapiUserData> {
   const [em, ph, fn, ln, externalId] = await Promise.all([
     hashPii(properties.email, "email"),
     hashPii(properties.phone_number, "phone"),
@@ -190,11 +185,13 @@ async function applyHashedUserProperties(
     hashPii(properties.last_name, "name"),
     hashPii(properties.user_id, "id"),
   ]);
-  if (em) userData.em = em;
-  if (ph) userData.ph = ph;
-  if (fn) userData.fn = fn;
-  if (ln) userData.ln = ln;
-  if (externalId) userData.external_id = externalId;
+  const hashed: MetaCapiUserData = {};
+  if (em) hashed.em = em;
+  if (ph) hashed.ph = ph;
+  if (fn) hashed.fn = fn;
+  if (ln) hashed.ln = ln;
+  if (externalId) hashed.external_id = externalId;
+  return hashed;
 }
 
 /**
@@ -203,7 +200,23 @@ async function applyHashedUserProperties(
 export function createMetaConversionApiPlugin(): FunnelPlugin {
   let endpoint = "";
   let testEventCode: string | undefined;
-  let storedUserProperties: UserProperties | null = null;
+  let hashedUserData: Promise<MetaCapiUserData> | null = null;
+  let synthesizedFbc: string | undefined;
+
+  function resolveFbc(): string | undefined {
+    const cookie = getCookie("_fbc");
+    if (cookie) return cookie;
+    if (!synthesizedFbc) {
+      const fbclid = getQueryParam("fbclid");
+      if (fbclid) {
+        // Meta's documented synthesis: fb.<subdomainIndex>.<creationTime>.<fbclid>.
+        // Synthesized once and reused — the creation time is part of the
+        // click identifier and must stay stable across events.
+        synthesizedFbc = `fb.1.${Date.now()}.${fbclid}`;
+      }
+    }
+    return synthesizedFbc;
+  }
 
   return {
     name: "meta-conversion-api",
@@ -215,11 +228,13 @@ export function createMetaConversionApiPlugin(): FunnelPlugin {
     },
 
     setUser(properties: UserProperties): void {
-      storedUserProperties = properties;
+      // Kick off hashing immediately and cache the promise — track() calls
+      // await the same digests instead of re-hashing per event.
+      hashedUserData = computeHashedUserData(properties);
     },
 
     resetUser(): void {
-      storedUserProperties = null;
+      hashedUserData = null;
     },
 
     track<E extends EventName>(eventName: E, params: EventMap[E], context: EventContext): void {
@@ -229,8 +244,8 @@ export function createMetaConversionApiPlugin(): FunnelPlugin {
 
       const metaEventName = EVENT_MAP[eventName] ?? eventName;
       const customData = transformParams(eventName, params);
-      const userData = collectUserData();
-      const userProps = storedUserProperties;
+      const userData = collectUserData(resolveFbc());
+      const hashed = hashedUserData;
       const eventTime = Math.floor(Date.now() / 1000);
       const sourceUrl = window.location.href;
       const captured = endpoint;
@@ -250,18 +265,25 @@ export function createMetaConversionApiPlugin(): FunnelPlugin {
         postJson(captured, JSON.stringify(payload));
       }
 
-      if (!userProps) {
+      if (!hashed) {
         // Synchronous fast path — nothing to hash.
         send();
         return;
       }
 
-      // Hash PII before posting. The track method stays sync; the network
-      // dispatch is fire-and-forget after hashing completes.
-      void (async () => {
-        await applyHashedUserProperties(userData, userProps);
-        send();
-      })();
+      // The track method stays sync; the network dispatch is fire-and-forget
+      // once the (cached) digests resolve. Chaining on the same promise also
+      // preserves dispatch order across consecutive track() calls.
+      void hashed.then(
+        (h) => {
+          Object.assign(userData, h);
+          send();
+        },
+        () => {
+          // Hashing failed — send without PII rather than dropping the event.
+          send();
+        },
+      );
     },
   };
 }

@@ -311,6 +311,36 @@ describe("createMetaConversionApiPlugin", () => {
         value: originalLocation,
       });
     });
+
+    it("should synthesize fbc once and reuse the same value on later events", async () => {
+      const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1712600000_000);
+      const originalLocation = window.location;
+      Object.defineProperty(window, "location", {
+        writable: true,
+        value: { href: "https://example.com/?fbclid=abc123", search: "?fbclid=abc123" },
+      });
+
+      const plugin = createMetaConversionApiPlugin();
+      plugin.initialize({ endpoint: TEST_ENDPOINT });
+
+      plugin.track("page_view", {}, TEST_CONTEXT);
+      // A later event must NOT re-synthesize fbc with a fresh timestamp —
+      // Meta treats the creation time as part of the click identifier.
+      nowSpy.mockReturnValue(1712600005_000);
+      plugin.track("page_view", {}, { eventId: "evt-2" });
+
+      const calls = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls;
+      expect(calls).toHaveLength(2);
+      const first = JSON.parse(await (calls[0][1] as Blob).text());
+      const second = JSON.parse(await (calls[1][1] as Blob).text());
+      expect(first.user_data.fbc).toBe("fb.1.1712600000000.abc123");
+      expect(second.user_data.fbc).toBe(first.user_data.fbc);
+
+      Object.defineProperty(window, "location", {
+        writable: true,
+        value: originalLocation,
+      });
+    });
   });
 
   describe("track — sendBeacon with fetch fallback", () => {
@@ -406,6 +436,36 @@ describe("createMetaConversionApiPlugin", () => {
       // Sanity: hashed values are not the raw inputs.
       expect(userData.em).not.toBe("Jane@Example.COM");
       expect(userData.ph).not.toBe("+82 10-1234-5678");
+    });
+
+    it("should hash PII once at setUser and reuse the digests across tracks", async () => {
+      const digestSpy = vi.spyOn(crypto.subtle, "digest");
+      const plugin = createMetaConversionApiPlugin();
+      plugin.initialize({ endpoint: TEST_ENDPOINT });
+
+      plugin.setUser?.({
+        email: "user@example.com",
+        phone_number: "+821012345678",
+        first_name: "Jane",
+        last_name: "Doe",
+        user_id: "u-001",
+      });
+
+      plugin.track("page_view", {}, TEST_CONTEXT);
+      plugin.track("page_view", {}, { eventId: "evt-2" });
+
+      await vi.waitFor(() => {
+        expect((navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(2);
+      });
+
+      // 5 PII fields → 5 digests total, NOT 5 per track() call.
+      expect(digestSpy).toHaveBeenCalledTimes(5);
+
+      const calls = (navigator.sendBeacon as ReturnType<typeof vi.fn>).mock.calls;
+      const first = JSON.parse(await (calls[0][1] as Blob).text());
+      const second = JSON.parse(await (calls[1][1] as Blob).text());
+      expect(first.user_data.em).toMatch(/^[a-f0-9]{64}$/);
+      expect(second.user_data.em).toBe(first.user_data.em);
     });
 
     it("should clear user properties after resetUser", async () => {
