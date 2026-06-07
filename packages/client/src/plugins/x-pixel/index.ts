@@ -5,6 +5,14 @@
  * Transforms GA4-based events into X Pixel standard events.
  * Unmapped events are sent as custom events via `twq("event", ...)`.
  *
+ * Advanced matching: X expects `email_address` / `phone_number` as EVENT
+ * parameters. The uwt.js pixel SHA-256-hashes them client-side before
+ * transmission, so the plugin attaches normalized plaintext (pre-hashing
+ * would be hashed again by the pixel and break matching). Phone numbers
+ * are normalized to `+<country code><number>` (E.164) per X's docs.
+ *
+ * @see {@link https://business.x.com/en/help/campaign-measurement-and-analytics/conversion-tracking-for-websites | X conversion tracking}
+ *
  * @packageDocumentation
  */
 
@@ -13,8 +21,8 @@ import {
   type EventMap,
   type EventName,
   type FunnelPlugin,
-  hashPii,
   type Item,
+  normalizePii,
   type UserProperties,
 } from "@sunwjy/funnel-core";
 
@@ -98,6 +106,7 @@ function transformParams<E extends EventName>(
  */
 export function createXPixelPlugin(): FunnelPlugin {
   let pixelId: string | undefined;
+  let userParams: Record<string, string> = {};
 
   return {
     name: "x-pixel",
@@ -118,6 +127,7 @@ export function createXPixelPlugin(): FunnelPlugin {
       const xEvent = EVENT_MAP[eventName];
       const xParams = {
         ...transformParams(eventName, params),
+        ...userParams,
         event_id: context.eventId,
       };
 
@@ -129,22 +139,18 @@ export function createXPixelPlugin(): FunnelPlugin {
     },
 
     setUser(properties: UserProperties): void {
-      if (typeof window === "undefined" || !window.twq || !pixelId) return;
+      // Stored locally and attached to every subsequent event — X has no
+      // config-level user-data call. The pixel hashes these on dispatch.
+      const next: Record<string, string> = {};
+      const email = normalizePii(properties.email, "email");
+      const phone = normalizePii(properties.phone_number, "phone_e164");
+      if (email) next.email_address = email;
+      if (phone) next.phone_number = phone;
+      userParams = next;
+    },
 
-      const capturedPixelId = pixelId;
-      void (async () => {
-        const [em, ph] = await Promise.all([
-          hashPii(properties.email, "email"),
-          hashPii(properties.phone_number, "phone"),
-        ]);
-        const xUserData: Record<string, unknown> = {};
-        if (em) xUserData.em = em;
-        if (ph) xUserData.ph_number = ph;
-
-        if (Object.keys(xUserData).length > 0) {
-          window.twq("config", capturedPixelId, xUserData);
-        }
-      })();
+    resetUser(): void {
+      userParams = {};
     },
   };
 }

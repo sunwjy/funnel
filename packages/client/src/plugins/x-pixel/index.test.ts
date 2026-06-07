@@ -254,41 +254,90 @@ describe("createXPixelPlugin", () => {
     });
   });
 
-  describe("setUser", () => {
-    it("should call twq config with pixelId and SHA-256-hashed user data", async () => {
+  /**
+   * X advanced matching rides on EVENT parameters (`email_address`,
+   * `phone_number`) — not on `twq("config")`. The uwt.js pixel SHA-256
+   * hashes these client-side before transmission, so the plugin passes
+   * normalized plaintext (pre-hashing would cause a double-hash mismatch).
+   * Phone must be in `+<country code><number>` format.
+   *
+   * @see https://business.x.com/en/help/campaign-measurement-and-analytics/conversion-tracking-for-websites
+   */
+  /** Params of the first twq("event", ...) call — skips the initialize-time config call. */
+  function firstEventParams(): Record<string, unknown> {
+    const call = (window.twq as ReturnType<typeof vi.fn>).mock.calls.find((c) => c[0] === "event");
+    expect(call).toBeDefined();
+    return call?.[2] as Record<string, unknown>;
+  }
+
+  describe("setUser — advanced matching via event params", () => {
+    it("should attach normalized email_address and E.164 phone_number to subsequent events", () => {
+      window.twq = vi.fn();
+      const plugin = createXPixelPlugin();
+      plugin.initialize({ pixelId: "o12345" });
+
+      plugin.setUser?.({ email: "  Test@Example.COM ", phone_number: "+82 10-1234-5678" });
+      plugin.track("purchase", { transaction_id: "T-1", currency: "USD", value: 50 }, mockContext);
+
+      expect(window.twq).toHaveBeenCalledWith(
+        "event",
+        "Purchase",
+        expect.objectContaining({
+          email_address: "test@example.com",
+          phone_number: "+821012345678",
+        }),
+      );
+    });
+
+    it("should not use the legacy em/ph_number keys", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
       plugin.initialize({ pixelId: "o12345" });
 
       plugin.setUser?.({ email: "test@example.com", phone_number: "+821012345678" });
-      // setUser hashes asynchronously — wait deterministically until the
-      // config call lands instead of racing it with a single timer tick.
-      const findCall = () =>
-        (window.twq as ReturnType<typeof vi.fn>).mock.calls.find(
-          (c) => c[0] === "config" && c[1] === "o12345" && c[2],
-        );
-      await vi.waitFor(() => {
-        expect(findCall()).toBeDefined();
-      });
+      plugin.track("page_view", {}, mockContext);
 
-      const call = findCall();
-      expect(call).toBeDefined();
-      const data = call?.[2] as Record<string, string>;
-      // Hashed values are 64-char hex; raw values must NOT appear.
-      expect(data.em).toMatch(/^[a-f0-9]{64}$/);
-      expect(data.ph_number).toMatch(/^[a-f0-9]{64}$/);
-      expect(data.em).not.toBe("test@example.com");
-      expect(data.ph_number).not.toBe("+821012345678");
+      const params = firstEventParams();
+      expect(params.em).toBeUndefined();
+      expect(params.ph_number).toBeUndefined();
     });
 
-    it("should not call twq when pixelId is not set", async () => {
+    it("should not call twq at setUser time — user data rides on events", () => {
       window.twq = vi.fn();
       const plugin = createXPixelPlugin();
+      plugin.initialize({ pixelId: "o12345" });
+      (window.twq as ReturnType<typeof vi.fn>).mockClear(); // drop the config call
 
       plugin.setUser?.({ email: "test@example.com" });
-      await new Promise((r) => setTimeout(r, 0));
 
       expect(window.twq).not.toHaveBeenCalled();
+    });
+
+    it("should omit user keys whose values are empty after normalization", () => {
+      window.twq = vi.fn();
+      const plugin = createXPixelPlugin();
+      plugin.initialize({ pixelId: "o12345" });
+
+      plugin.setUser?.({ email: "   ", phone_number: undefined });
+      plugin.track("page_view", {}, mockContext);
+
+      const params = firstEventParams();
+      expect(params.email_address).toBeUndefined();
+      expect(params.phone_number).toBeUndefined();
+    });
+
+    it("should replace previously stored user data on subsequent setUser calls", () => {
+      window.twq = vi.fn();
+      const plugin = createXPixelPlugin();
+      plugin.initialize({ pixelId: "o12345" });
+
+      plugin.setUser?.({ email: "old@example.com", phone_number: "+821011112222" });
+      plugin.setUser?.({ email: "new@example.com" });
+      plugin.track("page_view", {}, mockContext);
+
+      const params = firstEventParams();
+      expect(params.email_address).toBe("new@example.com");
+      expect(params.phone_number).toBeUndefined();
     });
 
     it("should not throw in SSR", () => {
@@ -296,6 +345,28 @@ describe("createXPixelPlugin", () => {
       plugin.initialize({ pixelId: "o12345" });
 
       expect(() => plugin.setUser?.({ email: "test@example.com" })).not.toThrow();
+    });
+  });
+
+  describe("resetUser", () => {
+    it("should stop attaching user data after resetUser", () => {
+      window.twq = vi.fn();
+      const plugin = createXPixelPlugin();
+      plugin.initialize({ pixelId: "o12345" });
+
+      plugin.setUser?.({ email: "test@example.com", phone_number: "+821012345678" });
+      plugin.resetUser?.();
+      plugin.track("page_view", {}, mockContext);
+
+      const params = firstEventParams();
+      expect(params.email_address).toBeUndefined();
+      expect(params.phone_number).toBeUndefined();
+    });
+
+    it("should not throw in SSR", () => {
+      const plugin = createXPixelPlugin();
+
+      expect(() => plugin.resetUser?.()).not.toThrow();
     });
   });
 });
