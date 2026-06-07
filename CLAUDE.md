@@ -26,6 +26,7 @@ Single-package commands: `pnpm --filter @sunwjy/funnel-core build`
 
 - **`@sunwjy/funnel-core`** — `EventMap` type definitions (GA4-based), `FunnelPlugin` interface, `Funnel` dispatcher class, `EventContext` (auto-generated `eventId` for deduplication)
 - **`@sunwjy/funnel-client`** — All client-side plugins consolidated into one package with subpath exports for tree-shaking (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok Pixel, Kakao Pixel, Naver Ad, X Pixel, LinkedIn Insight, Mixpanel, Amplitude, Toss Ads, Reddit Pixel, Daangn Ads, Pinterest Tag)
+- **`examples/*`** — Three standalone example apps (vanilla-html, react-vite, nextjs), all `private: true` and workspace-linked (`workspace:*`). CI-verified via `pnpm build && pnpm typecheck`; excluded from changesets. When a library API changes, update examples to keep them in sync.
 
 **Import styles:**
 ```ts

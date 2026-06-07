@@ -9,7 +9,9 @@
       "!**/dist",
       "!**/node_modules",
       "!**/coverage",
-      "!**/.changeset"
+      "!**/.changeset",
+      "!**/.next",
+      "!**/next-env.d.ts"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
