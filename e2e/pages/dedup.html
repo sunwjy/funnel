@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dedup Fixture (Pixel + CAPI)</title>
+    <!-- Meta Pixel Code -->
+    <script>
+      // biome-ignore lint/complexity/useArrowFunction: vendor snippet
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          // biome-ignore lint/complexity/noArguments: vendor snippet
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = !0;
+        n.version = "2.0";
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = !0;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+    </script>
+    <!-- End Meta Pixel Code -->
+  </head>
+  <body>
+    <h1>Dedup Fixture (Pixel + CAPI)</h1>
+    <button type="button" id="track-view_item">track view_item</button>
+    <button type="button" id="track-add_to_cart">track add_to_cart</button>
+    <button type="button" id="track-begin_checkout">track begin_checkout</button>
+    <button type="button" id="track-purchase">track purchase</button>
+    <button type="button" id="set-user">set-user</button>
+    <button type="button" id="consent-grant">consent-grant</button>
+    <button type="button" id="consent-deny">consent-deny</button>
+    <script type="module" src="/src/setup-dedup.ts"></script>
+  </body>
+</html>
