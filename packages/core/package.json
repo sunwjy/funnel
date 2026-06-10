@@ -1,6 +1,6 @@
 {
   "name": "@sunwjy/funnel-core",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Core types, plugin interface, and dispatcher for the funnel marketing event tracking library",
   "keywords": [
     "analytics",
