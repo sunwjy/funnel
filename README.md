@@ -3,7 +3,7 @@
 [![CI](https://github.com/sunwjy/funnel/actions/workflows/ci.yml/badge.svg)](https://github.com/sunwjy/funnel/actions/workflows/ci.yml)
 [![npm: funnel-client](https://img.shields.io/npm/v/%40sunwjy%2Ffunnel-client?label=funnel-client)](https://www.npmjs.com/package/@sunwjy/funnel-client)
 [![npm: funnel-core](https://img.shields.io/npm/v/%40sunwjy%2Ffunnel-core?label=funnel-core)](https://www.npmjs.com/package/@sunwjy/funnel-core)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/%40sunwjy%2Ffunnel-client?label=minzip)](https://bundlephobia.com/package/@sunwjy/funnel-client)
+[![bundle size](https://deno.bundlejs.com/badge?q=%40sunwjy%2Ffunnel-client)](https://bundlejs.com/?q=%40sunwjy%2Ffunnel-client)
 [![license](https://img.shields.io/npm/l/%40sunwjy%2Ffunnel-client)](./LICENSE)
 
 English | [한국어](./README.ko.md)
