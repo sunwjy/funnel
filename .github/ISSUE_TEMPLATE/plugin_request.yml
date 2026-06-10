@@ -1,0 +1,44 @@
+name: Plugin Request
+description: Request support for a new analytics / advertising platform
+title: "[Plugin]: "
+labels: ["enhancement", "plugin"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Want to add it yourself? See the ["Adding a New Plugin" guide in CONTRIBUTING.md](https://github.com/sunwjy/funnel/blob/main/CONTRIBUTING.md#adding-a-new-plugin) — new plugins are the most welcome contribution!
+  - type: input
+    id: platform
+    attributes:
+      label: Platform name
+      placeholder: "e.g., Snapchat Pixel, Criteo OneTag"
+    validations:
+      required: true
+  - type: input
+    id: docs
+    attributes:
+      label: Official tag/pixel documentation
+      description: Link to the platform's official client-side tag or pixel docs.
+      placeholder: "https://..."
+    validations:
+      required: true
+  - type: textarea
+    id: capabilities
+    attributes:
+      label: Platform capabilities
+      description: Check what the platform's client-side API supports, as far as you know.
+      value: |
+        - [ ] Standard events (purchase, add_to_cart, ...)
+        - [ ] Custom events
+        - [ ] User identification / advanced matching
+        - [ ] Consent API
+        - [ ] Server-side deduplication ID (event_id equivalent)
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Why this platform matters, expected event mapping, willingness to contribute a PR, etc.
+    validations:
+      required: false

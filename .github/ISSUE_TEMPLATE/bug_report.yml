@@ -1,0 +1,72 @@
+name: Bug Report
+description: Report a bug in @sunwjy/funnel-core or @sunwjy/funnel-client
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the sections below so we can reproduce and fix it quickly.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you expected to happen vs. what actually happened.
+      placeholder: |
+        Expected: `purchase` event is sent to Meta Pixel with `eventID`.
+        Actual: `fbq` is called without the `eventID` parameter.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: A code snippet, repo link, or step-by-step instructions that reproduce the issue.
+      render: ts
+    validations:
+      required: true
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Affected plugin(s)
+      multiple: true
+      options:
+        - core (Funnel / dispatcher)
+        - ga4
+        - gtm
+        - sgtm
+        - meta-pixel
+        - meta-conversion-api
+        - google-ads
+        - tiktok-pixel
+        - kakao-pixel
+        - naver-ad
+        - x-pixel
+        - linkedin-insight
+        - mixpanel
+        - amplitude
+        - toss-ads
+        - reddit-pixel
+        - daangn-ads
+        - pinterest-tag
+        - other / not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      placeholder: "@sunwjy/funnel-client@0.3.2"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Bundler, framework, runtime (browser/SSR), and anything else relevant.
+      placeholder: |
+        - Bundler: Vite 6
+        - Framework: Next.js 15 (App Router)
+        - Runtime: Chrome 137 / SSR
+    validations:
+      required: false

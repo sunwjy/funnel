@@ -1,5 +1,13 @@
 # Funnel
 
+[![CI](https://github.com/sunwjy/funnel/actions/workflows/ci.yml/badge.svg)](https://github.com/sunwjy/funnel/actions/workflows/ci.yml)
+[![npm: funnel-client](https://img.shields.io/npm/v/%40sunwjy%2Ffunnel-client?label=funnel-client)](https://www.npmjs.com/package/@sunwjy/funnel-client)
+[![npm: funnel-core](https://img.shields.io/npm/v/%40sunwjy%2Ffunnel-core?label=funnel-core)](https://www.npmjs.com/package/@sunwjy/funnel-core)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/%40sunwjy%2Ffunnel-client?label=minzip)](https://bundlephobia.com/package/@sunwjy/funnel-client)
+[![license](https://img.shields.io/npm/l/%40sunwjy%2Ffunnel-client)](./LICENSE)
+
+English | [한국어](./README.ko.md)
+
 A library that sends key marketing funnel events to all connected analytics tools through a single interface.
 
 Events and parameters are defined based on GA4 standards. Each plugin transforms them into the target tool's native format.
