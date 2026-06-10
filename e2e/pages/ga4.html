@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GA4 Fixture</title>
+    <!-- Google Analytics (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TEST000000"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        // biome-ignore lint/complexity/noArguments: vendor snippet
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+    </script>
+  </head>
+  <body>
+    <h1>GA4 Fixture</h1>
+    <button type="button" id="track-view_item">track view_item</button>
+    <button type="button" id="track-add_to_cart">track add_to_cart</button>
+    <button type="button" id="track-begin_checkout">track begin_checkout</button>
+    <button type="button" id="track-purchase">track purchase</button>
+    <button type="button" id="set-user">set-user</button>
+    <button type="button" id="consent-grant">consent-grant</button>
+    <button type="button" id="consent-deny">consent-deny</button>
+    <script type="module" src="/src/setup-ga4.ts"></script>
+  </body>
+</html>

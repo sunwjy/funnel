@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GTM Fixture</title>
+    <!-- Google Tag Manager -->
+    <script>
+      // biome-ignore lint/complexity/useArrowFunction: vendor snippet
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        // biome-ignore lint/complexity/useDateNow: vendor snippet
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          // biome-ignore lint/suspicious/noDoubleEquals: vendor snippet
+          // biome-ignore lint/style/useTemplate: vendor snippet
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        // biome-ignore lint/style/useTemplate: vendor snippet
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-TEST000");
+    </script>
+    <!-- End Google Tag Manager -->
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-TEST000"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+        title="Google Tag Manager"
+      ></iframe
+    ></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <h1>GTM Fixture</h1>
+    <button type="button" id="track-view_item">track view_item</button>
+    <button type="button" id="track-add_to_cart">track add_to_cart</button>
+    <button type="button" id="track-begin_checkout">track begin_checkout</button>
+    <button type="button" id="track-purchase">track purchase</button>
+    <button type="button" id="set-user">set-user</button>
+    <button type="button" id="consent-grant">consent-grant</button>
+    <button type="button" id="consent-deny">consent-deny</button>
+    <script type="module" src="/src/setup-gtm.ts"></script>
+  </body>
+</html>
