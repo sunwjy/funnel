@@ -1,6 +1,8 @@
 // Re-export core for convenience
 
 export type {
+  ConsentState,
+  ConsentStatus,
   EventContext,
   EventMap,
   EventName,

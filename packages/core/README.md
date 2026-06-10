@@ -82,8 +82,9 @@ interface FunnelPlugin {
 |--------------|--------|
 | Awareness | `page_view`, `view_promotion`, `select_promotion` |
 | Acquisition | `sign_up`, `generate_lead` |
-| Consideration | `search`, `view_item_list`, `select_item`, `view_item` |
-| Intent | `add_to_cart`, `remove_from_cart` |
+| Engagement | `login`, `share` |
+| Consideration | `search`, `view_search_results`, `view_item_list`, `select_item`, `view_item` |
+| Intent | `add_to_wishlist`, `add_to_cart`, `remove_from_cart`, `view_cart` |
 | Conversion | `begin_checkout`, `add_shipping_info`, `add_payment_info`, `purchase` |
 | Post-purchase | `refund` |
 
