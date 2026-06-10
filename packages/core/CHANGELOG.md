@@ -1,5 +1,11 @@
 # @sunwjy/funnel-core
 
+## 0.3.1
+
+### Patch Changes
+
+- [#8](https://github.com/sunwjy/funnel/pull/8) [`bb5881d`](https://github.com/sunwjy/funnel/commit/bb5881d42442014739053b5c95dbfbf03f4b6a04) Thanks [@sunwjy](https://github.com/sunwjy)! - Publish via npm OIDC trusted publishing. No functional changes; provenance attestation is now generated automatically by the trusted publishing flow.
+
 ## 0.3.0
 
 ### Minor Changes
