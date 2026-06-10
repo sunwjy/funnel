@@ -1,5 +1,14 @@
 # @sunwjy/funnel-client
 
+## 0.3.2
+
+### Patch Changes
+
+- [#12](https://github.com/sunwjy/funnel/pull/12) [`8eaecf4`](https://github.com/sunwjy/funnel/commit/8eaecf49441c3d5501e54b551a57c6319efeef8e) Thanks [@sunwjy](https://github.com/sunwjy)! - Re-export `ConsentState`/`ConsentStatus` types from `@sunwjy/funnel-client`, and sync READMEs with the implementation: document the `sgtm` plugin (plugin table, `setUser` mapping, event mapping section) and list all 21 supported events (`login`, `share`, `view_search_results`, `add_to_wishlist`, `view_cart` were missing).
+
+- Updated dependencies [[`8eaecf4`](https://github.com/sunwjy/funnel/commit/8eaecf49441c3d5501e54b551a57c6319efeef8e)]:
+  - @sunwjy/funnel-core@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes
