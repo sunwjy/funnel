@@ -9,7 +9,7 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 | Package | Description |
 |---------|-------------|
 | `@sunwjy/funnel-core` | Event types, plugin interface, Funnel class, `EventContext` (auto-generated `eventId`) |
-| `@sunwjy/funnel-client` | All client-side plugins (GA4, GTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude, Toss Ads, Reddit, Daangn, Pinterest) |
+| `@sunwjy/funnel-client` | All client-side plugins (GA4, GTM, sGTM, Meta Pixel, Meta Conversion API, Google Ads, TikTok, Kakao, Naver, X, LinkedIn, Mixpanel, Amplitude, Toss Ads, Reddit, Daangn, Pinterest) |
 
 ### Client Plugins
 
@@ -17,6 +17,7 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 |---------|-------------|
 | `@sunwjy/funnel-client/ga4` | Google Analytics 4 (`gtag`) |
 | `@sunwjy/funnel-client/gtm` | Google Tag Manager (`dataLayer`) |
+| `@sunwjy/funnel-client/sgtm` | Server-side GTM relay (GA4 Measurement Protocol v2) |
 | `@sunwjy/funnel-client/meta-pixel` | Meta Pixel (`fbq`) |
 | `@sunwjy/funnel-client/google-ads` | Google Ads conversion tracking (`gtag`) |
 | `@sunwjy/funnel-client/tiktok-pixel` | TikTok Pixel (`ttq`) |
@@ -116,6 +117,7 @@ funnel.resetUser();
 |--------|-----------|-------------|
 | GA4 | `gtag("set", { user_id })` + `gtag("set", "user_properties", {...})` | `gtag("set", { user_id: null })` + clears set user properties |
 | GTM | `dataLayer.push({ event: "funnel.set_user", user_id, user_properties })` | `dataLayer.push({ event: "funnel.reset_user", ... })` |
+| sGTM | Stores properties; `user_id` + `user_properties` are included in every Measurement Protocol payload | Clears stored data |
 | Meta Pixel | `fbq("init", pixelId, { em, fn, ln, ph, external_id })` | — (Meta has no documented clear API; data persists until page unload) |
 | Meta CAPI | SHA-256-hashes `em`/`ph`/`fn`/`ln`/`external_id` once, merges into `user_data` on every `track` | Clears stored data |
 | TikTok Pixel | `ttq.identify({ email, phone_number, external_id })` | — (TikTok has no un-identify API) |
@@ -174,8 +176,9 @@ Only GA4 standard events relevant to the marketing funnel are included.
 |--------------|--------|
 | Awareness | `page_view`, `view_promotion`, `select_promotion` |
 | Acquisition | `sign_up`, `generate_lead` |
-| Consideration | `search`, `view_item_list`, `select_item`, `view_item` |
-| Intent | `add_to_cart`, `remove_from_cart` |
+| Engagement | `login`, `share` |
+| Consideration | `search`, `view_search_results`, `view_item_list`, `select_item`, `view_item` |
+| Intent | `add_to_wishlist`, `add_to_cart`, `remove_from_cart`, `view_cart` |
 | Conversion | `begin_checkout`, `add_shipping_info`, `add_payment_info`, `purchase` |
 | Post-purchase | `refund` |
 
@@ -184,6 +187,8 @@ Only GA4 standard events relevant to the marketing funnel are included.
 The GA4 plugin passes events through directly via `gtag("event", ...)`.
 
 The GTM plugin pushes events to `dataLayer` with the GA4 event name as the `event` key. GTM containers then route each event to the appropriate tags based on configured triggers. For ecommerce events, GA4-spec keys (`items`, `currency`, `value`, `coupon`, `transaction_id`, `shipping`, `tax`, …) are nested under the conventional `ecommerce` object (cleared with `ecommerce: null` before each push), while custom params stay at the top level of the push where GTM variables read them.
+
+The sGTM plugin bypasses the browser GTM container entirely: each event is POSTed in GA4 Measurement Protocol v2 format to a configured server-side GTM endpoint (`{ endpoint, measurementId }`). The `eventId` is forwarded as `event_id`, and an auto-managed `client_id` (persisted in `localStorage`) and `session_id` (30-min idle timeout, GA4 default) are attached to every event.
 
 The Meta Pixel plugin maps events to standard Meta events:
 
@@ -417,10 +422,8 @@ pnpm lint        # Run linter
 pnpm lint:fix    # Auto-fix lint issues
 ```
 
-## Pre-release Backlog
+## TODO
 
-- [x] Contributing guide — [`CONTRIBUTING.md`](./CONTRIBUTING.md) with development setup and PR guidelines
-- [x] Examples — Standalone usage examples (vanilla HTML, React/Next.js integration)
 - [ ] API docs — Auto-generated API reference via TypeDoc or API Extractor
 
 ## Tech Stack
