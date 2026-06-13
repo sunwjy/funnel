@@ -7,8 +7,10 @@ One `track()` call dispatches a GA4-shaped event to every connected analytics to
 ## Installation
 
 ```bash
-npm install @sunwjy/funnel-core @sunwjy/funnel-client
+npm install @sunwjy/funnel-client
 ```
+
+That's the only package you need. `@sunwjy/funnel-core` is installed automatically as a dependency, and all of its APIs — the `Funnel` class, every event type, `hashPii`, etc. — are re-exported from `@sunwjy/funnel-client`.
 
 ## Usage
 

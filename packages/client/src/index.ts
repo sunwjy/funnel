@@ -1,17 +1,6 @@
-// Re-export core for convenience
-
-export type {
-  ConsentState,
-  ConsentStatus,
-  EventContext,
-  EventMap,
-  EventName,
-  FunnelConfig,
-  FunnelPlugin,
-  Item,
-  UserProperties,
-} from "@sunwjy/funnel-core";
-export { Funnel } from "@sunwjy/funnel-core";
+// Re-export everything from core so consumers only need to install
+// @sunwjy/funnel-client — the Funnel class, all event types, hashPii, etc.
+export * from "@sunwjy/funnel-core";
 export { createAmplitudePlugin } from "./plugins/amplitude/index.js";
 // Client-side plugins
 export { createDaangnAdsPlugin } from "./plugins/daangn-ads/index.js";

@@ -41,6 +41,16 @@
 | `@sunwjy/funnel-client/daangn-ads` | 당근비즈니스 전환 추적 (`karrotPixel`) |
 | `@sunwjy/funnel-client/pinterest-tag` | Pinterest Tag (`pintrk`) |
 
+## 설치
+
+```bash
+npm install @sunwjy/funnel-client
+# 또는: pnpm add @sunwjy/funnel-client
+# 또는: yarn add @sunwjy/funnel-client
+```
+
+이것만 설치하면 됩니다. `@sunwjy/funnel-core`는 `@sunwjy/funnel-client`의 의존성이라 자동으로 함께 설치됩니다. `Funnel` 클래스, 모든 이벤트 타입, `hashPii` 등 코어의 모든 API가 `@sunwjy/funnel-client`에서 다시 export되므로, `@sunwjy/funnel-core`를 직접 설치하거나 import할 필요가 없습니다.
+
 ## 사용법
 
 ```ts
