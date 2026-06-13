@@ -1,11 +1,11 @@
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
   FunnelPlugin,
   UserProperties,
 } from "@sunwjy/funnel-client";
-import type { ConsentState } from "@sunwjy/funnel-core";
 
 /** A single log entry produced by the debug plugin. */
 export interface LogEntry {

@@ -1,4 +1,4 @@
-import type { ConsentState } from "@sunwjy/funnel-core";
+import type { ConsentState } from "@sunwjy/funnel-client";
 import { useState } from "react";
 import { funnel } from "../funnel";
 

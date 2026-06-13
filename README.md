@@ -41,6 +41,16 @@ Events and parameters are defined based on GA4 standards. Each plugin transforms
 | `@sunwjy/funnel-client/daangn-ads` | Daangn Business conversion tracking (`karrotPixel`) |
 | `@sunwjy/funnel-client/pinterest-tag` | Pinterest Tag (`pintrk`) |
 
+## Installation
+
+```bash
+npm install @sunwjy/funnel-client
+# or: pnpm add @sunwjy/funnel-client
+# or: yarn add @sunwjy/funnel-client
+```
+
+That's all you need. `@sunwjy/funnel-core` is a dependency of `@sunwjy/funnel-client` and is installed automatically. Every core API — the `Funnel` class, all event types, `hashPii`, etc. — is re-exported from `@sunwjy/funnel-client`, so you never have to install or import `@sunwjy/funnel-core` directly.
+
 ## Usage
 
 ```ts

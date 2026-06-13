@@ -1,11 +1,11 @@
 import type {
+  ConsentState,
   EventContext,
   EventMap,
   EventName,
   FunnelPlugin,
   UserProperties,
 } from "@sunwjy/funnel-client";
-import type { ConsentState } from "@sunwjy/funnel-core";
 
 export interface LogEntry {
   timestamp: string;
