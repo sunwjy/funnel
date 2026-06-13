@@ -1,5 +1,13 @@
 # @sunwjy/funnel-client
 
+## 0.4.0
+
+### Minor Changes
+
+- [#17](https://github.com/sunwjy/funnel/pull/17) [`89a5b75`](https://github.com/sunwjy/funnel/commit/89a5b75b727d56bab966fb5b28aa235136ab6166) Thanks [@sunwjy](https://github.com/sunwjy)! - Re-export the entire `@sunwjy/funnel-core` public API from `@sunwjy/funnel-client`. The `Funnel` class, every event parameter type, and helpers like `hashPii`/`normalizePii` are now all available directly from `@sunwjy/funnel-client`.
+
+  As a result, installing `@sunwjy/funnel-client` alone is enough — `@sunwjy/funnel-core` is pulled in automatically as a dependency and never has to be installed or imported separately.
+
 ## 0.3.2
 
 ### Patch Changes
