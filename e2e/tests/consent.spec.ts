@@ -174,11 +174,10 @@ test.describe("Consent — setUser reflected in CAPI user_data", () => {
     expect(payload, "Purchase CAPI payload not found").toBeDefined();
 
     const SHA256_HEX_RE = /^[0-9a-f]{64}$/;
-    // payload is asserted defined above; non-null assertion is safe here.
-    const ud = payload!.user_data;
+    const ud = payload?.user_data;
 
     for (const field of ["em", "ph", "fn", "ln", "external_id"] as const) {
-      const val = ud[field];
+      const val = ud?.[field];
       expect(val, `user_data.${field} missing`).toBeTruthy();
       expect(
         typeof val === "string" && SHA256_HEX_RE.test(val),
