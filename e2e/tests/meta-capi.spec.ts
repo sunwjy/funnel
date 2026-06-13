@@ -71,20 +71,19 @@ test.describe("Meta CAPI plugin (sendBeacon primary path)", () => {
       expect(payload?.event_time).toBeGreaterThan(0);
 
       // custom_data: currency, value
-      // payload is asserted defined above; non-null assertion is safe here.
-      const cd = payload!.custom_data;
-      expect(cd["currency"]).toBe("KRW");
-      expect(cd["value"]).toBe(89000);
+      const cd = payload?.custom_data;
+      expect(cd?.currency).toBe("KRW");
+      expect(cd?.value).toBe(89000);
 
       // custom_data: content_ids, contents, num_items (items를 포함하는 이벤트)
-      expect(Array.isArray(cd["content_ids"])).toBe(true);
-      expect(cd["content_ids"] as string[]).toContain("SHOE-001");
-      expect(Array.isArray(cd["contents"])).toBe(true);
-      expect(typeof cd["num_items"]).toBe("number");
+      expect(Array.isArray(cd?.content_ids)).toBe(true);
+      expect(cd?.content_ids as string[]).toContain("SHOE-001");
+      expect(Array.isArray(cd?.contents)).toBe(true);
+      expect(typeof cd?.num_items).toBe("number");
 
       // purchase 이벤트에는 order_id 포함
       if (ga4Name === "purchase") {
-        expect(cd["order_id"]).toBe("TXN-E2E-001");
+        expect(cd?.order_id).toBe("TXN-E2E-001");
       }
     }
   });
@@ -107,12 +106,11 @@ test.describe("Meta CAPI plugin (sendBeacon primary path)", () => {
     const purchasePayload = captured.find((p) => p.event_name === "Purchase");
     expect(purchasePayload, "Purchase CAPI payload not found").toBeDefined();
 
-    // purchasePayload is asserted defined above; non-null assertion is safe here.
-    const ud = purchasePayload!.user_data;
+    const ud = purchasePayload?.user_data;
 
     // 모든 PII 필드는 SHA-256 hex (64자) — 원문 절대 불가
     for (const field of ["em", "ph", "fn", "ln", "external_id"] as const) {
-      const val = ud[field];
+      const val = ud?.[field];
       expect(val, `user_data.${field} missing after setUser`).toBeTruthy();
       expect(
         typeof val === "string" && SHA256_HEX_RE.test(val),
