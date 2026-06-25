@@ -7,6 +7,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "Funnel",
+      customCss: ["./src/styles/custom.css"],
       social: [
         {
           icon: "github",

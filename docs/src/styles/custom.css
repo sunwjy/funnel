@@ -1,0 +1,23 @@
+/*
+ * Brand accent — orange, WCAG AA across both themes.
+ *
+ * Light mode: a rich orange (#b35900) deep enough that Starlight's native mappings stay
+ * accessible — link text (= accent) is 4.83:1 on white, and white button text on the accent
+ * is the same 4.83:1. No text-color overrides needed.
+ * Dark mode: a lighter orange ramp — link text (= accent-high #ffbf70) is ~10.9:1 on the dark
+ * background, and dark button text (= accent-low) on accent-high is ~8.7:1.
+ */
+
+/* Dark mode (Starlight's default :root) */
+:root {
+  --sl-color-accent-low: #41240b;
+  --sl-color-accent: #ff8c1a;
+  --sl-color-accent-high: #ffbf70;
+}
+
+/* Light mode */
+:root[data-theme="light"] {
+  --sl-color-accent-low: #ffe8cc;
+  --sl-color-accent: #b35900;
+  --sl-color-accent-high: #7e3a07;
+}
