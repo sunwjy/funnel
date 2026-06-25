@@ -11,7 +11,10 @@
       "!**/coverage",
       "!**/.changeset",
       "!**/.next",
-      "!**/next-env.d.ts"
+      "!**/next-env.d.ts",
+      "!**/.astro",
+      "!**/*.astro",
+      "!docs/src/content"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },
