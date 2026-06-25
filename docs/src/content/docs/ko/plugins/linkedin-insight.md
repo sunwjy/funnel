@@ -12,7 +12,7 @@ LinkedIn Insight Tag 플러그인은 Funnel을 **LinkedIn 광고**에 연결합�
 
 ## 무엇을 추적하나요
 
-LinkedIn에는 이름이 정해진 표준 이벤트가 없습니다 — 전환 ID를 사용합니다. GA4 이벤트 이름에서
+LinkedIn에는 이름이 정해진 표준 이벤트가 없습니다. 전환 ID를 사용합니다. GA4 이벤트 이름에서
 LinkedIn 전환 ID로 가는 `conversionIds` 맵을 제공하세요:
 
 | Funnel 이벤트 (GA4) | LinkedIn |
@@ -28,7 +28,7 @@ LinkedIn 전환 ID로 가는 `conversionIds` 맵을 제공하세요:
 
 - Campaign Manager에서 발급받은 **LinkedIn Partner ID**.
 - Campaign Manager → 전환(Conversions)에서 생성한 하나 이상의 **전환 ID**.
-- 페이지에 로드된 LinkedIn Insight Tag 기본 스니펫 — Funnel이 실행되기 전에 `window.lintrk`가
+- 페이지에 로드된 LinkedIn Insight Tag 기본 스니펫. Funnel이 실행되기 전에 `window.lintrk`가
   존재해야 합니다.
 
 ## 설치 및 초기화
@@ -54,7 +54,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true`는 선택 사항입니다 — 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
+`consentRequired: true`는 선택 사항입니다. 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
 허용할 때까지 이벤트가 드롭됩니다.
 
 ## 이벤트 추적
@@ -78,6 +78,6 @@ funnel.track("purchase", {
 ## 참고
 
 - **SSR 안전.** `window`(또는 `window.lintrk`)가 없으면 플러그인은 아무 동작도 하지 않습니다.
-- `page_view`는 의도적으로 전송되지 않습니다 — Insight Tag가 페이지뷰를 자체적으로 기록합니다.
+- `page_view`는 의도적으로 전송되지 않습니다. Insight Tag가 페이지뷰를 자체적으로 기록합니다.
 - `conversionIds`에 매칭되는 항목이 없는 이벤트는 드롭됩니다. 연결 작업 중에는 플러그인의
   `debug: true`를 설정하면 드롭된 이벤트마다 `console.warn`을 받을 수 있습니다.

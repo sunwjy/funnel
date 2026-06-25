@@ -5,8 +5,8 @@ sidebar:
   order: 3
 ---
 
-The whole point of Funnel is to send one event to many platforms. Adding more platforms is just
-adding more plugins to the array — your `track()` calls don't change at all.
+The whole point of Funnel is to send one event to many platforms. Adding more platforms means
+adding more plugins to the array. Your `track()` calls don't change at all.
 
 ## Connect several plugins
 
@@ -33,7 +33,7 @@ export const funnel = new Funnel({
 ## Configure each plugin by its name
 
 `initialize()` takes a map keyed by each plugin's `name`. The factory you import determines the
-key — for example `createMetaPixelPlugin()` registers under `"meta-pixel"`.
+key. For example, `createMetaPixelPlugin()` registers under `"meta-pixel"`.
 
 ```ts
 funnel.initialize({
@@ -95,9 +95,9 @@ others still receive the event.
 
 ```ts
 funnel.track("page_view", { page_title: "Home" });
-//   → ga4         ✓ tracked
-//   → meta-pixel  ✗ throws (e.g. fbq not loaded yet) → logged, isolated
-//   → tiktok      ✓ tracked   (unaffected by meta-pixel failing)
+//   → ga4         tracked
+//   → meta-pixel  throws (e.g. fbq not loaded yet) → logged, isolated
+//   → tiktok      tracked   (unaffected by meta-pixel failing)
 ```
 
 By default the failure is logged with `console.error`. To forward failures to your own
@@ -117,6 +117,6 @@ The isolation guarantee holds whether or not you provide `onError`.
 
 ## Where to go next
 
-- [Framework integration](/guides/framework-integration/) — wire this into React, Next.js, or plain HTML.
-- [Server-side & deduplication](/guides/server-side-dedup/) — pair the Meta Pixel with the Conversions API.
-- [Plugins catalog](/plugins/) — setup details for every platform.
+- [Framework integration](/guides/framework-integration/): wire this into React, Next.js, or plain HTML.
+- [Server-side & deduplication](/guides/server-side-dedup/): pair the Meta Pixel with the Conversions API.
+- [Plugins catalog](/plugins/): setup details for every platform.

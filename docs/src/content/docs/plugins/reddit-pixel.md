@@ -47,7 +47,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true` is optional — when set, events are dropped until `ad_storage` is
+`consentRequired: true` is optional. When set, events are dropped until `ad_storage` is
 granted through `funnel.setConsent(...)`.
 
 ## Track an event
@@ -74,5 +74,5 @@ This calls `rdt("track", "Purchase", { currency: "USD", value: 75, transactionId
 - **SSR safe.** When `window` (or `window.rdt`) is absent, the plugin does nothing.
 - Per-item `id`/`name`/`category` are sent as a `products` array, plus an aggregated
   `itemCount`.
-- `conversionId` is set from Funnel's `eventId` on every event — pair it with Reddit CAPI to
+- `conversionId` is set from Funnel's `eventId` on every event. Pair it with Reddit CAPI to
   deduplicate browser and server conversions.

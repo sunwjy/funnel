@@ -27,7 +27,7 @@ Mixpanel 플러그인은 Funnel을 **Mixpanel** 프로덕트 분석에 연결합
 ## 시작하기 전에
 
 - **Mixpanel 프로젝트 토큰**.
-- 페이지에 로드된 Mixpanel 기본 스니펫 — Funnel이 실행되기 전에 `window.mixpanel`이 존재해야
+- 페이지에 로드된 Mixpanel 기본 스니펫. Funnel이 실행되기 전에 `window.mixpanel`이 존재해야
   합니다.
 
 ## 설치 및 초기화
@@ -44,13 +44,13 @@ export const funnel = new Funnel({
 funnel.initialize({
   mixpanel: {
     token: "your_project_token",
-    // mixpanel.init(token, config)로 전달 — 선택 사항
+    // mixpanel.init(token, config)로 전달 (선택 사항)
     config: { api_host: "https://api-eu.mixpanel.com" },
   },
 });
 ```
 
-`consentRequired: true`는 선택 사항입니다 — 설정하면 `funnel.setConsent(...)`로
+`consentRequired: true`는 선택 사항입니다. 설정하면 `funnel.setConsent(...)`로
 `analytics_storage`를 허용할 때까지 이벤트가 드롭됩니다.
 
 ## 이벤트 추적

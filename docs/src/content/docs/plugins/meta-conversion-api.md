@@ -17,17 +17,17 @@ Mapped GA4 events become Meta event names (`purchase` → `Purchase`, `add_to_ca
 payload includes `event_id`, `event_time`, `event_source_url`, `action_source: "website"`,
 `custom_data` (currency / value / `content_ids` / `contents` / `order_id` …), and `user_data`.
 PII fields (`em`, `ph`, `fn`, `ln`, `external_id`) are **SHA-256 hashed in the browser** before
-sending — if SubtleCrypto is unavailable they are omitted rather than sent in the clear. The
+sending. If SubtleCrypto is unavailable they are omitted rather than sent in the clear. The
 plugin also collects `_fbp` / `_fbc` cookies (synthesizing `fbc` from an `fbclid` query param
 when present) and the user agent.
 
 ## Before you start
 
 This is a **server-relay** plugin: there is **no browser pixel global**. It needs a server
-endpoint that accepts the JSON payload and forwards it to Meta CAPI with your access token —
-the access token lives on **your server**, never in the browser. Provide:
+endpoint that accepts the JSON payload and forwards it to Meta CAPI with your access token.
+The access token lives on **your server**, never in the browser. Provide:
 
-- **endpoint** — your server URL that relays to Meta CAPI.
+- **endpoint**: your server URL that relays to Meta CAPI.
 - Optionally **testEventCode** (e.g. `TEST12345`) to surface events in the Events Manager
   Test Events tab.
 

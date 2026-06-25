@@ -1,14 +1,14 @@
 ---
 title: FunnelPlugin
-description: 모든 플러그인이 구현하는 인터페이스 — name, initialize, track, 그리고 선택적 훅.
+description: "모든 플러그인이 구현하는 인터페이스: name, initialize, track, 그리고 선택적 훅."
 sidebar:
   order: 3
 ---
 
 `FunnelPlugin`은 모든 플러그인이 구현하는 계약입니다. 각 분석 플랫폼(GA4, Meta Pixel 등)은 이
 인터페이스를 만족하는 객체를 제공하며 [`Funnel`](/ko/reference/funnel/) 인스턴스에
-등록됩니다. 이 인터페이스를 직접 구현해야 하는 경우는 **커스텀** 플러그인을 작성할 때뿐입니다
-— 내장된 `createXxxPlugin()` 팩토리는 이미 이를 만족하는 객체를 반환합니다.
+등록됩니다. 이 인터페이스를 직접 구현해야 하는 경우는 **커스텀** 플러그인을 작성할 때뿐입니다.
+내장된 `createXxxPlugin()` 팩토리는 이미 이를 만족하는 객체를 반환합니다.
 
 ```ts
 import type { FunnelPlugin } from "@sunwjy/funnel-core";
@@ -30,7 +30,7 @@ import type { FunnelPlugin } from "@sunwjy/funnel-core";
 
 고유 문자열입니다. `Funnel` 디스패처는 이를 사용해
 [`initialize(pluginConfigs)`](/ko/reference/funnel/#initializepluginconfigs)에서 이
-플러그인의 설정을 조회합니다 — `pluginConfigs[name]`의 값이 여러분의 `initialize`로
+플러그인의 설정을 조회합니다. `pluginConfigs[name]`의 값이 여러분의 `initialize`로
 전달됩니다.
 
 ### `initialize(config)`
@@ -53,7 +53,7 @@ track<E extends EventName>(eventName: E, params: EventMap[E], context: EventCont
 [`EventContext`](/ko/reference/event-context/)입니다. 여기서 GA4 형태의 입력을 플랫폼
 네이티브 호출로 매핑하세요.
 
-### `setUser(properties)` — 선택
+### `setUser(properties)` (선택)
 
 ```ts
 setUser?(properties: UserProperties): void
@@ -63,7 +63,7 @@ setUser?(properties: UserProperties): void
 받습니다. 사용자 식별이 없는 플랫폼의 플러그인(예: Kakao Pixel, Naver Ad)은 이를
 생략해야 합니다.
 
-### `resetUser()` — 선택
+### `resetUser()` (선택)
 
 ```ts
 resetUser?(): void
@@ -71,7 +71,7 @@ resetUser?(): void
 
 선택입니다. 로그아웃 시 저장된 사용자 상태를 초기화합니다.
 
-### `setConsent(state)` — 선택
+### `setConsent(state)` (선택)
 
 ```ts
 setConsent?(state: ConsentState): void
@@ -104,7 +104,7 @@ export function createConsolePlugin(): FunnelPlugin {
       console.log("[console-plugin]", eventName, params, context.eventId);
     },
 
-    // 선택적 훅 — 플랫폼이 지원하는 것만 포함하세요.
+    // 선택적 훅. 플랫폼이 지원하는 것만 포함하세요.
     setUser(properties) {
       console.log("[console-plugin] setUser", properties);
     },
@@ -130,6 +130,6 @@ funnel.track("page_view", { page_title: "Home" });
 
 ## 함께 보기
 
-- [`Funnel`](/ko/reference/funnel/) — 이 메서드들을 구동하는 디스패처.
-- [`EventMap`](/ko/reference/event-map/) — 여러분의 `track`이 받는 이벤트.
-- [`EventContext`](/ko/reference/event-context/) — `track`에 전달되는 `eventId`.
+- [`Funnel`](/ko/reference/funnel/): 이 메서드들을 구동하는 디스패처.
+- [`EventMap`](/ko/reference/event-map/): 여러분의 `track`이 받는 이벤트.
+- [`EventContext`](/ko/reference/event-context/): `track`에 전달되는 `eventId`.

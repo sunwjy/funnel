@@ -26,12 +26,12 @@ Pixel의 표준 이벤트로 매핑하고 `window.TossPixel` 인스턴스를 통
 | `generate_lead` | `lead` |
 
 Toss에 대응 항목이 없는 이벤트(예: `view_item_list`, `select_item`, `remove_from_cart`,
-`refund`)는 조용히 드롭됩니다 — Toss에는 매칭되는 메서드도, 커스텀 이벤트 채널도 없습니다.
+`refund`)는 조용히 드롭됩니다. Toss에는 매칭되는 메서드도, 커스텀 이벤트 채널도 없습니다.
 
 ## 시작하기 전에
 
 - 토스애즈 대시보드에서 광고 계정별로 발급받은 **Toss Ads 전환 코드(conversion code)**.
-- 페이지에 로드된 Toss Pixel 기본 스니펫 — Funnel이 실행되기 전에 `window.TossPixel`이 존재해야
+- 페이지에 로드된 Toss Pixel 기본 스니펫. Funnel이 실행되기 전에 `window.TossPixel`이 존재해야
   합니다.
 
 ## 설치 및 초기화
@@ -50,7 +50,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true`는 선택 사항입니다 — 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
+`consentRequired: true`는 선택 사항입니다. 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
 허용할 때까지 이벤트가 드롭됩니다.
 
 ## 이벤트 추적

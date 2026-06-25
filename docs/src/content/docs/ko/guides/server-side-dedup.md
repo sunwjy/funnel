@@ -7,7 +7,7 @@ sidebar:
 
 *같은* 전환을 브라우저와 서버 양쪽에서 보내면 추적이 훨씬 안정적이 됩니다: 광고 차단기와 쿠키
 제한은 브라우저 이벤트를 잃게 만들고, 서버 이벤트는 브라우저 전용 신호 일부를 놓칩니다. 문제는
-중복 집계입니다 — 구매가 한 번뿐인데 플랫폼이 두 번으로 봅니다. **중복 제거(deduplication)** 가
+중복 집계입니다. 구매가 한 번뿐인데 플랫폼이 두 번으로 봅니다. 중복 제거(deduplication)가
 이를 해결하며, Funnel은 이벤트별 `eventId`로 이를 자동화합니다.
 
 ## `eventId`가 중복 제거 키입니다
@@ -15,7 +15,7 @@ sidebar:
 `track()` 호출마다 Funnel은 고유한 `eventId`(UUID)를 생성해, 같은 호출 안의 **모든** 플러그인에
 [EventContext](/ko/guides/core-concepts/)로 전달합니다. 그 호출의 모든 플러그인이 *동일한*
 `eventId`를 보기 때문에, 같은 동작을 보고하는 브라우저 이벤트와 서버 이벤트가 같은 식별자를
-가지며 — 플랫폼은 둘을 하나로 취급합니다.
+가지므로, 플랫폼은 둘을 하나로 취급합니다.
 
 ```ts
 funnel.track("purchase", { transaction_id: "T-1", currency: "KRW", value: 29000 });
@@ -25,7 +25,7 @@ funnel.track("purchase", { transaction_id: "T-1", currency: "KRW", value: 29000 
 // Meta는 둘을 보고, event_id로 매칭해 구매를 하나로 집계합니다.
 ```
 
-`eventId`는 직접 관리하지 않습니다 — `initialize()` 전에 큐에 쌓인 이벤트까지 포함해 Funnel이
+`eventId`는 직접 관리하지 않습니다. `initialize()` 전에 큐에 쌓인 이벤트까지 포함해 Funnel이
 처리합니다.
 
 ## Meta Pixel과 Conversions API 짝짓기
@@ -67,7 +67,7 @@ funnel.initialize({
 
 :::caution[CAPI 플러그인은 본인 서버가 필요합니다]
 `meta-conversion-api`는 *클라이언트* 플러그인입니다: 이벤트를 수집해 **본인**의 엔드포인트로
-POST할 뿐 — Meta를 직접 호출하지 않습니다(CAPI 액세스 토큰은 절대 브라우저에 두면 안 됩니다).
+POST할 뿐이며, Meta를 직접 호출하지 않습니다(CAPI 액세스 토큰은 절대 브라우저에 두면 안 됩니다).
 페이로드를 받아 본인 토큰으로 Meta에 전달하는 서버 라우트는 직접 제공해야 합니다. `endpoint`가
 설정되지 않으면 플러그인은 no-op입니다.
 :::
@@ -106,12 +106,12 @@ funnel.initialize({
 :::caution[API 시크릿을 브라우저 밖에 두세요]
 GA4 Measurement Protocol `apiSecret`은 민감 정보입니다. `sgtm` 플러그인은
 `allowApiSecretInBrowser: true`를 명시적으로 설정하지 않는 한 브라우저에서 이를 보내기를
-거부합니다 — DevTools, 프록시 로그, CDN 액세스 로그에 노출되기 때문입니다. 권장 방식은 `apiSecret`을
+거부합니다. DevTools, 프록시 로그, CDN 액세스 로그에 노출되기 때문입니다. 권장 방식은 `apiSecret`을
 설정하지 않고, sGTM 컨테이너가 브라우저 트래픽에 대해 api_secret 검증을 건너뛰게 하는 것입니다.
 :::
 
 ## 다음으로
 
-- [핵심 개념](/ko/guides/core-concepts/) — `EventContext`와 `eventId`에 대해 더 보기.
-- [SSR 주의사항](/ko/guides/ssr/) — 이 플러그인들이 SSR에서 안전하게 생성되는 이유.
-- [플러그인 카탈로그](/ko/plugins/) — `meta-conversion-api`와 `sgtm`의 전체 설정.
+- [핵심 개념](/ko/guides/core-concepts/): `EventContext`와 `eventId`에 대해 더 보기.
+- [SSR 주의사항](/ko/guides/ssr/): 이 플러그인들이 SSR에서 안전하게 생성되는 이유.
+- [플러그인 카탈로그](/ko/plugins/): `meta-conversion-api`와 `sgtm`의 전체 설정.

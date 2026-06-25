@@ -45,13 +45,13 @@ export const funnel = new Funnel({
 funnel.initialize({
   amplitude: {
     apiKey: "your_api_key",
-    // forwarded to amplitude.init(apiKey, options) — optional
+    // forwarded to amplitude.init(apiKey, options) (optional)
     options: { serverZone: "EU" },
   },
 });
 ```
 
-`consentRequired: true` is optional — when set, events are dropped until `analytics_storage`
+`consentRequired: true` is optional. When set, events are dropped until `analytics_storage`
 is granted through `funnel.setConsent(...)`.
 
 ## Track an event

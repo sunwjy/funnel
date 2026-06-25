@@ -14,7 +14,7 @@ funnel.track(eventName, params);
 ```
 
 Because Funnel uses GA4 as its canonical schema, the names and parameters below are the GA4
-standard ones. TypeScript autocompletes both — once you type the event name, your editor knows
+standard ones. TypeScript autocompletes both: once you type the event name, your editor knows
 exactly which parameters are valid.
 
 :::tip[Type safety for free]
@@ -111,7 +111,7 @@ funnel.track("begin_checkout", {
 
 ### purchase
 
-Sent when a purchase completes. `transaction_id` is **required** — GA4 needs it, and most
+Sent when a purchase completes. `transaction_id` is **required**: GA4 needs it, and most
 platforms use it for server-side deduplication of purchases.
 
 ```ts
@@ -152,10 +152,10 @@ Funnel ships the complete GA4 event vocabulary. Beyond the ones above, you also 
 `view_item_list`, `select_item`, `add_to_wishlist`, `remove_from_cart`, `view_cart`,
 `add_shipping_info`, `add_payment_info`, and `refund`.
 
-Each has its own typed parameters — your editor will show you the exact shape as you type. For
+Each has its own typed parameters; your editor will show you the exact shape as you type. For
 the definitive list of every event and parameter, see the [Reference](/reference/).
 
 ## Where to go next
 
-- [Adding multiple plugins](/guides/multiple-plugins/) — fan one event out to several platforms.
-- [Core concepts](/guides/core-concepts/) — how the dispatcher and plugins fit together.
+- [Adding multiple plugins](/guides/multiple-plugins/): fan one event out to several platforms.
+- [Core concepts](/guides/core-concepts/): how the dispatcher and plugins fit together.

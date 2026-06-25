@@ -31,7 +31,7 @@ conversions.
 
 - An **X Pixel ID** from your X Ads account.
 - The X base pixel snippet (uwt.js) loaded in your page `<head>`, so that `window.twq` exists
-  before Funnel runs. Funnel only sends events — it does not load the pixel for you.
+  before Funnel runs. Funnel only sends events. It does not load the pixel for you.
 
 ## Install & initialize
 
@@ -49,7 +49,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true` is optional — when set, events are dropped until you grant
+`consentRequired: true` is optional. When set, events are dropped until you grant
 `ad_storage` through `funnel.setConsent(...)`.
 
 ## Track an event
@@ -73,7 +73,7 @@ This calls `twq("event", "Purchase", { currency: "USD", value: 49, order_id: "T-
 
 ## Notes
 
-- **SSR safe.** When `window` (or `window.twq`) is absent, the plugin does nothing — no errors
+- **SSR safe.** When `window` (or `window.twq`) is absent, the plugin does nothing. No errors
   on the server.
 - **Advanced matching.** Calling `funnel.setUser({ email, phone_number })` attaches normalized
   `email_address` / `phone_number` (E.164) as event parameters. The pixel SHA-256-hashes them

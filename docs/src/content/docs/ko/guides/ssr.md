@@ -32,11 +32,11 @@ track(eventName, params, context) {
 ## SSR 중에 Funnel을 생성해도 됩니다
 
 이 가드들 덕분에, 싱글턴 모듈을 import하고 서버에서 `new Funnel({...})`를 생성하는 것은 완전히
-안전합니다. 생성자는 플러그인 목록을 저장할 뿐 — 어떤 브라우저 글로벌도 건드리지 않습니다. 그래서
+안전합니다. 생성자는 플러그인 목록을 저장할 뿐이며, 어떤 브라우저 글로벌도 건드리지 않습니다. 그래서
 이 모듈은 서버 컴포넌트에서 import해도 괜찮습니다:
 
 ```ts
-// lib/funnel.ts — 서버에서 import 안전
+// lib/funnel.ts (서버에서 import 안전)
 import { Funnel } from "@sunwjy/funnel-client";
 import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
@@ -49,7 +49,7 @@ export const funnel = new Funnel({
 ## 단 하나의 규칙: 초기화는 클라이언트에서
 
 플러그인이 서버에서 no-op이긴 하지만, 그곳에서 `initialize()`나 `track()`을 호출할 이유는
-없습니다 — 아무 쓸모도 없으니까요. 그래서 규칙은 간단합니다: **생성은 어디서든, 초기화와 추적은
+없습니다. 아무 쓸모도 없으니까요. 그래서 규칙은 간단합니다: **생성은 어디서든, 초기화와 추적은
 클라이언트에서.**
 
 React 기반 프레임워크에서 "클라이언트에서"란 effect 안을 뜻하며, 이는 서버 렌더링 중에는 절대
@@ -87,7 +87,7 @@ export function FunnelProvider({ children }: { children: React.ReactNode }) {
    `track()` 호출이 실제 `window.gtag` / `window.fbq`에 도달합니다.
 
 만약 어떤 `track()`이 SDK 로딩 전에 실행되더라도, `typeof window`/SDK 가드가 이를 오류 대신
-no-op으로 만듭니다 — 그리고 이벤트를 잃지도 않습니다. [`initialize()` 전에 추적된 이벤트는 큐에
+no-op으로 만듭니다. 이벤트를 잃지도 않습니다. [`initialize()` 전에 추적된 이벤트는 큐에
 쌓였다가 재생되기](/ko/guides/core-concepts/) 때문입니다.
 
 :::tip[CAPI와 sGTM 플러그인도 마찬가지]
@@ -98,5 +98,5 @@ SSR이 깨지지 않습니다.
 
 ## 다음으로
 
-- [프레임워크 연동](/ko/guides/framework-integration/) — 구체적인 Next.js 설정.
-- [핵심 개념](/ko/guides/core-concepts/) — initialize 이전 이벤트 큐.
+- [프레임워크 연동](/ko/guides/framework-integration/): 구체적인 Next.js 설정.
+- [핵심 개념](/ko/guides/core-concepts/): initialize 이전 이벤트 큐.

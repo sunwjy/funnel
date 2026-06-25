@@ -17,18 +17,18 @@ Meta Conversions API(CAPI) 플러그인은 GA4 기반 이벤트 데이터를 브
 각 페이로드에는 `event_id`, `event_time`, `event_source_url`, `action_source: "website"`,
 `custom_data`(currency / value / `content_ids` / `contents` / `order_id` …), `user_data`가
 포함됩니다. PII 필드(`em`, `ph`, `fn`, `ln`, `external_id`)는 전송 전 **브라우저에서 SHA-256으로
-해시**됩니다 — SubtleCrypto를 사용할 수 없으면 평문으로 보내지 않고 생략합니다. 플러그인은
+해시**됩니다. SubtleCrypto를 사용할 수 없으면 평문으로 보내지 않고 생략합니다. 플러그인은
 `_fbp` / `_fbc` 쿠키(있을 경우 `fbclid` 쿼리 파라미터로 `fbc` 합성)와 사용자 에이전트도
 수집합니다.
 
 ## 시작하기 전에
 
 이것은 **서버 릴레이** 플러그인입니다: **브라우저 픽셀 전역 객체가 없습니다**. JSON 페이로드를
-받아 액세스 토큰과 함께 Meta CAPI로 전달하는 서버 엔드포인트가 필요합니다 — 액세스 토큰은
+받아 액세스 토큰과 함께 Meta CAPI로 전달하는 서버 엔드포인트가 필요합니다. 액세스 토큰은
 브라우저가 아니라 **서버**에 둡니다. 다음을 제공하세요:
 
-- **endpoint** — Meta CAPI로 중계하는 서버 URL.
-- 선택적으로 **testEventCode**(예: `TEST12345`) — Events Manager의 Test Events 탭에 이벤트를
+- **endpoint**: Meta CAPI로 중계하는 서버 URL.
+- 선택적으로 **testEventCode**(예: `TEST12345`): Events Manager의 Test Events 탭에 이벤트를
   표시합니다.
 
 ## 설치 및 초기화

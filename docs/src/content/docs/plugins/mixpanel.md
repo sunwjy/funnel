@@ -45,13 +45,13 @@ export const funnel = new Funnel({
 funnel.initialize({
   mixpanel: {
     token: "your_project_token",
-    // forwarded to mixpanel.init(token, config) — optional
+    // forwarded to mixpanel.init(token, config) (optional)
     config: { api_host: "https://api-eu.mixpanel.com" },
   },
 });
 ```
 
-`consentRequired: true` is optional — when set, events are dropped until `analytics_storage`
+`consentRequired: true` is optional. When set, events are dropped until `analytics_storage`
 is granted through `funnel.setConsent(...)`.
 
 ## Track an event

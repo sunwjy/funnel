@@ -10,7 +10,7 @@ TikTok Pixel 플러그인은 Funnel의 GA4 기반 이벤트를 **TikTok Pixel** 
 
 ## 무엇을 추적하나요
 
-`page_view`는 `ttq.page()`를 호출합니다. 매핑된 GA4 이벤트는 TikTok 표준 이벤트가 됩니다 —
+`page_view`는 `ttq.page()`를 호출합니다. 매핑된 GA4 이벤트는 TikTok 표준 이벤트가 됩니다.
 예: `purchase` → `CompletePayment`, `add_to_cart` → `AddToCart`, `begin_checkout` →
 `InitiateCheckout`, `view_item` → `ViewContent`, `sign_up` → `CompleteRegistration`,
 `generate_lead` → `SubmitForm`, `search` → `Search`. GA4 `items`는 TikTok `contents`가 됩니다.
@@ -64,7 +64,7 @@ funnel.track("purchase", {
 - `select_item`은 의도적으로 매핑하지 **않습니다**: TikTok의 `ClickButton`은 비제품 CTA용이므로,
   PLP 클릭이 해당 카운터를 부풀리지 않도록 커스텀 이벤트로 전달됩니다.
 - `setUser`는 고급 매칭을 위해 `ttq.identify({ email, phone_number, external_id })`를 호출합니다.
-  TikTok에는 "식별 해제" 호출이 없으므로 이 플러그인은 `resetUser`를 구현하지 않습니다 — 필요하면
+  TikTok에는 "식별 해제" 호출이 없으므로 이 플러그인은 `resetUser`를 구현하지 않습니다. 필요하면
   로그아웃 후 페이지를 새로고침하세요.
 - `consentRequired: true`로 설정하면 `setConsent`를 통해 `ad_storage`가 허용될 때까지 이벤트를
   버립니다. 기본값은 게이팅 없음(플랫폼 위임)입니다.

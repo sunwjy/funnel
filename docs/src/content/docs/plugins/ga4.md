@@ -6,7 +6,7 @@ sidebar:
 ---
 
 The GA4 plugin sends Funnel events to **Google Analytics 4** through `window.gtag`. Because
-Funnel's events already follow the GA4 schema, this plugin passes them through unchanged — no
+Funnel's events already follow the GA4 schema, this plugin passes them through unchanged. No
 transformation needed.
 
 ## What it tracks
@@ -62,7 +62,7 @@ funnel.track("purchase", {
 ## Notes
 
 - **SSR-safe**: when `window` (or `window.gtag`) is unavailable, `track`, `setUser`, and
-  `setConsent` quietly skip — nothing throws.
+  `setConsent` quietly skip. Nothing throws.
 - The `config` field is forwarded verbatim to `gtag("config", measurementId, config)`, so you
   can control GA4 SDK behavior (`send_page_view`, `cookie_domain`, `anonymize_ip`, etc.).
 - `setConsent` mirrors Google Consent Mode v2 signals one-to-one

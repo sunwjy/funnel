@@ -14,7 +14,7 @@ These examples mirror the apps in the repository's `examples/` directory.
 
 ## The shared singleton (all frameworks)
 
-Put the instance in one module — e.g. `funnel.ts` (or `lib/funnel.ts`):
+Put the instance in one module, e.g. `funnel.ts` (or `lib/funnel.ts`):
 
 ```ts
 // funnel.ts
@@ -106,7 +106,7 @@ Next.js renders on the server, so the rule is: **construct the Funnel anywhere, 
 `initialize()` and `track()` on the client.** You do that from a client component inside an
 effect.
 
-The singleton module is plain — no browser calls at import time:
+The singleton module is plain, with no browser calls at import time:
 
 ```ts
 // lib/funnel.ts
@@ -249,12 +249,12 @@ document.getElementById("btn-add-to-cart")?.addEventListener("click", () => {
 
 ## Don't forget the platform base snippets
 
-In every framework, Funnel calls `window.gtag`, `window.fbq`, and similar globals — it does not
+In every framework, Funnel calls `window.gtag`, `window.fbq`, and similar globals. It does not
 load the platform SDKs for you. Make sure each platform's base snippet (the one from its
 dashboard) is on the page before events fire. If a global isn't present, the matching plugin
 simply no-ops.
 
 ## Where to go next
 
-- [SSR considerations](/guides/ssr/) — why server rendering is always safe.
-- [Adding multiple plugins](/guides/multiple-plugins/) — add more platforms to the singleton.
+- [SSR considerations](/guides/ssr/): why server rendering is always safe.
+- [Adding multiple plugins](/guides/multiple-plugins/): add more platforms to the singleton.

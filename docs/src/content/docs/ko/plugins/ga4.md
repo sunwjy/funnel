@@ -17,7 +17,7 @@ Funnel의 이벤트는 이미 GA4 스키마를 따르므로, 이 플러그인은
 ## 시작하기 전에
 
 - GA4 속성에서 발급받은 **GA4 측정 ID**(`G-XXXXXXXXXX` 형태).
-- 페이지 `<head>`에 로드된 표준 GA4 기본 스니펫(gtag.js) — Funnel이 실행되기 전에
+- 페이지 `<head>`에 로드된 표준 GA4 기본 스니펫(gtag.js). Funnel이 실행되기 전에
   `window.gtag`가 존재해야 합니다. Funnel은 `gtag`를 호출만 하며, 직접 로드하지는 않습니다.
 
 ## 설치 및 초기화
@@ -60,7 +60,7 @@ funnel.track("purchase", {
 ## 참고
 
 - **SSR 안전**: `window`(또는 `window.gtag`)가 없으면 `track`, `setUser`, `setConsent`는
-  조용히 건너뜁니다 — 오류가 발생하지 않습니다.
+  조용히 건너뜁니다. 오류가 발생하지 않습니다.
 - `config` 필드는 `gtag("config", measurementId, config)`로 그대로 전달되므로 GA4 SDK
   동작(`send_page_view`, `cookie_domain`, `anonymize_ip` 등)을 제어할 수 있습니다.
 - `setConsent`는 Google Consent Mode v2 신호

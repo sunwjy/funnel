@@ -26,7 +26,7 @@ event (`pageView`, `productView`, `purchase`, …).
 | `generate_lead` | `lead` |
 
 Events without a Toss equivalent (e.g. `view_item_list`, `select_item`, `remove_from_cart`,
-`refund`) are silently dropped — Toss has no matching method and no custom-event channel.
+`refund`) are silently dropped. Toss has no matching method and no custom-event channel.
 
 ## Before you start
 
@@ -50,7 +50,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true` is optional — when set, events are dropped until `ad_storage` is
+`consentRequired: true` is optional. When set, events are dropped until `ad_storage` is
 granted through `funnel.setConsent(...)`.
 
 ## Track an event

@@ -10,7 +10,7 @@ standard events and sends them through `window.fbq`.
 
 ## What it tracks
 
-Mapped GA4 events become Meta standard events — for example `purchase` → `Purchase`,
+Mapped GA4 events become Meta standard events. For example, `purchase` → `Purchase`,
 `add_to_cart` → `AddToCart`, `begin_checkout` → `InitiateCheckout`, `view_item` →
 `ViewContent`, `sign_up` → `CompleteRegistration`, `generate_lead` → `Lead`, and `search` →
 `Search`. GA4 `items` are reshaped into `content_ids` / `contents` / `num_items`. Any event
@@ -66,7 +66,7 @@ order_id }, { eventID })`.
 - **SSR-safe**: every method returns early when `window` or `window.fbq` is missing.
 - `setUser` re-runs `fbq("init", pixelId, { em, ph, fn, ln, external_id })` for Advanced
   Matching. Meta Pixel has **no documented way to clear** that data, so this plugin implements no
-  `resetUser` — the data persists until the page unloads. Reload after logout if you need a clean
+  `resetUser`. The data persists until the page unloads. Reload after logout if you need a clean
   slate.
 - `setConsent` uses Meta's binary consent API, derived from `ad_storage`
   (`granted` → `grant`, otherwise `revoke`).

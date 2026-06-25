@@ -5,8 +5,8 @@ sidebar:
   order: 1
 ---
 
-If you run marketing campaigns, you probably send the same events — page views, sign-ups,
-purchases — to several analytics tools: Google Analytics, the Meta Pixel, TikTok, and so on.
+If you run marketing campaigns, you probably send the same events (page views, sign-ups,
+purchases) to several analytics tools: Google Analytics, the Meta Pixel, TikTok, and so on.
 Each one has its own SDK, its own event names, and its own parameter shapes. Wiring them up
 separately is repetitive and easy to get out of sync.
 
@@ -26,7 +26,7 @@ funnel.track("purchase", { currency: "KRW", value: 29000, transaction_id: "T-1" 
 ## The mental model
 
 - **GA4 is the canonical schema.** Every event name and parameter follows the GA4
-  convention. Plugins map *from* GA4 to their platform — never the other way around.
+  convention. Plugins map *from* GA4 to their platform, never the other way around.
 - **One `track()` call fans out to all plugins.** You connect plugins once; every event
   reaches all of them.
 - **Plugins are error-isolated.** If one plugin throws, the others still receive the event.
@@ -35,7 +35,7 @@ funnel.track("purchase", { currency: "KRW", value: 29000, transaction_id: "T-1" 
 
 ## What Funnel is not
 
-- It is **not** an analytics product — it sends data *to* analytics tools, it does not
+- It is **not** an analytics product. It sends data *to* analytics tools; it does not
   store or visualize it.
 - It does **not** bundle the platform SDKs. You still load `gtag`, `fbq`, etc. as usual;
   Funnel calls those globals for you.

@@ -30,10 +30,10 @@ yarn add @sunwjy/funnel-client
 ## 두 가지 import 방식
 
 ```ts
-// 배럴 import — 편리하고 완전히 트리쉐이킹됨 (sideEffects: false)
+// 배럴 import, 편리하고 완전히 트리쉐이킹됨 (sideEffects: false)
 import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@sunwjy/funnel-client";
 
-// 서브패스 import — 명시한 플러그인만 번들에 포함됨을 보장
+// 서브패스 import, 명시한 플러그인만 번들에 포함됨을 보장
 import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 ```
 
@@ -49,4 +49,4 @@ Funnel은 분석 전역 객체(`window.gtag`, `window.fbq` 등)를 호출하지�
 
 ## 다음 단계
 
-준비됐습니다 — [5분 만에 첫 이벤트를 보내보세요](/ko/start-here/quickstart/).
+준비됐습니다. [5분 만에 첫 이벤트를 보내보세요](/ko/start-here/quickstart/).

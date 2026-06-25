@@ -30,7 +30,7 @@ Pinterest Tag의 표준 이벤트로 매핑하고 `window.pintrk`를 통해 전�
 ## 시작하기 전에
 
 - **Pinterest Tag ID**(광고주 광고 계정 태그).
-- 페이지에 로드된 Pinterest 기본 태그 — Funnel이 실행되기 전에 `window.pintrk`가 존재해야 합니다.
+- 페이지에 로드된 Pinterest 기본 태그. Funnel이 실행되기 전에 `window.pintrk`가 존재해야 합니다.
 
 ## 설치 및 초기화
 
@@ -48,7 +48,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true`는 선택 사항입니다 — 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
+`consentRequired: true`는 선택 사항입니다. 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
 허용할 때까지 이벤트가 드롭됩니다.
 
 ## 이벤트 추적
@@ -74,7 +74,7 @@ funnel.track("purchase", {
 ## 참고
 
 - **SSR 안전.** `window`(또는 `window.pintrk`)가 없으면 플러그인은 아무 동작도 하지 않습니다.
-- `begin_checkout`은 의도적으로 Pinterest `checkout`에 매핑되지 **않습니다** — Pinterest의
+- `begin_checkout`은 의도적으로 Pinterest `checkout`에 매핑되지 **않습니다**. Pinterest의
   `checkout`은 *완료된* 구매를 의미하므로, 전환 수가 부풀려지는 것을 막기 위해 대신 `custom`
   이벤트로 전달됩니다.
 - `funnel.setUser(...)`는 향상된 매칭(enhanced match)을 위해 `pintrk("set", ...)`을 호출하며,

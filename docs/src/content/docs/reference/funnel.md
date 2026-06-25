@@ -1,6 +1,6 @@
 ---
 title: Funnel
-description: The dispatcher class — configure plugins, initialize, and track events.
+description: "The dispatcher class: configure plugins, initialize, and track events."
 sidebar:
   order: 2
 ---
@@ -58,7 +58,7 @@ const funnel = new Funnel({
 
 ## `new Funnel(config)`
 
-Creates a new instance. The constructor only stores configuration — no plugin is touched until
+Creates a new instance. The constructor only stores configuration. No plugin is touched until
 you call [`initialize()`](#initializepluginconfigs).
 
 ```ts
@@ -74,7 +74,7 @@ initialize(pluginConfigs?: Record<string, Record<string, unknown>>): void
 ```
 
 Initializes every registered plugin. `pluginConfigs` is a map keyed by **plugin name**
-(`plugin.name`) — the value for each key is passed to that plugin's `initialize()`. A plugin
+(`plugin.name`). The value for each key is passed to that plugin's `initialize()`. A plugin
 with no entry receives an empty object (`{}`).
 
 ```ts
@@ -171,7 +171,7 @@ setConsent(state: ConsentState): void
 Updates the user's consent state across all plugins that implement `setConsent`. Accepts
 **partial** updates: the given signals are merged into the last known state, and the full
 accumulated `ConsentState` is forwarded to each plugin. If called before `initialize()`, the
-state is stored and applied during initialization — before user identity and queued events.
+state is stored and applied during initialization, before user identity and queued events.
 
 `ConsentState` follows the Google Consent Mode v2 signal model. Each field is a `ConsentStatus`
 (`"granted" | "denied"`), and all fields are optional.
@@ -185,13 +185,13 @@ state is stored and applied during initialization — before user identity and q
 
 ```ts
 funnel.setConsent({ analytics_storage: "granted" });
-// later — merged into the previous state
+// later, merged into the previous state
 funnel.setConsent({ ad_storage: "granted", ad_user_data: "granted" });
 ```
 
 ## See also
 
-- [`EventMap`](/reference/event-map/) — the event names and parameters `track()` accepts.
-- [`FunnelPlugin`](/reference/funnel-plugin/) — the interface each registered plugin implements.
-- [`EventContext`](/reference/event-context/) — the per-event context generated on each
+- [`EventMap`](/reference/event-map/): the event names and parameters `track()` accepts.
+- [`FunnelPlugin`](/reference/funnel-plugin/): the interface each registered plugin implements.
+- [`EventContext`](/reference/event-context/): the per-event context generated on each
   `track()`.

@@ -14,7 +14,7 @@ Google Ads 플러그인은 Funnel의 GA4 기반 이벤트를 `window.gtag`를 �
 **전환 라벨**이 설정된 각 GA4 이벤트에 대해 플러그인은
 `gtag("event", "conversion", { ...params, event_id, send_to: "<conversionId>/<label>" })`를
 실행하며, 원래 GA4 파라미터(items, `transaction_id` 등)를 함께 전달해 Enhanced Conversions가
-이를 읽을 수 있게 합니다. 매핑된 라벨이 **없는** 이벤트는 의도적으로 **전달하지 않습니다** —
+이를 읽을 수 있게 합니다. 매핑된 라벨이 **없는** 이벤트는 의도적으로 **전달하지 않습니다**.
 `send_to`가 없는 `gtag("event", ...)`는 모든 gtag 대상으로 라우팅되어 GA4 플러그인과 함께
 이중 집계되기 때문입니다.
 

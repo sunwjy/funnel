@@ -15,7 +15,7 @@ container entirely and `POST`s each event to a URL you control.
 Every Funnel event is sent as a single Measurement Protocol event with the same name and
 parameters, plus `event_id` (for deduplication against browser events), a derived `session_id`,
 and `engagement_time_msec`. User identity from `setUser` is attached as `user_id` /
-`user_properties`. There is no event-name mapping — names pass through unchanged.
+`user_properties`. There is no event-name mapping. Names pass through unchanged.
 
 ## Before you start
 
@@ -24,13 +24,13 @@ Instead it needs:
 
 - The **endpoint** URL of your sGTM container (e.g. `https://sgtm.example.com`).
 - A **GA4 Measurement ID** (`G-XXXXXXXXXX`).
-- A `client_id` — generated and persisted in `localStorage` (`_funnel_sgtm_cid`) automatically,
+- A `client_id`, generated and persisted in `localStorage` (`_funnel_sgtm_cid`) automatically,
   or supplied via `clientId`.
 
 The GA4 Measurement Protocol **API secret** should *not* be placed in browser code: it would
 leak in DevTools, proxy logs, and CDN access logs. The recommended setup is to leave `apiSecret`
 unset and have your sGTM container skip api_secret validation for browser traffic. If you must
-send it, you have to also set `allowApiSecretInBrowser: true` to acknowledge the risk — otherwise
+send it, you have to also set `allowApiSecretInBrowser: true` to acknowledge the risk; otherwise
 the plugin strips it and logs an error.
 
 ## Install & initialize

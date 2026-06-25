@@ -14,7 +14,7 @@ are forwarded as conversions.
 For each GA4 event that has a configured **conversion label**, the plugin fires
 `gtag("event", "conversion", { ...params, event_id, send_to: "<conversionId>/<label>" })`,
 forwarding the original GA4 params (items, `transaction_id`, etc.) so Enhanced Conversions can
-read them. Events **without** a mapped label are deliberately **not** forwarded — a bare
+read them. Events **without** a mapped label are deliberately **not** forwarded. A bare
 `gtag("event", ...)` would route to every gtag destination and double-count alongside the GA4
 plugin.
 

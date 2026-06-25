@@ -14,7 +14,7 @@ funnel.track(eventName, params);
 ```
 
 Funnel은 GA4를 기준 스키마로 쓰기 때문에, 아래의 이름과 파라미터는 GA4 표준입니다. TypeScript가
-둘 다 자동완성해 줍니다 — 이벤트 이름을 입력하는 순간, 에디터가 어떤 파라미터가 유효한지 정확히
+둘 다 자동완성해 줍니다. 이벤트 이름을 입력하는 순간 에디터가 어떤 파라미터가 유효한지 정확히
 알게 됩니다.
 
 :::tip[공짜로 얻는 타입 안전성]
@@ -110,7 +110,7 @@ funnel.track("begin_checkout", {
 
 ### purchase
 
-구매가 완료될 때 전송합니다. `transaction_id`는 **필수**입니다 — GA4가 요구하며, 대부분의
+구매가 완료될 때 전송합니다. `transaction_id`는 **필수**입니다. GA4가 요구하며, 대부분의
 플랫폼이 구매의 서버사이드 중복 제거에 이 값을 씁니다.
 
 ```ts
@@ -151,10 +151,10 @@ Funnel은 GA4 이벤트 어휘 전체를 제공합니다. 위에서 다룬 것 �
 `view_item_list`, `select_item`, `add_to_wishlist`, `remove_from_cart`, `view_cart`,
 `add_shipping_info`, `add_payment_info`, `refund`.
 
-각각 고유한 타입의 파라미터를 가지며 — 입력하는 동안 에디터가 정확한 형태를 보여줍니다. 모든
+각각 고유한 타입의 파라미터를 가지며, 입력하는 동안 에디터가 정확한 형태를 보여줍니다. 모든
 이벤트와 파라미터의 확정적인 목록은 [레퍼런스](/ko/reference/)를 보세요.
 
 ## 다음으로
 
-- [여러 플러그인 연결](/ko/guides/multiple-plugins/) — 하나의 이벤트를 여러 플랫폼으로 fan-out.
-- [핵심 개념](/ko/guides/core-concepts/) — 디스패처와 플러그인이 맞물리는 방식.
+- [여러 플러그인 연결](/ko/guides/multiple-plugins/): 하나의 이벤트를 여러 플랫폼으로 fan-out.
+- [핵심 개념](/ko/guides/core-concepts/): 디스패처와 플러그인이 맞물리는 방식.

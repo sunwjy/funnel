@@ -9,7 +9,7 @@
 [English](./README.md) | 한국어
 
 핵심 마케팅 퍼널 이벤트를 단일 인터페이스로 연결된 모든 분석 도구에 전송하는 라이브러리입니다.
-이벤트는 GA4 표준을 따르고, 각 플러그인이 이를 대상 도구의 네이티브 포맷으로 변환합니다 — `track()`
+이벤트는 GA4 표준을 따르고, 각 플러그인이 이를 대상 도구의 네이티브 포맷으로 변환합니다. `track()`
 한 번이면 GA4, Meta, TikTok 등으로 전송됩니다.
 
 ## 패키지
@@ -27,7 +27,7 @@ npm install @sunwjy/funnel-client
 # 또는: yarn add @sunwjy/funnel-client
 ```
 
-이것만 설치하면 됩니다 — `@sunwjy/funnel-core`가 `@sunwjy/funnel-client`에서 재수출되므로,
+이것만 설치하면 됩니다. `@sunwjy/funnel-core`가 `@sunwjy/funnel-client`에서 재수출되므로,
 이 한 번의 설치로 `Funnel` 클래스와 모든 이벤트 타입이 함께 제공됩니다.
 
 ## 빠른 시작
@@ -50,7 +50,7 @@ funnel.initialize({
 funnel.track("purchase", { currency: "KRW", value: 29000, transaction_id: "T-1" });
 ```
 
-Funnel은 플랫폼 전역 객체(`window.gtag`, `window.fbq` 등)를 호출하지만 직접 로드하지는 않습니다 —
+Funnel은 플랫폼 전역 객체(`window.gtag`, `window.fbq` 등)를 호출하지만 직접 로드하지는 않습니다.
 각 플랫폼의 기본 스니펫을 평소처럼 추가하세요. 전체 과정은
 [5분 빠른 시작](./docs/src/content/docs/ko/start-here/quickstart.md)을 참고하세요.
 
@@ -59,12 +59,12 @@ Funnel은 플랫폼 전역 객체(`window.gtag`, `window.fbq` 등)를 호출하�
 입문용 전체 문서(영어 + 한국어)는 [`docs/`](./docs)에 있으며, 배포되면
 **https://funnel-docs.netlify.app** 에 게시됩니다.
 
-- **시작하기** — [Funnel이란?](./docs/src/content/docs/ko/start-here/what-is-funnel.md) ·
+- **시작하기**: [Funnel이란?](./docs/src/content/docs/ko/start-here/what-is-funnel.md) ·
   [설치](./docs/src/content/docs/ko/start-here/installation.md) ·
   [빠른 시작](./docs/src/content/docs/ko/start-here/quickstart.md)
-- **가이드** — [핵심 개념, 프레임워크 연동, 서버사이드 중복 제거, SSR, 트리쉐이킹](./docs/src/content/docs/ko/guides/)
-- **플러그인** — [17개 플랫폼 전체 설정 페이지](./docs/src/content/docs/ko/plugins/)
-- **레퍼런스** — [EventMap, Funnel, FunnelPlugin, EventContext](./docs/src/content/docs/ko/reference/)
+- **가이드**: [핵심 개념, 프레임워크 연동, 서버사이드 중복 제거, SSR, 트리쉐이킹](./docs/src/content/docs/ko/guides/)
+- **플러그인**: [17개 플랫폼 전체 설정 페이지](./docs/src/content/docs/ko/plugins/)
+- **레퍼런스**: [EventMap, Funnel, FunnelPlugin, EventContext](./docs/src/content/docs/ko/reference/)
 
 English documentation is under [`docs/src/content/docs/`](./docs/src/content/docs/).
 
@@ -79,7 +79,7 @@ English documentation is under [`docs/src/content/docs/`](./docs/src/content/doc
 | `examples/react-vite` | React 19 + Vite | `pnpm --filter @examples/react-vite dev` |
 | `examples/nextjs` | Next.js 15 App Router | `pnpm --filter @examples/nextjs dev` |
 
-기본적으로 모든 예제는 플레이스홀더 / 로그 데모 모드로 실행됩니다 — 실제 플랫폼 ID가 필요 없습니다.
+기본적으로 모든 예제는 플레이스홀더 / 로그 데모 모드로 실행됩니다. 실제 플랫폼 ID가 필요 없습니다.
 
 ## 개발
 

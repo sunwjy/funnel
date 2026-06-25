@@ -12,7 +12,7 @@ mapped to its conversion ID in the plugin config.
 
 ## What it tracks
 
-LinkedIn does not have named standard events — it uses conversion IDs. You supply a
+LinkedIn does not have named standard events. It uses conversion IDs. You supply a
 `conversionIds` map from GA4 event names to your LinkedIn conversion IDs:
 
 | Funnel event (GA4) | LinkedIn |
@@ -54,7 +54,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true` is optional — when set, events are dropped until `ad_storage` is
+`consentRequired: true` is optional. When set, events are dropped until `ad_storage` is
 granted through `funnel.setConsent(...)`.
 
 ## Track an event
@@ -78,6 +78,6 @@ With the mapping above this calls `lintrk("track", { conversion_id: 9876544, val
 ## Notes
 
 - **SSR safe.** When `window` (or `window.lintrk`) is absent, the plugin does nothing.
-- `page_view` is intentionally never sent — the Insight Tag records page views on its own.
+- `page_view` is intentionally never sent. The Insight Tag records page views on its own.
 - Events without a matching entry in `conversionIds` are dropped. Set the plugin's `debug: true`
   to get a `console.warn` for each dropped event while wiring things up.

@@ -48,7 +48,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true` is optional — when set, events are dropped until `ad_storage` is
+`consentRequired: true` is optional. When set, events are dropped until `ad_storage` is
 granted through `funnel.setConsent(...)`.
 
 ## Track an event
@@ -74,7 +74,7 @@ This calls `pintrk("track", "checkout", { currency: "USD", value: 60, order_id: 
 ## Notes
 
 - **SSR safe.** When `window` (or `window.pintrk`) is absent, the plugin does nothing.
-- `begin_checkout` is intentionally **not** mapped to Pinterest `checkout` — Pinterest's
+- `begin_checkout` is intentionally **not** mapped to Pinterest `checkout`. Pinterest's
   `checkout` means a *completed* purchase, so it falls through to a `custom` event instead to
   avoid inflating conversions.
 - `funnel.setUser(...)` calls `pintrk("set", ...)` for enhanced match, mapping `email`→`em`,

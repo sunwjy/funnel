@@ -32,11 +32,11 @@ in a real browser with the SDK present.
 ## You can construct the Funnel during SSR
 
 Because of those guards, importing your singleton module and constructing `new Funnel({...})` on
-the server is completely safe. The constructor just stores the plugin list — it doesn't touch any
+the server is completely safe. The constructor just stores the plugin list and doesn't touch any
 browser global. So this module is fine to import from server components:
 
 ```ts
-// lib/funnel.ts — safe to import on the server
+// lib/funnel.ts (safe to import on the server)
 import { Funnel } from "@sunwjy/funnel-client";
 import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
@@ -49,7 +49,7 @@ export const funnel = new Funnel({
 ## The one rule: initialize on the client
 
 Even though plugins no-op on the server, there's no reason to call `initialize()` or `track()`
-there — it would do nothing useful. So the rule is simply: **construct anywhere, initialize and
+there, as it would do nothing useful. So the rule is: **construct anywhere, initialize and
 track on the client.**
 
 In React-based frameworks, "on the client" means inside an effect, which never runs during
@@ -87,7 +87,7 @@ Putting it together, here's what happens across a server render and client hydra
    now reach the real `window.gtag` / `window.fbq`.
 
 If a `track()` somehow runs before the SDK has loaded, the `typeof window`/SDK guard makes it a
-no-op rather than an error — and you don't lose the event, because [events tracked before
+no-op rather than an error. You don't lose the event, because [events tracked before
 `initialize()` are queued and replayed](/guides/core-concepts/).
 
 :::tip[The CAPI and sGTM plugins too]
@@ -98,5 +98,5 @@ breaks SSR.
 
 ## Where to go next
 
-- [Framework integration](/guides/framework-integration/) — the concrete Next.js setup.
-- [Core concepts](/guides/core-concepts/) — the pre-initialize event queue.
+- [Framework integration](/guides/framework-integration/): the concrete Next.js setup.
+- [Core concepts](/guides/core-concepts/): the pre-initialize event queue.

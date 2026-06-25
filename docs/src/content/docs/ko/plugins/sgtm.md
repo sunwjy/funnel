@@ -24,13 +24,13 @@ push하고 브라우저 스니펫에 의존)과 달리, 이 플러그인은 브�
 
 - sGTM 컨테이너의 **엔드포인트** URL(예: `https://sgtm.example.com`).
 - **GA4 측정 ID**(`G-XXXXXXXXXX`).
-- `client_id` — `localStorage`(`_funnel_sgtm_cid`)에 자동으로 생성·유지되거나 `clientId`로
+- `client_id`: `localStorage`(`_funnel_sgtm_cid`)에 자동으로 생성·유지되거나 `clientId`로
   직접 지정할 수 있습니다.
 
 GA4 Measurement Protocol **API 시크릿**은 브라우저 코드에 넣지 *않는* 것이 좋습니다: DevTools,
 프록시 로그, CDN 액세스 로그에 노출됩니다. 권장 설정은 `apiSecret`을 비워두고 sGTM 컨테이너가
 브라우저 트래픽에 대해 api_secret 검증을 건너뛰도록 하는 것입니다. 반드시 전송해야 한다면 위험을
-인지하는 의미로 `allowApiSecretInBrowser: true`도 함께 설정해야 합니다 — 그렇지 않으면 플러그인이
+인지하는 의미로 `allowApiSecretInBrowser: true`도 함께 설정해야 합니다. 그렇지 않으면 플러그인이
 이를 제거하고 오류를 기록합니다.
 
 ## 설치 및 초기화

@@ -8,7 +8,7 @@ sidebar:
 `EventContext` is a small metadata object that the [`Funnel`](/reference/funnel/) dispatcher
 generates on **every** [`track()`](/reference/funnel/#trackeventname-params) call and passes to
 each plugin's [`track()`](/reference/funnel-plugin/#trackeventname-params-context). It holds data
-that is _not_ part of the GA4 event schema but is needed for cross-platform features — chiefly
+that is _not_ part of the GA4 event schema but is needed for cross-platform features, chiefly
 server-side deduplication.
 
 ```ts
@@ -27,9 +27,9 @@ For a single `track()` call, the dispatcher generates **one** `eventId` and hand
 `context` object to every registered plugin. So GA4, the Meta Pixel, and any other plugin all see
 the identical `eventId` for that one event.
 
-This is the key to deduplication: if the **same** event is reported through two channels — for
+This is the key to deduplication: if the **same** event is reported through two channels (for
 example the Meta Pixel in the browser **and** the Meta Conversions API (CAPI) from your
-server — both reports can carry the same `eventId`, and Meta will count it once instead of twice.
+server), both reports can carry the same `eventId`, and Meta will count it once instead of twice.
 
 ```ts
 // Inside a plugin, the eventId is available on context:
@@ -45,7 +45,7 @@ falls back to a UUID-v4-shaped string built with `Math.random()` in environments
 Either way you get a unique UUID-shaped string.
 
 The `eventId` is generated at **call time**. So if you `track()` before `initialize()`, the event
-is queued and later replayed with its **original** `eventId` intact — the identity is fixed when
+is queued and later replayed with its **original** `eventId` intact. The identity is fixed when
 you call `track`, not when it is dispatched. See
 [queuing before `initialize`](/reference/funnel/#queuing-before-initialize).
 
@@ -65,8 +65,8 @@ reports.
 
 ## See also
 
-- [`Funnel`](/reference/funnel/) — generates the `EventContext` on each `track()`.
-- [`FunnelPlugin`](/reference/funnel-plugin/) — receives `context` as the third `track`
+- [`Funnel`](/reference/funnel/): generates the `EventContext` on each `track()`.
+- [`FunnelPlugin`](/reference/funnel-plugin/): receives `context` as the third `track`
   argument.
-- [`EventMap`](/reference/event-map/) — note that `purchase.transaction_id` is the GA4-level ID
+- [`EventMap`](/reference/event-map/): note that `purchase.transaction_id` is the GA4-level ID
   many platforms also use for purchase deduplication.

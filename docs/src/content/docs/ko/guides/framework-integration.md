@@ -14,7 +14,7 @@ Funnel은 프레임워크에 구애받지 않지만, 프레임워크마다 "설�
 
 ## 공유 싱글턴 (모든 프레임워크 공통)
 
-인스턴스를 한 모듈에 둡니다 — 예: `funnel.ts`(또는 `lib/funnel.ts`):
+인스턴스를 한 모듈에 둡니다(`funnel.ts` 또는 `lib/funnel.ts`):
 
 ```ts
 // funnel.ts
@@ -106,7 +106,7 @@ Next.js는 서버에서 렌더링하므로 규칙은 이렇습니다: **Funnel�
 `initialize()`와 `track()`은 클라이언트에서만 호출한다.** 이는 클라이언트 컴포넌트의 effect
 안에서 처리합니다.
 
-싱글턴 모듈은 단순합니다 — import 시점에 브라우저 호출이 없습니다:
+싱글턴 모듈은 단순합니다. import 시점에 브라우저 호출이 없습니다:
 
 ```ts
 // lib/funnel.ts
@@ -179,7 +179,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 :::note[SSR에서 안전한 이유]
 `funnel.ts` 모듈은 서버에서 로드되지만, `initialize()`와 `track()`은 `useEffect` 안에서만
-실행되며 — 서버 렌더링 중에는 절대 실행되지 않습니다. 게다가 모든 클라이언트 플러그인은
+실행되며, 서버 렌더링 중에는 절대 실행되지 않습니다. 게다가 모든 클라이언트 플러그인은
 `typeof window`로 가드하므로, 실수로 서버에서 호출되더라도 no-op입니다.
 [SSR 주의사항](/ko/guides/ssr/)을 보세요.
 :::
@@ -249,11 +249,11 @@ document.getElementById("btn-add-to-cart")?.addEventListener("click", () => {
 
 ## 플랫폼 기본 스니펫을 잊지 마세요
 
-어느 프레임워크든 Funnel은 `window.gtag`, `window.fbq` 같은 글로벌을 호출합니다 — 플랫폼 SDK를
+어느 프레임워크든 Funnel은 `window.gtag`, `window.fbq` 같은 글로벌을 호출합니다. 플랫폼 SDK를
 대신 로드해 주지는 않습니다. 이벤트가 발생하기 전에 각 플랫폼의 기본 스니펫(대시보드에서 받는
 것)이 페이지에 있는지 확인하세요. 글로벌이 없으면 해당 플러그인은 단순히 no-op으로 동작합니다.
 
 ## 다음으로
 
-- [SSR 주의사항](/ko/guides/ssr/) — 서버 렌더링이 항상 안전한 이유.
-- [여러 플러그인 연결](/ko/guides/multiple-plugins/) — 싱글턴에 플랫폼을 더 추가하기.
+- [SSR 주의사항](/ko/guides/ssr/): 서버 렌더링이 항상 안전한 이유.
+- [여러 플러그인 연결](/ko/guides/multiple-plugins/): 싱글턴에 플랫폼을 더 추가하기.

@@ -14,10 +14,10 @@ Funnel은 여러 플랫폼용 어댑터를 제공하지만, 실제로 쓰는 것
 유효한 import 방식은 두 가지이며, 둘 다 트리쉐이킹이 됩니다:
 
 ```ts
-// 1. 배럴 import — 패키지 루트에서 전부.
+// 1. 배럴 import: 패키지 루트에서 전부.
 import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@sunwjy/funnel-client";
 
-// 2. 서브패스 import — 각 플러그인을 자기 진입점에서.
+// 2. 서브패스 import: 각 플러그인을 자기 진입점에서.
 import { Funnel } from "@sunwjy/funnel-client";
 import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
@@ -44,7 +44,7 @@ export const funnel = new Funnel({ plugins: [createGA4Plugin()] });
 
 ## 서브패스 import: 보장된 격리
 
-서브패스 import는 한 걸음 더 나아갑니다 — 번들러를 단일 플러그인의 진입점으로 직접 가리키므로,
+서브패스 import는 한 걸음 더 나아갑니다. 번들러를 단일 플러그인의 진입점으로 직접 가리키므로,
 번들러의 트리쉐이킹이 불완전하거나 꺼져 있어도 형제 플러그인을 끌어올 여지가 없습니다:
 
 ```ts
@@ -62,9 +62,9 @@ import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
 
 ## 어떤 걸 써야 하나?
 
-- **배럴 import** — 편리하고, import 줄이 적으며, `sideEffects: false` 덕분에 올바르게
+- **배럴 import**: 편리하고, import 줄이 적으며, `sideEffects: false` 덕분에 올바르게
   트리쉐이킹됩니다. 모던 번들러를 쓰는 대부분의 앱에 좋은 기본값입니다.
-- **서브패스 import** — 보장을 원하거나, 트리쉐이킹을 전적으로 신뢰하기 어려운 툴체인을 다룰 때
+- **서브패스 import**: 보장을 원하거나, 트리쉐이킹을 전적으로 신뢰하기 어려운 툴체인을 다룰 때
   가장 안전한 선택입니다. 약간 더 장황합니다.
 
 어느 쪽이든 규칙은 같습니다: **실제로 등록하는 플러그인만 import하라.** 무게를 더하는 유일한
@@ -78,5 +78,5 @@ import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
 
 ## 다음으로
 
-- [여러 플러그인 연결](/ko/guides/multiple-plugins/) — import가 함께 어우러지는 방식.
-- [핵심 개념](/ko/guides/core-concepts/) — 각 플러그인이 실제로 하는 일.
+- [여러 플러그인 연결](/ko/guides/multiple-plugins/): import가 함께 어우러지는 방식.
+- [핵심 개념](/ko/guides/core-concepts/): 각 플러그인이 실제로 하는 일.

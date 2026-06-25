@@ -10,7 +10,7 @@ events and sends them through `window.ttq`.
 
 ## What it tracks
 
-`page_view` calls `ttq.page()`. Mapped GA4 events become TikTok standard events — for example
+`page_view` calls `ttq.page()`. Mapped GA4 events become TikTok standard events. For example,
 `purchase` → `CompletePayment`, `add_to_cart` → `AddToCart`, `begin_checkout` →
 `InitiateCheckout`, `view_item` → `ViewContent`, `sign_up` → `CompleteRegistration`,
 `generate_lead` → `SubmitForm`, and `search` → `Search`. GA4 `items` become TikTok `contents`.
@@ -64,7 +64,7 @@ This fires `ttq.track("CompletePayment", { contents, currency, value, order_id, 
 - `select_item` is intentionally **not** mapped: TikTok's `ClickButton` is for non-product CTAs,
   so PLP clicks fall through to a custom event instead of inflating that counter.
 - `setUser` calls `ttq.identify({ email, phone_number, external_id })` for advanced matching.
-  TikTok exposes no "un-identify" call, so this plugin implements no `resetUser` — reload the
+  TikTok exposes no "un-identify" call, so this plugin implements no `resetUser`. Reload the
   page after logout if needed.
 - Set `consentRequired: true` to drop events until `ad_storage` is granted via `setConsent`. The
   default is no gating (platform delegation).

@@ -27,15 +27,15 @@ yarn add @sunwjy/funnel-client
 | Package | When to use it |
 | --- | --- |
 | `@sunwjy/funnel-client` | Browser apps. Includes the `Funnel` class (re-exported from core) **and** all client plugins. Start here. |
-| `@sunwjy/funnel-core` | Shared types and the dispatcher only — useful for server code or custom plugins that should not pull in the client bundle. |
+| `@sunwjy/funnel-core` | Shared types and the dispatcher only. Useful for server code or custom plugins that should not pull in the client bundle. |
 
 ## Two ways to import
 
 ```ts
-// Barrel import — convenient, fully tree-shakeable (sideEffects: false)
+// Barrel import: convenient, fully tree-shakeable (sideEffects: false)
 import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@sunwjy/funnel-client";
 
-// Subpath import — guarantees only the plugin you name is bundled
+// Subpath import: guarantees only the plugin you name is bundled
 import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 ```
 
@@ -51,4 +51,4 @@ one needs.
 
 ## Next step
 
-You're ready — [send your first events in 5 minutes](/start-here/quickstart/).
+You're ready. [Send your first events in 5 minutes](/start-here/quickstart/).

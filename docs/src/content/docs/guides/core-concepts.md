@@ -1,12 +1,12 @@
 ---
 title: Core concepts
-description: The four ideas behind Funnel — the dispatcher, plugins, EventContext, and the GA4 schema.
+description: "The four ideas behind Funnel: the dispatcher, plugins, EventContext, and the GA4 schema."
 sidebar:
   order: 1
 ---
 
-Funnel has a small surface area. Once you understand four ideas — the **Funnel** dispatcher,
-**plugins**, the **EventContext** (with its `eventId`), and **GA4 as the canonical schema** —
+Funnel has a small surface area. Once you understand four ideas (the **Funnel** dispatcher,
+**plugins**, the **EventContext** with its `eventId`, and **GA4 as the canonical schema**),
 everything else follows.
 
 ## The Funnel dispatcher
@@ -27,16 +27,16 @@ export const funnel = new Funnel({
 
 It has a tiny public API:
 
-- `new Funnel({ plugins, debug?, onError? })` — register plugins.
-- `funnel.initialize({ <pluginName>: {<config>} })` — boot the plugins with their IDs.
-- `funnel.track(eventName, params)` — send one event to every plugin.
+- `new Funnel({ plugins, debug?, onError? })`: register plugins.
+- `funnel.initialize({ <pluginName>: {<config>} })`: boot the plugins with their IDs.
+- `funnel.track(eventName, params)`: send one event to every plugin.
 
 There are also optional identity and consent helpers (`setUser`, `resetUser`, `setConsent`),
 covered in their own guides.
 
 :::tip[Events before initialize]
 You can call `track()` before `initialize()`. Events are queued (up to 100) and replayed in
-order once initialization completes — each keeps its original `eventId`. This means you never
+order once initialization completes, each keeping its original `eventId`. This means you never
 lose the first page view to a race with your config loading.
 :::
 
@@ -49,7 +49,7 @@ Conceptually, a plugin is just an object with a `name` and a few methods:
 
 ```ts
 interface FunnelPlugin {
-  name: string; // e.g. "ga4", "meta-pixel" — also the config key
+  name: string; // e.g. "ga4", "meta-pixel" (also the config key)
   initialize(config: Record<string, unknown>): void;
   track(eventName, params, context): void;
   // optional:
@@ -59,7 +59,7 @@ interface FunnelPlugin {
 }
 ```
 
-You rarely write a plugin by hand — you import a `createXPlugin()` factory and add it to the
+You rarely write a plugin by hand. Import a `createXPlugin()` factory and add it to the
 `plugins` array. The `name` string is important: it's the key you use to pass config in
 `initialize()`.
 
@@ -86,13 +86,13 @@ The `eventId` is the same value for every plugin in a single `track()` call. Tha
 API can report the same purchase, and Meta knows they're one event because they share an
 `eventId`. See [Server-side & deduplication](/guides/server-side-dedup/) for the full picture.
 
-You don't create or manage `eventId` yourself — Funnel does it for you, including for events
+You don't create or manage `eventId` yourself. Funnel does it for you, including for events
 queued before `initialize()`.
 
 ## Dispatch fan-out and error isolation
 
-One `track()` call reaches **all** plugins. Crucially, plugins are **error-isolated**: if one
-plugin throws, the dispatcher catches it and keeps going, so the others still receive the event.
+One `track()` call reaches all plugins. Plugins are error-isolated: if one plugin throws, the
+dispatcher catches it and keeps going, so the others still receive the event.
 
 ```ts
 funnel.track("purchase", { currency: "KRW", value: 29000, transaction_id: "T-1" });
@@ -113,13 +113,13 @@ const funnel = new Funnel({
 });
 ```
 
-Even with a custom `onError`, isolation still holds — one plugin failing never blocks the others.
+Even with a custom `onError`, isolation still holds: one plugin failing never blocks the others.
 
 ## GA4 as the canonical schema
 
 Funnel does not invent its own event vocabulary. **GA4 is the canonical schema**: you always
 write event names and parameters in the GA4 convention, and each plugin maps *from* GA4 *to* its
-own platform — never the reverse.
+own platform, never the reverse.
 
 ```ts
 // You write the GA4 standard, once:
@@ -136,6 +136,6 @@ in the shape that platform expects.
 
 ## Where to go next
 
-- [Tracking your first events](/guides/first-events/) — the event names and parameters in detail.
-- [Adding multiple plugins](/guides/multiple-plugins/) — connect several platforms at once.
-- [Server-side & deduplication](/guides/server-side-dedup/) — put `eventId` to work.
+- [Tracking your first events](/guides/first-events/): event names and parameters in detail.
+- [Adding multiple plugins](/guides/multiple-plugins/): connect several platforms at once.
+- [Server-side & deduplication](/guides/server-side-dedup/): put `eventId` to work.

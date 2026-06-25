@@ -29,7 +29,7 @@ Pixel의 표준 이벤트로 매핑하고 `window.rdt`를 통해 전송합니다
 ## 시작하기 전에
 
 - Reddit 광고에서 발급받은 **Reddit Pixel(광고주) ID**.
-- 페이지에 로드된 Reddit Pixel 기본 스니펫 — Funnel이 실행되기 전에 `window.rdt`가 존재해야
+- 페이지에 로드된 Reddit Pixel 기본 스니펫. Funnel이 실행되기 전에 `window.rdt`가 존재해야
   합니다.
 
 ## 설치 및 초기화
@@ -48,7 +48,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true`는 선택 사항입니다 — 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
+`consentRequired: true`는 선택 사항입니다. 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
 허용할 때까지 이벤트가 드롭됩니다.
 
 ## 이벤트 추적
@@ -75,5 +75,5 @@ funnel.track("purchase", {
 - **SSR 안전.** `window`(또는 `window.rdt`)가 없으면 플러그인은 아무 동작도 하지 않습니다.
 - 항목별 `id`/`name`/`category`는 `products` 배열로 전송되며, 집계된 `itemCount`도 함께
   전송됩니다.
-- 모든 이벤트에서 `conversionId`는 Funnel의 `eventId`로 설정됩니다 — Reddit CAPI와 함께 사용해
+- 모든 이벤트에서 `conversionId`는 Funnel의 `eventId`로 설정됩니다. Reddit CAPI와 함께 사용해
   브라우저와 서버 전환을 중복 제거하세요.

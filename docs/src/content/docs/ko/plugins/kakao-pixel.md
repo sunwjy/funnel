@@ -63,7 +63,7 @@ funnel.track("purchase", {
 
 - **SSR 안전**: `window` 또는 `window.kakaoPixel`(또는 `trackId`)이 없으면 `track`은 아무 동작을
   하지 않습니다.
-- **커스텀 이벤트 없음 / `event_id` 중복 제거 없음** — 위에 매핑된 이벤트 집합만 Kakao에
+- **커스텀 이벤트 없음 / `event_id` 중복 제거 없음**: 위에 매핑된 이벤트 집합만 Kakao에
   도달하며, 나머지는 의도적으로 버려집니다.
 - `purchase`에서 `currency`가 제공되지 않으면 기본값은 `"KRW"`입니다.
 - `consentRequired: true`로 설정하면 `setConsent`를 통해 `ad_storage`가 허용될 때까지 이벤트를

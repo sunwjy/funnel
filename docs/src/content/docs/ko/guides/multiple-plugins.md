@@ -6,7 +6,7 @@ sidebar:
 ---
 
 Funnel의 핵심은 하나의 이벤트를 여러 플랫폼으로 보내는 것입니다. 플랫폼을 더 추가하는 일은 배열에
-플러그인을 더 넣는 것일 뿐이며 — `track()` 호출은 전혀 바뀌지 않습니다.
+플러그인을 더 넣는 것일 뿐이며, `track()` 호출은 전혀 바뀌지 않습니다.
 
 ## 여러 플러그인 연결하기
 
@@ -33,7 +33,7 @@ export const funnel = new Funnel({
 ## 각 플러그인을 이름으로 설정하기
 
 `initialize()`는 각 플러그인의 `name`을 키로 하는 맵을 받습니다. import하는 팩토리가 키를
-결정합니다 — 예를 들어 `createMetaPixelPlugin()`은 `"meta-pixel"`로 등록됩니다.
+결정합니다. 예를 들어 `createMetaPixelPlugin()`은 `"meta-pixel"`로 등록됩니다.
 
 ```ts
 funnel.initialize({
@@ -95,9 +95,9 @@ Funnel이 이를 보장합니다: 각 플러그인은 try/catch 안에서 실행
 
 ```ts
 funnel.track("page_view", { page_title: "Home" });
-//   → ga4         ✓ 추적됨
-//   → meta-pixel  ✗ throw (예: fbq 미로딩) → 로그되고 격리됨
-//   → tiktok      ✓ 추적됨   (meta-pixel 실패와 무관)
+//   → ga4         추적됨
+//   → meta-pixel  throw (예: fbq 미로딩) → 로그되고 격리됨
+//   → tiktok      추적됨   (meta-pixel 실패와 무관)
 ```
 
 기본적으로 실패는 `console.error`로 로그됩니다. 실패를 직접 모니터링으로 보내려면 생성자에
@@ -117,6 +117,6 @@ const funnel = new Funnel({
 
 ## 다음으로
 
-- [프레임워크 연동](/ko/guides/framework-integration/) — React, Next.js, 순수 HTML에 연결하기.
-- [서버사이드 & 중복 제거](/ko/guides/server-side-dedup/) — Meta Pixel과 Conversions API 짝짓기.
-- [플러그인 카탈로그](/ko/plugins/) — 모든 플랫폼의 설정 세부사항.
+- [프레임워크 연동](/ko/guides/framework-integration/): React, Next.js, 순수 HTML에 연결하기.
+- [서버사이드 & 중복 제거](/ko/guides/server-side-dedup/): Meta Pixel과 Conversions API 짝짓기.
+- [플러그인 카탈로그](/ko/plugins/): 모든 플랫폼의 설정 세부사항.

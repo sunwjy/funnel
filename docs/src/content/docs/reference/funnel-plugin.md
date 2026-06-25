@@ -1,6 +1,6 @@
 ---
 title: FunnelPlugin
-description: The interface every plugin implements — name, initialize, track, and optional hooks.
+description: "The interface every plugin implements: name, initialize, track, and optional hooks."
 sidebar:
   order: 3
 ---
@@ -8,7 +8,7 @@ sidebar:
 `FunnelPlugin` is the contract every plugin implements. Each analytics platform (GA4, Meta
 Pixel, etc.) provides an object that satisfies this interface and is registered with a
 [`Funnel`](/reference/funnel/) instance. You only need to implement this interface yourself when
-writing a **custom** plugin — the built-in `createXxxPlugin()` factories already return objects
+writing a **custom** plugin. The built-in `createXxxPlugin()` factories already return objects
 that satisfy it.
 
 ```ts
@@ -30,7 +30,7 @@ import type { FunnelPlugin } from "@sunwjy/funnel-core";
 ### `name`
 
 A unique string. The `Funnel` dispatcher uses it to look up this plugin's configuration in
-[`initialize(pluginConfigs)`](/reference/funnel/#initializepluginconfigs) — the value at
+[`initialize(pluginConfigs)`](/reference/funnel/#initializepluginconfigs): the value at
 `pluginConfigs[name]` is what gets passed to your `initialize`.
 
 ### `initialize(config)`
@@ -53,7 +53,7 @@ matches that event's parameter type, and `context` is the
 [`EventContext`](/reference/event-context/) carrying the shared `eventId`. Map the GA4-shaped
 input into your platform's native call here.
 
-### `setUser(properties)` — optional
+### `setUser(properties)` (optional)
 
 ```ts
 setUser?(properties: UserProperties): void
@@ -62,7 +62,7 @@ setUser?(properties: UserProperties): void
 Optional. Receives [`UserProperties`](/reference/funnel/#setuserproperties) (the GA4 user model).
 Plugins for platforms with no user identification (e.g., Kakao Pixel, Naver Ad) should omit it.
 
-### `resetUser()` — optional
+### `resetUser()` (optional)
 
 ```ts
 resetUser?(): void
@@ -70,7 +70,7 @@ resetUser?(): void
 
 Optional. Reset any stored user state on logout.
 
-### `setConsent(state)` — optional
+### `setConsent(state)` (optional)
 
 ```ts
 setConsent?(state: ConsentState): void
@@ -103,7 +103,7 @@ export function createConsolePlugin(): FunnelPlugin {
       console.log("[console-plugin]", eventName, params, context.eventId);
     },
 
-    // Optional hooks — include only what your platform supports.
+    // Optional hooks: include only what your platform supports.
     setUser(properties) {
       console.log("[console-plugin] setUser", properties);
     },
@@ -129,6 +129,6 @@ funnel.track("page_view", { page_title: "Home" });
 
 ## See also
 
-- [`Funnel`](/reference/funnel/) — the dispatcher that drives these methods.
-- [`EventMap`](/reference/event-map/) — the events your `track` receives.
-- [`EventContext`](/reference/event-context/) — the `eventId` passed to `track`.
+- [`Funnel`](/reference/funnel/): the dispatcher that drives these methods.
+- [`EventMap`](/reference/event-map/): the events your `track` receives.
+- [`EventContext`](/reference/event-context/): the `eventId` passed to `track`.

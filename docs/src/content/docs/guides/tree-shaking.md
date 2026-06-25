@@ -14,10 +14,10 @@ bundle small.
 There are two valid import styles, and both are tree-shakeable:
 
 ```ts
-// 1. Barrel import — everything from the package root.
+// 1. Barrel import: everything from the package root.
 import { Funnel, createGA4Plugin, createMetaPixelPlugin } from "@sunwjy/funnel-client";
 
-// 2. Subpath import — each plugin from its own entry point.
+// 2. Subpath import: each plugin from its own entry point.
 import { Funnel } from "@sunwjy/funnel-client";
 import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 import { createMetaPixelPlugin } from "@sunwjy/funnel-client/meta-pixel";
@@ -44,7 +44,7 @@ export const funnel = new Funnel({ plugins: [createGA4Plugin()] });
 
 ## Subpath imports: guaranteed isolation
 
-Subpath imports go one step further — they point the bundler directly at a single plugin's entry
+Subpath imports go one step further: they point the bundler directly at a single plugin's entry
 point, so there's no chance of pulling in siblings even if your bundler's tree-shaking is
 imperfect or disabled:
 
@@ -63,9 +63,9 @@ Use them like `@sunwjy/funnel-client/<subpath>`.
 
 ## Which should I use?
 
-- **Barrel import** — convenient, fewer import lines, and tree-shakes correctly thanks to
+- **Barrel import**: convenient, fewer import lines, and tree-shakes correctly thanks to
   `sideEffects: false`. A good default for most apps with a modern bundler.
-- **Subpath imports** — the safest choice when you want a guarantee, or when working with a
+- **Subpath imports**: the safest choice when you want a guarantee, or when working with a
   toolchain whose tree-shaking you don't fully trust. Slightly more verbose.
 
 Either way, the rule is the same: **only import the plugins you actually register.** An unused
@@ -79,5 +79,5 @@ appear. You shouldn't see platforms you never imported.
 
 ## Where to go next
 
-- [Adding multiple plugins](/guides/multiple-plugins/) — how the imports come together.
-- [Core concepts](/guides/core-concepts/) — what each plugin actually does.
+- [Adding multiple plugins](/guides/multiple-plugins/): how the imports come together.
+- [Core concepts](/guides/core-concepts/): what each plugin actually does.

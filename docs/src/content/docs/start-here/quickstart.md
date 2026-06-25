@@ -5,14 +5,14 @@ sidebar:
   order: 3
 ---
 
-This walkthrough connects two plugins — **GA4** and the **Meta Pixel** — and sends a couple of
+This walkthrough connects two plugins (**GA4** and the **Meta Pixel**) and sends a couple of
 events. It assumes you've already [installed `@sunwjy/funnel-client`](/start-here/installation/).
 
 ## 1. Load the platform base snippets
 
 Funnel calls `window.gtag` and `window.fbq`, so those globals must exist first. Add the
 standard GA4 and Meta Pixel base snippets to your page `<head>` (the ones each platform gives
-you in its dashboard). You only need them loaded — Funnel handles the event calls.
+you in its dashboard). You only need them loaded; Funnel handles the event calls.
 
 ## 2. Create a Funnel with plugins
 
@@ -48,7 +48,7 @@ plugin.
 // A page view
 funnel.track("page_view", { page_title: "Home" });
 
-// A purchase — GA4 standard parameters
+// A purchase: GA4 standard parameters
 funnel.track("purchase", {
   currency: "KRW",
   value: 29000,
@@ -60,12 +60,12 @@ That's it. With `debug: true` you'll see each event logged, and both GA4 and the
 will receive their platform-native versions.
 
 :::tip[Events before initialize]
-You can call `track()` before `initialize()` — events are queued (up to 100) and replayed in
+You can call `track()` before `initialize()`. Events are queued (up to 100) and replayed in
 order once initialization completes, each keeping its original `eventId`.
 :::
 
 ## Where to go next
 
-- [Core concepts](/guides/) — how `Funnel`, plugins, and `EventContext` fit together
-- [Plugins catalog](/plugins/) — add TikTok, Kakao, LinkedIn, and more
-- [Server-side & deduplication](/guides/) — pair the Meta Pixel with the Conversions API
+- [Core concepts](/guides/): how `Funnel`, plugins, and `EventContext` fit together
+- [Plugins catalog](/plugins/): add TikTok, Kakao, LinkedIn, and more
+- [Server-side & deduplication](/guides/): pair the Meta Pixel with the Conversions API

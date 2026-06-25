@@ -19,7 +19,7 @@ events, dispatched through `window.karrotPixel`.
 | `sign_up` | `CompleteRegistration` |
 | `purchase` | `Purchase` (`total_price`, `total_quantity`, `products`) |
 
-Daangn's pixel exposes only this fixed set of standard events — there is no custom-event API.
+Daangn's pixel exposes only this fixed set of standard events. There is no custom-event API.
 Unmapped GA4 events (e.g. `view_item_list`, `select_item`, `search`, `refund`) are silently
 dropped.
 
@@ -47,7 +47,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true` is optional — when set, events are dropped until `ad_storage` is
+`consentRequired: true` is optional. When set, events are dropped until `ad_storage` is
 granted through `funnel.setConsent(...)`.
 
 ## Track an event

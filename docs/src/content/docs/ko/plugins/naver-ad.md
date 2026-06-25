@@ -12,7 +12,7 @@ Naver Ad 플러그인은 Funnel의 GA4 기반 이벤트를 `window.wcs`를 통�
 ## 무엇을 추적하나요
 
 `page_view`는 `wcs_do()`를 통해 네이버 페이지뷰 비콘을 실행합니다. 매핑된 GA4 이벤트는 `_conv`
-객체를 만들어 `wcs.trans(_conv)`로 전달합니다 — 예: `purchase` → `purchase`, `sign_up` →
+객체를 만들어 `wcs.trans(_conv)`로 전달합니다. 예: `purchase` → `purchase`, `sign_up` →
 `sign_up`, `add_to_cart` → `add_to_cart`, `generate_lead` → `lead`, `add_to_wishlist` →
 `add_to_wishlist`, `begin_checkout` → `begin_checkout`, `view_item` → `view_content`. GA4
 `items`는 네이버 전환 항목(id, name, quantity, `payAmount`, category, option)이 됩니다. 네이버는
@@ -20,7 +20,7 @@ Naver Ad 플러그인은 Funnel의 GA4 기반 이벤트를 `window.wcs`를 통�
 
 ## 시작하기 전에
 
-- **네이버공통키** — `wcs_add["wa"]`로 등록되며 여기서는 `accountId`로 전달합니다.
+- **네이버공통키**: `wcs_add["wa"]`로 등록되며 여기서는 `accountId`로 전달합니다.
 - `window.wcs`가 존재하도록 설치된 네이버 공통 스크립트 `//wcs.naver.net/wcslog.js`. `wcs.trans`를
   지원하는 버전인지 확인하세요(오래된 스크립트는 전환에 대해 아무 동작을 하지 않습니다).
 - 선택적으로 `wcs.inflow()` 쿠키 도메인 설정을 위한 **사이트 도메인**.

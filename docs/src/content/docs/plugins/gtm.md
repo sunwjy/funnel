@@ -6,7 +6,7 @@ sidebar:
 ---
 
 The GTM plugin pushes Funnel events to the **Google Tag Manager** `window.dataLayer`. Your GTM
-container then routes each event to the right tags based on its own triggers — so you wire
+container then routes each event to the right tags based on its own triggers, so you wire
 destinations in GTM, not in code.
 
 ## What it tracks

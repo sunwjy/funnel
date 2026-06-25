@@ -19,14 +19,14 @@ Funnel의 GA4 표준 이벤트를 당근의 표준 전환 이벤트로 매핑하
 | `sign_up` | `CompleteRegistration` |
 | `purchase` | `Purchase` (`total_price`, `total_quantity`, `products`) |
 
-당근의 픽셀은 이 고정된 표준 이벤트 세트만 노출합니다 — 커스텀 이벤트 API가 없습니다. 매핑되지
+당근의 픽셀은 이 고정된 표준 이벤트 세트만 노출합니다. 커스텀 이벤트 API가 없습니다. 매핑되지
 않은 GA4 이벤트(예: `view_item_list`, `select_item`, `search`, `refund`)는 조용히 드롭됩니다.
 
 ## 시작하기 전에
 
 - 당근비즈니스 → 광고도구 → 전환 추적 관리에서 발급받은 **당근 전환 추적 코드 ID**.
 - 페이지에 로드된 당근 픽셀 로더
-  (`https://karrot-pixel.business.daangn.com/0.2/karrot-pixel.umd.js`) — Funnel이 실행되기 전에
+  (`https://karrot-pixel.business.daangn.com/0.2/karrot-pixel.umd.js`). Funnel이 실행되기 전에
   `window.karrotPixel`이 존재해야 합니다.
 
 ## 설치 및 초기화
@@ -45,7 +45,7 @@ funnel.initialize({
 });
 ```
 
-`consentRequired: true`는 선택 사항입니다 — 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
+`consentRequired: true`는 선택 사항입니다. 설정하면 `funnel.setConsent(...)`로 `ad_storage`를
 허용할 때까지 이벤트가 드롭됩니다.
 
 ## 이벤트 추적

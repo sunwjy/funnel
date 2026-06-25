@@ -12,7 +12,7 @@ calls through `window.wcs`, using Naver's current `wcs.trans` conversion-script 
 ## What it tracks
 
 `page_view` fires Naver's page-view beacon via `wcs_do()`. Mapped GA4 events build a `_conv`
-object and pass it to `wcs.trans(_conv)` — for example `purchase` → `purchase`, `sign_up` →
+object and pass it to `wcs.trans(_conv)`. For example, `purchase` → `purchase`, `sign_up` →
 `sign_up`, `add_to_cart` → `add_to_cart`, `generate_lead` → `lead`, `add_to_wishlist` →
 `add_to_wishlist`, `begin_checkout` → `begin_checkout`, `view_item` → `view_content`. GA4 `items`
 become Naver conversion items (id, name, quantity, `payAmount`, category, option). Naver has a

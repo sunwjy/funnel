@@ -10,7 +10,7 @@ English | [한국어](./README.ko.md)
 
 A library that sends key marketing funnel events to all connected analytics tools through a
 single interface. Events follow the GA4 standard; each plugin transforms them into the target
-tool's native format — so one `track()` call reaches GA4, Meta, TikTok, and more.
+tool's native format, so one `track()` call reaches GA4, Meta, TikTok, and more.
 
 ## Packages
 
@@ -27,7 +27,7 @@ npm install @sunwjy/funnel-client
 # or: yarn add @sunwjy/funnel-client
 ```
 
-That's all you need — `@sunwjy/funnel-core` is re-exported from `@sunwjy/funnel-client`, so the
+That's all you need. `@sunwjy/funnel-core` is re-exported from `@sunwjy/funnel-client`, so the
 `Funnel` class and every event type come with this single install.
 
 ## Quickstart
@@ -50,8 +50,8 @@ funnel.initialize({
 funnel.track("purchase", { currency: "KRW", value: 29000, transaction_id: "T-1" });
 ```
 
-Funnel calls the platform globals (`window.gtag`, `window.fbq`, …) but does not load them —
-add each platform's base snippet as usual. See the
+Funnel calls the platform globals (`window.gtag`, `window.fbq`, …) but does not load them.
+Add each platform's base snippet as usual. See the
 [5-minute Quickstart](./docs/src/content/docs/start-here/quickstart.md) for the full walkthrough.
 
 ## Documentation
@@ -59,12 +59,12 @@ add each platform's base snippet as usual. See the
 Full, beginner-oriented docs (English + 한국어) live in [`docs/`](./docs) and will be published
 at **https://funnel-docs.netlify.app** once deployed.
 
-- **Start here** — [What is Funnel?](./docs/src/content/docs/start-here/what-is-funnel.md) ·
+- **Start here**: [What is Funnel?](./docs/src/content/docs/start-here/what-is-funnel.md) ·
   [Installation](./docs/src/content/docs/start-here/installation.md) ·
   [Quickstart](./docs/src/content/docs/start-here/quickstart.md)
-- **Guides** — [core concepts, framework integration, server-side dedup, SSR, tree-shaking](./docs/src/content/docs/guides/)
-- **Plugins** — [setup pages for all 17 platforms](./docs/src/content/docs/plugins/)
-- **Reference** — [EventMap, Funnel, FunnelPlugin, EventContext](./docs/src/content/docs/reference/)
+- **Guides**: [core concepts, framework integration, server-side dedup, SSR, tree-shaking](./docs/src/content/docs/guides/)
+- **Plugins**: [setup pages for all 17 platforms](./docs/src/content/docs/plugins/)
+- **Reference**: [EventMap, Funnel, FunnelPlugin, EventContext](./docs/src/content/docs/reference/)
 
 한국어 문서는 [`docs/src/content/docs/ko/`](./docs/src/content/docs/ko/)에 있습니다.
 
@@ -79,7 +79,7 @@ that references the library via `workspace:*`, so it always reflects the current
 | `examples/react-vite` | React 19 + Vite | `pnpm --filter @examples/react-vite dev` |
 | `examples/nextjs` | Next.js 15 App Router | `pnpm --filter @examples/nextjs dev` |
 
-By default all examples run in placeholder / log-demo mode — no real platform IDs required.
+By default all examples run in placeholder / log-demo mode. No real platform IDs required.
 
 ## Development
 
@@ -91,7 +91,7 @@ pnpm lint        # Run linter
 pnpm test        # Run tests
 ```
 
-## Tech Stack
+## Tech stack
 
 - **Monorepo**: pnpm + Turborepo
 - **Bundler**: tsdown (ESM + CJS dual build with `.d.ts` generation)

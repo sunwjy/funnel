@@ -1,12 +1,12 @@
 ---
 title: 핵심 개념
-description: Funnel을 떠받치는 네 가지 개념 — 디스패처, 플러그인, EventContext, 그리고 GA4 스키마.
+description: "Funnel을 떠받치는 네 가지 개념: 디스패처, 플러그인, EventContext, 그리고 GA4 스키마."
 sidebar:
   order: 1
 ---
 
-Funnel의 표면적은 작습니다. 네 가지 개념 — **Funnel** 디스패처, **플러그인**, **EventContext**
-(그 안의 `eventId`), 그리고 **GA4를 기준(canonical) 스키마로 삼는다는 점** — 만 이해하면 나머지는
+Funnel의 표면적은 작습니다. **Funnel** 디스패처, **플러그인**, **EventContext**(그 안의 `eventId`),
+그리고 **GA4를 기준(canonical) 스키마로 삼는다는 점**, 이 네 가지만 이해하면 나머지는
 자연스럽게 따라옵니다.
 
 ## Funnel 디스패처
@@ -27,16 +27,16 @@ export const funnel = new Funnel({
 
 공개 API는 아주 작습니다:
 
-- `new Funnel({ plugins, debug?, onError? })` — 플러그인 등록.
-- `funnel.initialize({ <pluginName>: {<config>} })` — 각 플러그인을 ID로 부팅.
-- `funnel.track(eventName, params)` — 이벤트 하나를 모든 플러그인으로 전송.
+- `new Funnel({ plugins, debug?, onError? })`: 플러그인 등록.
+- `funnel.initialize({ <pluginName>: {<config>} })`: 각 플러그인을 ID로 부팅.
+- `funnel.track(eventName, params)`: 이벤트 하나를 모든 플러그인으로 전송.
 
 이외에 선택적 사용자 식별·동의 헬퍼(`setUser`, `resetUser`, `setConsent`)도 있으며, 각각의
 가이드에서 다룹니다.
 
 :::tip[initialize 이전의 이벤트]
 `initialize()` 전에 `track()`을 호출해도 됩니다. 이벤트는 큐에 쌓였다가(최대 100개), 초기화가
-끝나면 순서대로 재생되며 — 각자 원래의 `eventId`를 그대로 유지합니다. 덕분에 설정 로딩과의 경쟁
+끝나면 순서대로 재생되며, 각자 원래의 `eventId`를 그대로 유지합니다. 덕분에 설정 로딩과의 경쟁
 때문에 첫 페이지뷰를 잃을 일이 없습니다.
 :::
 
@@ -49,7 +49,7 @@ export const funnel = new Funnel({
 
 ```ts
 interface FunnelPlugin {
-  name: string; // 예: "ga4", "meta-pixel" — 설정 키로도 쓰임
+  name: string; // 예: "ga4", "meta-pixel" (설정 키로도 쓰임)
   initialize(config: Record<string, unknown>): void;
   track(eventName, params, context): void;
   // 선택:
@@ -59,7 +59,7 @@ interface FunnelPlugin {
 }
 ```
 
-플러그인을 손으로 직접 작성할 일은 드뭅니다 — `createXPlugin()` 팩토리를 import해서 `plugins`
+플러그인을 손으로 직접 작성할 일은 드뭅니다. `createXPlugin()` 팩토리를 import해서 `plugins`
 배열에 넣습니다. `name` 문자열이 중요한데, `initialize()`에서 설정을 넘길 때 키로 쓰입니다.
 
 ```ts
@@ -86,7 +86,7 @@ Conversions API가 동일한 구매를 보고해도, 두 이벤트가 같은 `ev
 하나의 이벤트임을 압니다. 자세한 내용은 [서버사이드 & 중복 제거](/ko/guides/server-side-dedup/)를
 보세요.
 
-`eventId`를 직접 만들거나 관리하지 않아도 됩니다 — `initialize()` 전에 큐에 쌓인 이벤트까지
+`eventId`를 직접 만들거나 관리하지 않아도 됩니다. `initialize()` 전에 큐에 쌓인 이벤트까지
 포함해 Funnel이 알아서 처리합니다.
 
 ## 디스패치 fan-out과 오류 격리
@@ -114,14 +114,14 @@ const funnel = new Funnel({
 });
 ```
 
-커스텀 `onError`를 써도 격리는 그대로 유지됩니다 — 한 플러그인의 실패가 나머지를 막는 일은
+커스텀 `onError`를 써도 격리는 그대로 유지됩니다. 한 플러그인의 실패가 나머지를 막는 일은
 없습니다.
 
 ## 기준 스키마로서의 GA4
 
 Funnel은 자체 이벤트 어휘를 만들지 않습니다. **GA4가 기준 스키마**입니다: 이벤트 이름과 파라미터를
-항상 GA4 규약으로 작성하고, 각 플러그인이 GA4*로부터* 자기 플랫폼*으로* 매핑합니다 — 절대
-반대 방향이 아닙니다.
+항상 GA4 규약으로 작성하고, 각 플러그인이 GA4*로부터* 자기 플랫폼*으로* 매핑합니다. 반대
+방향은 없습니다.
 
 ```ts
 // GA4 표준을 한 번 작성하면:
@@ -138,6 +138,6 @@ funnel.track("add_to_cart", { currency: "KRW", value: 89000, items: [/* ... */] 
 
 ## 다음으로
 
-- [첫 이벤트 추적](/ko/guides/first-events/) — 이벤트 이름과 파라미터를 자세히.
-- [여러 플러그인 연결](/ko/guides/multiple-plugins/) — 여러 플랫폼을 한 번에 연결.
-- [서버사이드 & 중복 제거](/ko/guides/server-side-dedup/) — `eventId`를 활용하기.
+- [첫 이벤트 추적](/ko/guides/first-events/): 이벤트 이름과 파라미터를 자세히.
+- [여러 플러그인 연결](/ko/guides/multiple-plugins/): 여러 플랫폼을 한 번에 연결.
+- [서버사이드 & 중복 제거](/ko/guides/server-side-dedup/): `eventId`를 활용하기.

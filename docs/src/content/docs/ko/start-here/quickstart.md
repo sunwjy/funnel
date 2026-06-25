@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-이 워크스루는 두 플러그인 — **GA4**와 **Meta Pixel** — 을 연결하고 이벤트 몇 개를 보냅니다.
+이 워크스루는 두 플러그인(**GA4**와 **Meta Pixel**)을 연결하고 이벤트 몇 개를 보냅니다.
 [`@sunwjy/funnel-client`를 이미 설치](/ko/start-here/installation/)했다고 가정합니다.
 
 ## 1. 플랫폼 기본 스니펫 로드
@@ -47,7 +47,7 @@ GA4 이벤트 이름과 파라미터로 `track()`을 호출합니다. 같은 호
 // 페이지 조회
 funnel.track("page_view", { page_title: "Home" });
 
-// 구매 — GA4 표준 파라미터
+// 구매 (GA4 표준 파라미터)
 funnel.track("purchase", {
   currency: "KRW",
   value: 29000,
@@ -59,12 +59,12 @@ funnel.track("purchase", {
 형식으로 이벤트를 받습니다.
 
 :::tip[initialize 전 이벤트]
-`initialize()` 전에 `track()`을 호출해도 됩니다 — 이벤트는 큐에 쌓였다가(최대 100개)
+`initialize()` 전에 `track()`을 호출해도 됩니다. 이벤트는 큐에 쌓였다가(최대 100개)
 초기화가 끝나면 순서대로 재생되며, 각자 원래 `eventId`를 유지합니다.
 :::
 
 ## 다음으로
 
-- [핵심 개념](/ko/guides/) — `Funnel`, 플러그인, `EventContext`가 어떻게 맞물리는지
-- [플러그인 카탈로그](/ko/plugins/) — TikTok, Kakao, LinkedIn 등 추가
-- [서버사이드 & 중복 제거](/ko/guides/) — Meta Pixel과 Conversions API 짝짓기
+- [핵심 개념](/ko/guides/): `Funnel`, 플러그인, `EventContext`가 어떻게 맞물리는지
+- [플러그인 카탈로그](/ko/plugins/): TikTok, Kakao, LinkedIn 등 추가
+- [서버사이드 & 중복 제거](/ko/guides/): Meta Pixel과 Conversions API 짝짓기

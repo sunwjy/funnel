@@ -61,7 +61,7 @@ This calls `kakaoPixel(trackId).purchase({ total_quantity, total_price, currency
 ## Notes
 
 - **SSR-safe**: `track` no-ops when `window` or `window.kakaoPixel` (or `trackId`) is missing.
-- **No custom events / no `event_id` deduplication** — only the mapped event set above reaches
+- **No custom events / no `event_id` deduplication**: only the mapped event set above reaches
   Kakao; everything else is dropped on purpose.
 - `currency` defaults to `"KRW"` for `purchase` when not provided.
 - Set `consentRequired: true` to drop events until `ad_storage` is granted via `setConsent`. The

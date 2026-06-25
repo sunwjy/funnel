@@ -1,6 +1,6 @@
 ---
 title: Funnel
-description: 디스패처 클래스 — 플러그인 설정, 초기화, 이벤트 추적.
+description: "디스패처 클래스: 플러그인 설정, 초기화, 이벤트 추적."
 sidebar:
   order: 2
 ---
@@ -39,7 +39,7 @@ import { Funnel } from "@sunwjy/funnel-client";
 | `phase` | `"initialize" \| "track" \| "setUser" \| "resetUser" \| "setConsent"` | 예외를 던진 라이프사이클 메서드. |
 | `eventName` | `EventName`(선택) | 이벤트 이름. `phase === "track"`일 때만 존재. |
 
-오류는 항상 격리됩니다 — 플러그인 하나가 예외를 던져도 나머지는 막히지 않습니다. `onError`를
+오류는 항상 격리됩니다. 플러그인 하나가 예외를 던져도 나머지는 막히지 않습니다. `onError`를
 제공하면 그 오류를 로그 대신 다른 곳(Sentry, Bugsnag 등)으로 전달할 수 있습니다.
 
 ```ts
@@ -58,7 +58,7 @@ const funnel = new Funnel({
 
 ## `new Funnel(config)`
 
-새 인스턴스를 생성합니다. 생성자는 설정만 저장하며 — [`initialize()`](#initializepluginconfigs)를
+새 인스턴스를 생성합니다. 생성자는 설정만 저장하며, [`initialize()`](#initializepluginconfigs)를
 호출하기 전까지는 어떤 플러그인도 건드리지 않습니다.
 
 ```ts
@@ -74,7 +74,7 @@ initialize(pluginConfigs?: Record<string, Record<string, unknown>>): void
 ```
 
 등록된 모든 플러그인을 초기화합니다. `pluginConfigs`는 **플러그인 이름**(`plugin.name`)을
-키로 하는 맵이며 — 각 키의 값이 해당 플러그인의 `initialize()`에 전달됩니다. 항목이 없는
+키로 하는 맵이며, 각 키의 값이 해당 플러그인의 `initialize()`에 전달됩니다. 항목이 없는
 플러그인은 빈 객체(`{}`)를 받습니다.
 
 ```ts
@@ -170,9 +170,8 @@ setConsent(state: ConsentState): void
 ```
 
 `setConsent`를 구현한 모든 플러그인에서 사용자 동의 상태를 갱신합니다. **부분** 업데이트를
-허용합니다 — 주어진 신호가 마지막으로 알려진 상태에 병합되고, 누적된 전체 `ConsentState`가
-각 플러그인으로 전달됩니다. `initialize()` 전에 호출하면 상태가 저장되었다가 초기화 중 —
-사용자 정체성과 큐 이벤트보다 먼저 — 적용됩니다.
+허용합니다. 주어진 신호가 마지막으로 알려진 상태에 병합되고, 누적된 전체 `ConsentState`가
+각 플러그인으로 전달됩니다. `initialize()` 전에 호출하면 상태가 저장되었다가 초기화 중 적용됩니다(사용자 정체성과 큐 이벤트보다 먼저).
 
 `ConsentState`는 Google Consent Mode v2 신호 모델을 따릅니다. 각 필드는 `ConsentStatus`
 (`"granted" | "denied"`)이며 모든 필드는 선택입니다.
@@ -186,13 +185,13 @@ setConsent(state: ConsentState): void
 
 ```ts
 funnel.setConsent({ analytics_storage: "granted" });
-// 나중에 — 이전 상태에 병합됨
+// 나중에 호출. 이전 상태에 병합됨
 funnel.setConsent({ ad_storage: "granted", ad_user_data: "granted" });
 ```
 
 ## 함께 보기
 
-- [`EventMap`](/ko/reference/event-map/) — `track()`이 받는 이벤트 이름과 파라미터.
-- [`FunnelPlugin`](/ko/reference/funnel-plugin/) — 등록된 각 플러그인이 구현하는 인터페이스.
-- [`EventContext`](/ko/reference/event-context/) — 매 `track()`마다 생성되는 이벤트별
+- [`EventMap`](/ko/reference/event-map/): `track()`이 받는 이벤트 이름과 파라미터.
+- [`FunnelPlugin`](/ko/reference/funnel-plugin/): 등록된 각 플러그인이 구현하는 인터페이스.
+- [`EventContext`](/ko/reference/event-context/): 매 `track()`마다 생성되는 이벤트별
   컨텍스트.

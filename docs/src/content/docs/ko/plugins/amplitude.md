@@ -28,7 +28,7 @@ Funnel의 `eventId`로 `insert_id`를 설정해 서버사이드 중복 제거를
 ## 시작하기 전에
 
 - **Amplitude API 키**.
-- 페이지에 로드된 Amplitude 브라우저 SDK — Funnel이 실행되기 전에 `window.amplitude`가 존재해야
+- 페이지에 로드된 Amplitude 브라우저 SDK. Funnel이 실행되기 전에 `window.amplitude`가 존재해야
   합니다.
 
 ## 설치 및 초기화
@@ -45,13 +45,13 @@ export const funnel = new Funnel({
 funnel.initialize({
   amplitude: {
     apiKey: "your_api_key",
-    // amplitude.init(apiKey, options)로 전달 — 선택 사항
+    // amplitude.init(apiKey, options)로 전달 (선택 사항)
     options: { serverZone: "EU" },
   },
 });
 ```
 
-`consentRequired: true`는 선택 사항입니다 — 설정하면 `funnel.setConsent(...)`로
+`consentRequired: true`는 선택 사항입니다. 설정하면 `funnel.setConsent(...)`로
 `analytics_storage`를 허용할 때까지 이벤트가 드롭됩니다.
 
 ## 이벤트 추적

@@ -7,7 +7,7 @@ sidebar:
 
 `EventMap`은 정규(canonical) 이벤트 스키마입니다. 지원되는 모든 이벤트 이름을 그 파라미터의
 구조에 매핑합니다. GA4가 진실의 원천이므로 아래의 모든 이벤트 이름과 파라미터는 GA4 표준에서
-그대로 가져온 것입니다 — 플러그인은 이 스키마에서 각 플랫폼의 네이티브 형식으로 매핑하며,
+그대로 가져온 것입니다. 플러그인은 이 스키마에서 각 플랫폼의 네이티브 형식으로 매핑하며,
 그 반대로는 절대 하지 않습니다.
 
 [`funnel.track(eventName, params)`](/ko/reference/funnel/)를 호출하면 TypeScript가
@@ -154,7 +154,7 @@ import type { Item } from "@sunwjy/funnel-core";
 | `creative_slot` | `string` | 아니요 | 프로모션 크리에이티브 슬롯. |
 | `location_id` | `string` | 아니요 | 프로모션에 연관된 위치 ID. |
 
-## 이커머스 — 탐색
+## 이커머스: 탐색
 
 ### `view_item_list`
 
@@ -186,7 +186,7 @@ import type { Item } from "@sunwjy/funnel-core";
 | `value` | `number` | 아니요 | 아이템의 금전적 가치. |
 | `items` | `Item[]` | 아니요 | 조회된 아이템. |
 
-## 이커머스 — 장바구니 & 위시리스트
+## 이커머스: 장바구니 & 위시리스트
 
 ### `add_to_wishlist`
 
@@ -228,7 +228,7 @@ import type { Item } from "@sunwjy/funnel-core";
 | `value` | `number` | 아니요 | 장바구니에 담긴 아이템의 총 가치. |
 | `items` | `Item[]` | 아니요 | 장바구니에 담긴 아이템. |
 
-## 이커머스 — 결제 & 구매
+## 이커머스: 결제 & 구매
 
 ### `begin_checkout`
 
@@ -303,7 +303,7 @@ import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 const funnel = new Funnel({ plugins: [createGA4Plugin()] });
 funnel.initialize({ ga4: { measurementId: "G-XXXXXXXXXX" } });
 
-// 아이템 한 개를 포함한 구매 — 타입이 PurchaseParams + Item에 대해 검사됩니다.
+// 아이템 한 개를 포함한 구매. 타입이 PurchaseParams + Item에 대해 검사됩니다.
 funnel.track("purchase", {
   transaction_id: "T-1",
   currency: "KRW",
@@ -314,5 +314,5 @@ funnel.track("purchase", {
 
 ## 함께 보기
 
-- [`Funnel`](/ko/reference/funnel/) — `track()`에서 이 스키마를 소비하는 디스패처.
-- [`FunnelPlugin`](/ko/reference/funnel-plugin/) — 플러그인이 각 이벤트를 받는 방식.
+- [`Funnel`](/ko/reference/funnel/): `track()`에서 이 스키마를 소비하는 디스패처.
+- [`FunnelPlugin`](/ko/reference/funnel-plugin/): 플러그인이 각 이벤트를 받는 방식.

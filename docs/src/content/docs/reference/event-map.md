@@ -7,7 +7,7 @@ sidebar:
 
 `EventMap` is the canonical event schema. It maps every supported event name to the shape of
 its parameters. Because GA4 is the source of truth, every event name and parameter below comes
-straight from the GA4 standard — plugins map _from_ this schema into each platform's native
+straight from the GA4 standard. Plugins map _from_ this schema into each platform's native
 format, never the other way around.
 
 When you call [`funnel.track(eventName, params)`](/reference/funnel/), TypeScript uses
@@ -156,7 +156,7 @@ Sent when a user clicks or selects a promotion.
 | `creative_slot` | `string` | No | Slot of the promotional creative. |
 | `location_id` | `string` | No | Location ID associated with the promotion. |
 
-## Ecommerce — browsing
+## Ecommerce: browsing
 
 ### `view_item_list`
 
@@ -188,7 +188,7 @@ Sent when a product detail page is viewed.
 | `value` | `number` | No | Monetary value of the item. |
 | `items` | `Item[]` | No | The viewed item(s). |
 
-## Ecommerce — cart & wishlist
+## Ecommerce: cart and wishlist
 
 ### `add_to_wishlist`
 
@@ -230,7 +230,7 @@ Sent when a user views their shopping cart.
 | `value` | `number` | No | Total value of items in the cart. |
 | `items` | `Item[]` | No | Items in the cart. |
 
-## Ecommerce — checkout & purchase
+## Ecommerce: checkout and purchase
 
 ### `begin_checkout`
 
@@ -305,7 +305,7 @@ import { createGA4Plugin } from "@sunwjy/funnel-client/ga4";
 const funnel = new Funnel({ plugins: [createGA4Plugin()] });
 funnel.initialize({ ga4: { measurementId: "G-XXXXXXXXXX" } });
 
-// A purchase with one item — types are checked against PurchaseParams + Item.
+// A purchase with one item: types are checked against PurchaseParams + Item.
 funnel.track("purchase", {
   transaction_id: "T-1",
   currency: "KRW",
@@ -316,5 +316,5 @@ funnel.track("purchase", {
 
 ## See also
 
-- [`Funnel`](/reference/funnel/) — the dispatcher that consumes this schema in `track()`.
-- [`FunnelPlugin`](/reference/funnel-plugin/) — how a plugin receives each event.
+- [`Funnel`](/reference/funnel/): the dispatcher that consumes this schema in `track()`.
+- [`FunnelPlugin`](/reference/funnel-plugin/): how a plugin receives each event.

@@ -7,7 +7,7 @@ sidebar:
 
 Sending the *same* conversion from both the browser and your server makes tracking far more
 reliable: ad blockers and cookie restrictions cost you browser events, while server events miss
-some browser-only signals. The catch is double-counting — the platform sees two purchases when
+some browser-only signals. The catch is double-counting: the platform sees two purchases when
 there was one. **Deduplication** solves this, and Funnel makes it automatic with the per-event
 `eventId`.
 
@@ -16,7 +16,7 @@ there was one. **Deduplication** solves this, and Funnel makes it automatic with
 On every `track()` call, Funnel generates a unique `eventId` (a UUID) and passes it to **all**
 plugins in the same call via the [EventContext](/guides/core-concepts/). Because every plugin in
 that call sees the *same* `eventId`, a browser event and a server event reporting the same action
-carry the same identifier — and the platform treats them as one.
+carry the same identifier, and the platform treats them as one.
 
 ```ts
 funnel.track("purchase", { transaction_id: "T-1", currency: "KRW", value: 29000 });
@@ -26,7 +26,7 @@ funnel.track("purchase", { transaction_id: "T-1", currency: "KRW", value: 29000 
 // Meta sees both, matches on event_id, counts ONE purchase.
 ```
 
-You don't manage `eventId` — Funnel does, including for events queued before `initialize()`.
+You don't manage `eventId`. Funnel does, including for events queued before `initialize()`.
 
 ## Pairing Meta Pixel with the Conversions API
 
@@ -66,8 +66,8 @@ Your server endpoint then forwards that payload to Meta's Conversions API. Meta 
 on `event_id` and deduplicates.
 
 :::caution[The CAPI plugin needs your server]
-`meta-conversion-api` is a *client* plugin: it collects and posts the event to **your** endpoint
-— it does not call Meta directly (your CAPI access token must never live in the browser). You
+`meta-conversion-api` is a *client* plugin: it collects and posts the event to **your** endpoint.
+It does not call Meta directly (your CAPI access token must never live in the browser). You
 provide the server route that receives the payload and forwards it to Meta with your token. If
 no `endpoint` is configured, the plugin is a no-op.
 :::
@@ -112,6 +112,6 @@ unset and have your sGTM container skip api_secret validation for browser traffi
 
 ## Where to go next
 
-- [Core concepts](/guides/core-concepts/) — more on `EventContext` and `eventId`.
-- [SSR considerations](/guides/ssr/) — why these plugins are safe to construct during SSR.
-- [Plugins catalog](/plugins/) — full config for `meta-conversion-api` and `sgtm`.
+- [Core concepts](/guides/core-concepts/): more on `EventContext` and `eventId`.
+- [SSR considerations](/guides/ssr/): why these plugins are safe to construct during SSR.
+- [Plugins catalog](/plugins/): full config for `meta-conversion-api` and `sgtm`.
