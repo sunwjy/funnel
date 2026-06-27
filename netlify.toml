@@ -2,5 +2,5 @@
 # Base directory = repo root (default). Node version is read from .nvmrc at the root.
 # Deploy previews are enabled automatically for pull requests.
 [build]
-  command = "pnpm install --frozen-lockfile && pnpm --filter @sunwjy/funnel-docs build"
+  command = "pnpm install --frozen-lockfile && pnpm docs:build"
   publish = "docs/dist"
