@@ -12,6 +12,10 @@
     "test:watch": "vitest",
     "test:e2e": "pnpm --filter @e2e/funnel test:e2e",
     "test:coverage": "vitest run --coverage",
+    "docs:dev": "pnpm --filter @sunwjy/funnel-docs dev",
+    "docs:build": "pnpm --filter @sunwjy/funnel-docs build",
+    "docs:preview": "pnpm --filter @sunwjy/funnel-docs preview",
+    "docs:check": "pnpm --filter @sunwjy/funnel-docs check",
     "changeset": "changeset",
     "version": "changeset version && pnpm install --lockfile-only",
     "release": "pnpm build && changeset publish"
