@@ -51,12 +51,12 @@ jobs:
 
       - name: Docs checks (snippets, links, i18n parity)
         run: |
-          pnpm --filter @sunwjy/funnel-docs check:snippets
-          pnpm --filter @sunwjy/funnel-docs check:links
+          pnpm --filter @repo/docs check:snippets
+          pnpm --filter @repo/docs check:links
           if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
-            pnpm --filter @sunwjy/funnel-docs check:i18n --strict
+            pnpm --filter @repo/docs check:i18n --strict
           else
-            pnpm --filter @sunwjy/funnel-docs check:i18n --warn
+            pnpm --filter @repo/docs check:i18n --warn
           fi
 
       - name: Typecheck
@@ -100,7 +100,7 @@ jobs:
           key: playwright-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
-        run: pnpm --filter @e2e/funnel exec playwright install --with-deps chromium
+        run: pnpm --filter @repo/e2e exec playwright install --with-deps chromium
 
       - name: Run E2E tests
         run: pnpm test:e2e

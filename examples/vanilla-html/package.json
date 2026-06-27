@@ -1,5 +1,5 @@
 {
-  "name": "@examples/vanilla-html",
+  "name": "@repo/example-vanilla-html",
   "version": "0.0.0",
   "private": true,
   "type": "module",

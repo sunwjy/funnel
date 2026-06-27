@@ -1,4 +1,4 @@
-# @examples/vanilla-html
+# @repo/example-vanilla-html
 
 Funnel 라이브러리를 Vanilla TypeScript(Vite) 환경에서 사용하는 예제입니다.
 
@@ -10,7 +10,7 @@ Funnel 라이브러리를 Vanilla TypeScript(Vite) 환경에서 사용하는 예
 ```bash
 # 저장소 루트에서
 pnpm install
-pnpm --filter @examples/vanilla-html dev
+pnpm --filter @repo/example-vanilla-html dev
 ```
 
 브라우저에서 `http://localhost:5173` 을 열면 버튼을 클릭해 퍼널 이벤트를 발생시킬 수 있습니다.

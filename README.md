@@ -75,9 +75,9 @@ that references the library via `workspace:*`, so it always reflects the current
 
 | Path | Stack | Run |
 |------|-------|-----|
-| `examples/vanilla-html` | Vite + vanilla TS | `pnpm --filter @examples/vanilla-html dev` |
-| `examples/react-vite` | React 19 + Vite | `pnpm --filter @examples/react-vite dev` |
-| `examples/nextjs` | Next.js 15 App Router | `pnpm --filter @examples/nextjs dev` |
+| `examples/vanilla-html` | Vite + vanilla TS | `pnpm --filter @repo/example-vanilla-html dev` |
+| `examples/react-vite` | React 19 + Vite | `pnpm --filter @repo/example-react-vite dev` |
+| `examples/nextjs` | Next.js 15 App Router | `pnpm --filter @repo/example-nextjs dev` |
 
 By default all examples run in placeholder / log-demo mode. No real platform IDs required.
 

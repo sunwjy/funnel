@@ -99,9 +99,9 @@ pnpm --filter @sunwjy/funnel-client test     # (tests run from the root Vitest c
 To run an example app locally:
 
 ```bash
-pnpm --filter @examples/vanilla-html dev
-pnpm --filter @examples/react-vite dev
-pnpm --filter @examples/nextjs dev
+pnpm --filter @repo/example-vanilla-html dev
+pnpm --filter @repo/example-react-vite dev
+pnpm --filter @repo/example-nextjs dev
 ```
 
 Examples run in **placeholder / log-demo mode** by default — no real platform IDs needed. A debug plugin logs every event (including its `eventId`) to the console and an on-screen panel. To send real events, copy `.env.example` to `.env.local` inside the example directory.
