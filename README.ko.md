@@ -75,9 +75,9 @@ English documentation is under [`docs/src/content/docs/`](./docs/src/content/doc
 
 | 경로 | 스택 | 실행 |
 |------|-------|-----|
-| `examples/vanilla-html` | Vite + 바닐라 TS | `pnpm --filter @examples/vanilla-html dev` |
-| `examples/react-vite` | React 19 + Vite | `pnpm --filter @examples/react-vite dev` |
-| `examples/nextjs` | Next.js 15 App Router | `pnpm --filter @examples/nextjs dev` |
+| `examples/vanilla-html` | Vite + 바닐라 TS | `pnpm --filter @repo/example-vanilla-html dev` |
+| `examples/react-vite` | React 19 + Vite | `pnpm --filter @repo/example-react-vite dev` |
+| `examples/nextjs` | Next.js 15 App Router | `pnpm --filter @repo/example-nextjs dev` |
 
 기본적으로 모든 예제는 플레이스홀더 / 로그 데모 모드로 실행됩니다. 실제 플랫폼 ID가 필요 없습니다.
 

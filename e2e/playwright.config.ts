@@ -15,7 +15,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "pnpm --filter @e2e/funnel dev",
+    command: "pnpm --filter @repo/e2e dev",
     port: 5990,
     reuseExistingServer: !process.env.CI,
   },

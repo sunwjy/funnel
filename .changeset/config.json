@@ -7,5 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@examples/vanilla-html", "@examples/react-vite", "@examples/nextjs", "@e2e/funnel", "@sunwjy/funnel-docs"]
+  "ignore": ["@repo/example-vanilla-html", "@repo/example-react-vite", "@repo/example-nextjs", "@repo/e2e", "@repo/docs"]
 }

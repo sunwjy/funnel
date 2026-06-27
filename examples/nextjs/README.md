@@ -25,7 +25,7 @@ Next.js 15 App Router에서 `@sunwjy/funnel-client`를 사용하는 예제입니
 pnpm install
 
 # 개발 서버 시작
-pnpm --filter @examples/nextjs dev
+pnpm --filter @repo/example-nextjs dev
 ```
 
 브라우저에서 `http://localhost:3000`을 열어 확인합니다.

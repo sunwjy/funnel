@@ -20,7 +20,7 @@ React 19 + Vite 기반의 멀티스텝 쇼핑 퍼널 예제입니다.
 pnpm install
 
 # 개발 서버 시작
-pnpm --filter @examples/react-vite dev
+pnpm --filter @repo/example-react-vite dev
 ```
 
 브라우저에서 <http://localhost:5173> 접속 후 화면 오른쪽 이벤트 로그 패널에서 추적 결과를 확인합니다.
@@ -63,10 +63,10 @@ useEffect(() => {
 
 ```bash
 # Vite 프로덕션 빌드
-pnpm --filter @examples/react-vite build
+pnpm --filter @repo/example-react-vite build
 
 # TypeScript 타입 체크 (빌드된 lib dist 타입 기준)
-pnpm --filter @examples/react-vite typecheck
+pnpm --filter @repo/example-react-vite typecheck
 ```
 
 ## 파일 구조
