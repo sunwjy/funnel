@@ -49,6 +49,16 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Docs checks (snippets, links, i18n parity)
+        run: |
+          pnpm --filter @sunwjy/funnel-docs check:snippets
+          pnpm --filter @sunwjy/funnel-docs check:links
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            pnpm --filter @sunwjy/funnel-docs check:i18n --strict
+          else
+            pnpm --filter @sunwjy/funnel-docs check:i18n --warn
+          fi
+
       - name: Typecheck
         run: pnpm typecheck
 

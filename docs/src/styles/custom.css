@@ -1,0 +1,44 @@
+/*
+ * Brand accent — point color #ff8000 (light), contrast-tuned orange (dark). WCAG AA.
+ *
+ * Light mode: --sl-color-accent is exactly #ff8000. Starlight uses --sl-color-accent only for
+ * non-text surfaces (focus rings, form accent-color, badge borders, active markers), so #ff8000
+ * shows as the point color without any text-contrast problem. Link text and the primary button
+ * (both derived from --sl-color-text-accent) are set to a deeper orange so they stay AA:
+ *   - link text #b35900 on white .............. 4.83:1 (AA)
+ *   - white button text on #b35900 background .. 4.83:1 (AA)
+ *
+ * Dark mode: a lighter orange ramp tuned for the dark background:
+ *   - link text --sl-color-accent-high #ffbf70 on bg .......... ~10.9:1
+ *   - dark button text on #ffbf70 background ................. ~8.7:1
+ */
+
+/* Dark mode (Starlight's default :root) */
+:root {
+  --sl-color-accent-low: #41240b;
+  --sl-color-accent: #ff8c1a;
+  --sl-color-accent-high: #ffbf70;
+}
+
+/* Light mode */
+:root[data-theme="light"] {
+  --sl-color-accent-low: #ffe8cc;
+  --sl-color-accent: #ff8000; /* the point color */
+  --sl-color-accent-high: #8b3e04;
+  --sl-color-text-accent: #b35900; /* links + primary buttons, AA on white */
+}
+
+/*
+ * Heading scale — modular scale, ratio 1.25 (major third) on the 16px body.
+ * Tighter than Starlight's default (h1 35px / h2 29px / h3 24px) but with a
+ * touch more contrast between steps than a 1.2 scale.
+ *   h1 31px = 16 * 1.25^3 ... 1.95x body
+ *   h2 25px = 16 * 1.25^2 ... 1.56x body
+ *   h3 20px = 16 * 1.25 ..... 1.25x body
+ *   body 16px (--sl-text-base, unchanged)
+ */
+:root {
+  --sl-text-h1: 1.9375rem; /* 31px */
+  --sl-text-h2: 1.5625rem; /* 25px */
+  --sl-text-h3: 1.25rem; /* 20px */
+}

@@ -1,0 +1,41 @@
+---
+title: Funnel
+description: One track() call sends your marketing funnel events to every connected analytics tool.
+template: splash
+hero:
+  tagline: "Define events once with the GA4 standard. Every plugin maps them to its platform: GA4, Meta, TikTok, and more."
+  actions:
+    - text: Get started
+      link: /start-here/what-is-funnel/
+      icon: right-arrow
+    - text: View on GitHub
+      link: https://github.com/sunwjy/funnel
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+Funnel is a marketing analytics library that sends key funnel events to **all of your
+connected tools through a single interface**. You write events once using the GA4 standard,
+and each plugin transforms them into the target platform's native format.
+
+<CardGrid stagger>
+	<Card title="Start Here" icon="rocket">
+		New to Funnel? Learn [what it is](/start-here/what-is-funnel/), then
+		[install it](/start-here/installation/) and ship your first event in
+		[5 minutes](/start-here/quickstart/).
+	</Card>
+	<Card title="Guides" icon="open-book">
+		Task-focused [guides](/guides/) for core concepts, framework integration,
+		server-side deduplication, and SSR.
+	</Card>
+	<Card title="Plugins" icon="puzzle">
+		One [catalog page per platform](/plugins/): GA4, Meta Pixel, TikTok, Kakao,
+		and the rest, each with a copy-paste setup.
+	</Card>
+	<Card title="Reference" icon="information">
+		The [event schema and APIs](/reference/): `EventMap`, the `Funnel` class,
+		the `FunnelPlugin` interface, and `EventContext`.
+	</Card>
+</CardGrid>

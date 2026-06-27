@@ -1,0 +1,41 @@
+---
+title: Funnel
+description: track() 한 번으로 마케팅 퍼널 이벤트를 연결된 모든 분석 도구에 전송합니다.
+template: splash
+hero:
+  tagline: GA4 표준으로 이벤트를 한 번만 정의하세요. 각 플러그인이 GA4·Meta·TikTok 등 자기 플랫폼 형식으로 변환합니다.
+  actions:
+    - text: 시작하기
+      link: /ko/start-here/what-is-funnel/
+      icon: right-arrow
+    - text: GitHub에서 보기
+      link: https://github.com/sunwjy/funnel
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+Funnel은 핵심 퍼널 이벤트를 **하나의 인터페이스로 연결된 모든 도구에 전송**하는 마케팅 분석
+라이브러리입니다. 이벤트는 GA4 표준으로 한 번만 작성하고, 각 플러그인이 대상 플랫폼의 네이티브
+형식으로 변환합니다.
+
+<CardGrid stagger>
+	<Card title="시작하기" icon="rocket">
+		처음이신가요? [Funnel이 무엇인지](/ko/start-here/what-is-funnel/) 알아본 뒤
+		[설치](/ko/start-here/installation/)하고 [5분 만에](/ko/start-here/quickstart/)
+		첫 이벤트를 보내보세요.
+	</Card>
+	<Card title="가이드" icon="open-book">
+		핵심 개념, 프레임워크 연동, 서버사이드 중복 제거, SSR을 다루는
+		[가이드](/ko/guides/)입니다.
+	</Card>
+	<Card title="플러그인" icon="puzzle">
+		플랫폼별 [카탈로그 페이지](/ko/plugins/): GA4, Meta Pixel, TikTok, Kakao 등
+		각각 복붙 가능한 설정과 함께 제공합니다.
+	</Card>
+	<Card title="레퍼런스" icon="information">
+		[이벤트 스키마와 API](/ko/reference/): `EventMap`, `Funnel` 클래스,
+		`FunnelPlugin` 인터페이스, `EventContext`.
+	</Card>
+</CardGrid>
