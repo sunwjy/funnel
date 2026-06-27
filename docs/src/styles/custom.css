@@ -27,3 +27,18 @@
   --sl-color-accent-high: #8b3e04;
   --sl-color-text-accent: #b35900; /* links + primary buttons, AA on white */
 }
+
+/*
+ * Heading scale — modular scale, ratio 1.25 (major third) on the 16px body.
+ * Tighter than Starlight's default (h1 35px / h2 29px / h3 24px) but with a
+ * touch more contrast between steps than a 1.2 scale.
+ *   h1 31px = 16 * 1.25^3 ... 1.95x body
+ *   h2 25px = 16 * 1.25^2 ... 1.56x body
+ *   h3 20px = 16 * 1.25 ..... 1.25x body
+ *   body 16px (--sl-text-base, unchanged)
+ */
+:root {
+  --sl-text-h1: 1.9375rem; /* 31px */
+  --sl-text-h2: 1.5625rem; /* 25px */
+  --sl-text-h3: 1.25rem; /* 20px */
+}
